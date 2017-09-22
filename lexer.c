@@ -177,7 +177,7 @@ Token lexToken(){
             if (peekNext() == '/'){
                 getNext();
                 //Comment ends when end of line of end of file is seen
-                while (!isEol(peekNext()) || peekNext() != End){
+                while (!isEol(peekNext()) && peekNext() != End){
                     getNext();
                 }
                 goto begin; //No token to return, so start lexing again
@@ -227,9 +227,9 @@ Token lexToken(){
             else if (isIdentChar(peekNext())){
                 identifier:
                 //Continue if alphanumeric match doesnt end at keyword or no keyword exists and return identifier
-                do {
+                while(isIdentChar(peekNext())) {
                     store(getNext());
-                } while(isIdentChar(peekNext()));
+                }
                 return tokIdent;
             }
             //Syntax error otherwise

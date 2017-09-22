@@ -20,7 +20,7 @@ void testTokenIgnored(){
 }
 
 void testTokenKeywordIdentifier(){
-    setup("ret return returning _DEF72");
+    setup("ret return returning _DEF72  double long int float l ");
     test(tokIdent);
     assert(strEq(&stringBuffer, "ret"));
     test(tokReturn);
@@ -28,6 +28,12 @@ void testTokenKeywordIdentifier(){
     assert(strEq(&stringBuffer, "returning"));
     test(tokIdent);
     assert(strEq(&stringBuffer, "_DEF72"));
+    test(tokDouble);
+    test(tokLong);
+    test(tokInt);
+    test(tokFloat);
+    test(tokIdent);
+    assert(strEq(&stringBuffer, "l"));
     test(tokEof);
 }
 
@@ -43,27 +49,27 @@ void testTokenString(){
 
 void testTokenNumber(){
     setup("500(500.)60.54.7 ..");
-    test(tokInt);
+    test(tokNumInt);
     assert(intVal == 500);
     test(tokLParen);
-    test(tokDouble);
+    test(tokNumDouble);
     assert(doubleEq(floatVal, 500));
     test(tokRParen);
-    test(tokDouble);
+    test(tokNumDouble);
     assert(doubleEq(floatVal, 60.54));
-    test(tokDouble);
+    test(tokNumDouble);
     assert(doubleEq(floatVal, .7));
     test(tokUnexpected);
     assert(curChar == '.');
 }
 
 void testTokenSymbols(){
-    setup(",+-./{};*");
+    setup(",+-*/{};");
     test(tokComma);
     test(tokPlus);
     test(tokMinus);
-    test(tokDiv);
     test(tokMulti);
+    test(tokDiv);
     test(tokLBrace);
     test(tokRBrace);
     test(tokSemicolon);
@@ -75,9 +81,9 @@ void testTokenSymbols(){
 int main(int argc, char const *argv[])
 {
     testTokenIgnored();
-    // testTokenSymbols();
-    // testTokenNumber();
-    // testTokenString();
-    // testTokenKeywordIdentifier();
+    testTokenSymbols();
+    testTokenNumber();
+    testTokenString();
+    testTokenKeywordIdentifier();
     return 0;
 }
