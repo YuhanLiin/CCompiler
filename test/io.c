@@ -17,8 +17,9 @@ char_t output[100];
 size_t olen = 0;
 
 //Output string to output array
-#define outprint(...) do {int i = sprintf(&output[olen], __VA_ARGS__);\
-                        assert(i>=0); olen += i;} while(0)
+#define outprint(...) do {{ \
+    int i = sprintf(&output[olen], __VA_ARGS__);    \
+    assert(i>=0); olen += i;}} while(0)
 
 void ioSetup(const char_t* str){
     strcpy(input, str); //Might need to be adjusted for bigger char types

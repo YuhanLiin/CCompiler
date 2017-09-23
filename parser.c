@@ -243,6 +243,7 @@ static Ast* parseFunction(Type type){
         getTok(); //Consume identifier
         //Function call discovered
         if (curTok == tokLParen){
+            getTok(); //Consume left paren
             NewAst(Function, func, type, name);
             initArr(vptr)(&func->paramNames, 0, NULL, &free);
             initArr(Type)(&func->paramTypes, 0, NULL, NULL); 
@@ -253,8 +254,13 @@ static Ast* parseFunction(Type type){
                 if (curTok == tokRParen){
                     finishedParsingParams:
                     getTok(); //Consume right paren
-                    Ast* stmt = parseStmt(); //TODO Should be compound stmt
-                    if (stmt) return (Ast*)stmt;
+                    if (curTok == tokSemicolon){
+                        getTok();
+                        return (Ast*)func;
+                    }
+                    else if (func->stmt = parseStmt()){
+                        return (Ast*)func;
+                    }
                 }
             }
             disposeArr(vptr)(&func->paramNames);
@@ -267,7 +273,7 @@ static Ast* parseFunction(Type type){
     }
 }
 
-Ast* topLevel(){
+Ast* parseTopLevel(){
     Type type = parseType();
     if (type == typNone){
         //TODO handle non-functions

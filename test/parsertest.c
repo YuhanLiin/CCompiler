@@ -41,6 +41,29 @@ void outputAst(Ast* ast){
             outputAst(binop->right);
             return;
         }
+        case astStmtReturn:
+            outprint("ret ");
+            outputAst(((StmtReturn*)ast)->expr);
+            return;
+        case astFunction: {
+            Function* fn = (Function*)ast;
+            assert (fn->paramTypes.size == fn->paramNames.size);
+            size_t paramCount = fn->paramTypes.size;
+            outprint("fn");
+            if (fn->stmt == NULL){
+                outprint("dec");
+            }
+            outprint(":%s:%s:%d ", stringifyType(fn->type), fn->name, paramCount);
+            for (size_t i=0; i<paramCount; i++){
+                Type type = fn->paramTypes.elem[i];
+                char_t* name = fn->paramNames.elem[i];
+                outprint("%s:%s ", stringifyType(type), name);
+            }
+            if (fn->stmt){
+                outputAst(fn->stmt);
+            }
+            return;
+        }
         //TODO more print operations
         default:
             assert(0 && "Unhandled ast label"); //Nothing should fall thru the cracks
@@ -75,16 +98,31 @@ void testParseBinop(){
     test(parseExpr, "(a-\"lll\")/d", "/ - id:a str:lll id:d "); 
 }
 
-void testParseError(){
-    test(parseExpr, "((sfgd) ", "ERROR "); 
-    test(parseExpr, "", "ERROR "); 
-    test(parseExpr, "sdg(5", "ERROR "); 
+void testStmt(){
+    test(parseStmt, "return (f) ;", "ret id:f ");
 }
+
+void testFunction(){
+    //This one also tests all the types so far
+    test(
+        parseTopLevel, "long long int main (int a, double b, long c, long long d, long int e, float f);",
+        "fndec:i64:main:6 i32:a f64:b i32:c i64:d i32:e f32:f "
+    );
+    test(parseTopLevel, "double k() return 5;", "fn:f64:k:0 ret int:5 ");
+}
+
+// void testParseError(){
+//     test(parseExpr, "((sfgd) ", "ERROR "); 
+//     test(parseExpr, "", "ERROR "); 
+//     test(parseExpr, "sdg(5", "ERROR "); 
+// }
 
 int main(int argc, char const *argv[])
 {
-    testParseBasicExpr();
-    testParseCall();
-    testParseBinop();
+    // testParseBasicExpr();
+    // testParseCall();
+    // testParseBinop();
+    // testStmt();
+    testFunction();
     return 0;
 }

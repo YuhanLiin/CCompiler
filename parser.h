@@ -6,5 +6,7 @@
 void initParser();
 
 Ast* parseExpr();
+Ast* parseStmt();
+Ast* parseTopLevel();
 
 char isError();

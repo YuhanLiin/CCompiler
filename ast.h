@@ -66,12 +66,12 @@ typedef struct {
 typedef struct {
     Ast label; 
     Type type; 
-    char_t* name; 
+    char_t* name;
+    Ast* stmt;  //Leave this null if there is no definition
     Array(Type) paramTypes; 
     Array(vptr) paramNames; 
-    Ast* stmt;  //Leave this null if there is no definition
 } Function;
-#define Function(type, name) (Function){astFunction, type, name}    //Bad to copy so many fields, so limited constructor
+#define Function(type, name) (Function){astFunction, type, name, NULL}    //Bad to copy so many fields, so limited constructor
 
 //Delete ast based on type of ast
 void disposeAst(void* ast);
