@@ -5,6 +5,8 @@
 #include <assert.h>
 
 char_t curChar; //Updated for every character consumed
+size_t lineNumber = 1;
+size_t linePos;
 Array(char_t) stringBuffer; //Store identifier and strings
 double floatVal;   //Store number tokens
 long long intVal;
@@ -17,9 +19,32 @@ void disposeLexer(){
     disposeArr(char_t)(&stringBuffer);
 }
 
+//Character matchers
+static char isSpace(char_t c){
+    return c ==' ' || c =='\t';
+}
+static char isEol(char_t c){ //End of line chars
+    return c=='\n' || c=='\r';
+}
+static char isAlpha(char_t c){
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+static char isDigit(char_t c){
+    return c >= '0' && c <= '9';
+}
+static char isIdentChar(char_t c){
+    return isAlpha(c) || isDigit(c) || c == '_';
+}
+
 //Consumes char and updates curChar. Called by tokenizer
 static char_t getNext(){
     curChar = consumeNext();
+    //Increases line number or position
+    if (isEol(curChar)){
+        lineNumber++;
+        linePos = 0;
+    }
+    else linePos++;
     return curChar;
 }
 //Store in string
@@ -42,23 +67,6 @@ static char storeNextIf(char_t c){
         return 1;
     }
     return 0;
-}
-
-//Character matchers
-static char isSpace(char_t c){
-    return c ==' ' || c =='\t';
-}
-static char isEol(char_t c){ //End of line chars
-    return c=='\n' || c=='\r';
-}
-static char isAlpha(char_t c){
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-static char isDigit(char_t c){
-    return c >= '0' && c <= '9';
-}
-static char isIdentChar(char_t c){
-    return isAlpha(c) || isDigit(c) || c == '_';
 }
 
 //Recognizes decimal sequence and adds it to floatVal. Returns whether decimals were recognized
@@ -238,3 +246,47 @@ Token lexToken(){
     assert(0 && "Lexer missing case");
 }
 
+const char_t * stringifyToken(Token tok){
+    case tokEof:
+        return "end of file";
+    case tokReturn:
+        return "keyword \"return\"";
+    case tokInt:
+        return "keyword \"int\"";
+    case tokLong:
+        return "keyword \"long\"";
+    case tokFloat:
+        return "keyword \"float\""; 
+    case tokDouble:
+        return "keyword \"double\"";
+    case tokIdent:
+        return "identifier";
+    case tokNumDouble:
+        return "floating-point number";
+    case tokNumInt:
+        return "integer";
+    case tokString:
+        return "string";
+    case tokPlus:
+        return "'+'";
+    case tokMinus:
+        return "'-'";
+    case tokDiv:
+        return "'/'";
+    case tokMulti:
+        return "'*'";
+    case tokComma:
+        return "','";
+    case tokLParen:
+        return "'('";
+    case tokRParen:
+        return "')'";
+    case tokSemicolon:
+        return "';'";
+    case tokLBrace:
+        return "'{'";
+    case tokRBrace:
+        return "'}'";
+    default:
+        assert(0 && "Unhandled token");
+}

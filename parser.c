@@ -14,9 +14,19 @@ static Token getTok(){  //Updates lookahead token
     return curTok = lexToken();
 }
 
-char isError(Ast* p){ //Checks if ptr is a SyntaxError sentinel value. Returning true means said ptr holds no resource
-    return (p == SyntaxError);
-} 
+void syntaxError(Token expected){
+    if (curTok == tokUnexpected){
+        if (curChar == End){
+            writeErr(lineNumber, linePos, "expected %s, but found end of file.", stringifyToken(expected));
+        }
+        else{
+            writeErr(lineNumber, linePos, "expected %s, but found '%c'.", stringifyToken(expected), curChar);
+        }
+    }
+    else{
+        writeErr(lineNumber, linePos, "expected %s, but found '%s'.", stringifyToken(expected), stringifyToken(curTok));
+    }
+}
 
 void initParser(){
     getTok();
@@ -71,7 +81,7 @@ static char parseArgs(Array(vptr) *args){
     //While comma exists consume it and keep parsing expressions
     do {    
         Ast* arg = parseExpr();
-        if (isError(arg)) return 0; //If expression cant be parsed then syntax error
+        if (arg == NULL) return 0; //If expression cant be parsed then syntax error
         if (!pushArr(vptr)(args, arg)) exit(1); //Push arg and check for malloc failures
     }while (curTok == tokComma && (getTok() || 1));   
     return 1;
@@ -106,7 +116,7 @@ static Ast* parsePrimaryExpr(){
                 }
                 disposeAst(expr);
             }
-            return SyntaxError;
+            return NULL;
         }
         case tokIdent: {
             char_t* name = toCstring(&stringBuffer);
@@ -139,10 +149,10 @@ static Ast* parsePrimaryExpr(){
                 return (Ast*)ident;
             }
             free(name);
-            return SyntaxError;
+            return NULL;
         }
         default:
-            return SyntaxError;
+            return NULL;
     }
 }
 
@@ -167,12 +177,12 @@ static Ast* parseBinopExpr(Ast* lhs, int minPrec){
     while (operatorPrec(op = curTok) >= minPrec){
         getTok(); //Consume binop
         //Attempt to parse 1st atom of rhs expression
-        if (isError(rhs = parsePrimaryExpr())) return rhs;
+        if ((rhs = parsePrimaryExpr()) == NULL) return rhs;
         //While next binop is of higher precedence, accumulate expression into rhs
         while ((prec = operatorPrec(curTok)) > minPrec){
             Ast* newRhs = parseBinopExpr(rhs, prec);
             //Attempt to parse subsequent atoms at a precedece equal to current binop
-            if (isError(newRhs)){
+            if (newRhs == NULL){
                 free(rhs); //Responsible for delete rhs, which was created in this scope
                 return newRhs;
             }
@@ -188,9 +198,9 @@ static Ast* parseBinopExpr(Ast* lhs, int minPrec){
 //expr := primeExpr exprBinop
 Ast* parseExpr(){
     Ast* lhs = parsePrimaryExpr(); //Parse the 1st primary expression
-    if (isError(lhs)) return lhs; 
+    if (lhs == NULL) return lhs; 
     Ast* expr = parseBinopExpr(lhs, 1); //Parse all follwing binops
-    if (isError(expr)){
+    if (expr == NULL){
         free(lhs);
         return expr;
     }
@@ -209,11 +219,11 @@ Ast* parseStmt(){
             }
         }
         free(expr);
-        return SyntaxError;
+        return NULL;
     }
     else{
         //TODO handle other statements
-        return SyntaxError;
+        return NULL;
     }
 }
 
@@ -269,7 +279,7 @@ static Ast* parseFunction(Type type){
         }
         //TODO declarations as well
         free(name);
-        return SyntaxError;
+        return NULL;
     }
 }
 
@@ -277,7 +287,7 @@ Ast* parseTopLevel(){
     Type type = parseType();
     if (type == typNone){
         //TODO handle non-functions
-        return SyntaxError;
+        return NULL;
     }
     else{
         return parseFunction(type);

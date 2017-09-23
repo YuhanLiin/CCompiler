@@ -29,6 +29,8 @@ typedef enum {
 
 #define End 0 //Eof character
 extern char_t curChar; //Updated for every character consumed
+extern size_t lineNumber;
+extern size_t linePos;
 extern Array(char_t) stringBuffer; //Store identifier and strings
 extern double floatVal; 
 extern long long intVal;
@@ -40,3 +42,4 @@ char_t peekNext();  //Called by tokenizer
 char_t consumeNext();
 //Gets the next token
 Token lexToken();
+const char_t * stringifyToken(Token tok);

@@ -9,7 +9,7 @@
 
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){
-    if (isError(ast)){   //Syntax error
+    if (ast == NULL){   //Syntax error
         outprint("ERROR ");
         return;
     }

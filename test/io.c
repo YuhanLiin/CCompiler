@@ -13,7 +13,7 @@ char_t peekNext(){
     return input[ilen];
 }
 
-char_t output[100];
+char_t output[400];
 size_t olen = 0;
 
 //Output string to output array
@@ -24,6 +24,6 @@ size_t olen = 0;
 void ioSetup(const char_t* str){
     strcpy(input, str); //Might need to be adjusted for bigger char types
     ilen = 0;
-    memset(output, 0, 100*sizeof(char_t));  //Also needs to change for widechar
+    memset(output, 0, 400*sizeof(char_t));  //Also needs to change for widechar
     olen = 0;
 }
