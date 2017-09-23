@@ -7,24 +7,22 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define NewAst(T, ptrname, ...) New(T, ptrname, 1) *ptrname = T(__VA_ARGS__);
-
 Token curTok;  //Lookahead token. Global lexer values correspond to this token
 static Token getTok(){  //Updates lookahead token
     return curTok = lexToken();
 }
 
-void syntaxError(Token expected){
+void syntaxError(const char_t* expected){
     if (curTok == tokUnexpected){
         if (curChar == End){
-            writeErr(lineNumber, linePos, "expected %s, but found end of file.", stringifyToken(expected));
+            writeErr(lineNumber, linePos, "expected %s, but found end of file.", expected);
         }
         else{
-            writeErr(lineNumber, linePos, "expected %s, but found '%c'.", stringifyToken(expected), curChar);
+            writeErr(lineNumber, linePos, "expected %s, but found '%c'.", expected, curChar);
         }
     }
     else{
-        writeErr(lineNumber, linePos, "expected %s, but found '%s'.", stringifyToken(expected), stringifyToken(curTok));
+        writeErr(lineNumber, linePos, "expected %s, but found '%s'.", expected, stringifyToken(curTok));
     }
 }
 
@@ -109,11 +107,14 @@ static Ast* parsePrimaryExpr(){
             getTok(); //Consume left paren
             Ast* expr = parseExpr();
             if (expr){
-                //Look for right paren. Clean up expression node if it's not found
+                //Look for right paren. If not found just pretend it's there and write to error
                 if (curTok == tokRParen){
                     getTok();
-                    return expr;
                 }
+                else {
+                    syntaxError(stringifyToken(tokRParen));
+                }
+                return expr;
                 disposeAst(expr);
             }
             return NULL;
@@ -129,15 +130,19 @@ static Ast* parsePrimaryExpr(){
                 initArr(vptr)(&call->args, 0, NULL, &disposeAst);
                 //If following brackets are not empty, attempt to parse 1 or more args.
                 if (curTok == tokRParen){
-                    goto finishedParsingArgs;
+                    getTok(); //Consume rb
+                    return (Ast*)call;
                 } 
                 else{
+                    //Attempt to parse arguments. It will throw if unsuccessful so no need to handle it here
                     if (parseArgs(&call->args)){
                         if (curTok == tokRParen){
-                            finishedParsingArgs:
-                            getTok(); //Consume rb
-                            return (Ast*)call;
+                            getTok(); //Consume rb  
                         }
+                        else{
+                            syntaxError(stringifyToken(tokRParen));
+                        }
+                        return (Ast*)call;
                     }
                 }
                 disposeArr(vptr)(&call->args);
@@ -152,6 +157,7 @@ static Ast* parsePrimaryExpr(){
             return NULL;
         }
         default:
+            syntaxError("identifier");
             return NULL;
     }
 }
@@ -202,7 +208,6 @@ Ast* parseExpr(){
     Ast* expr = parseBinopExpr(lhs, 1); //Parse all follwing binops
     if (expr == NULL){
         free(lhs);
-        return expr;
     }
     return expr;
 }
@@ -212,19 +217,23 @@ Ast* parseStmt(){
         getTok(); //Consume return
         Ast* expr = parseExpr();
         if (expr){
+            NewAst(StmtReturn, stmt, expr)
             if (curTok == tokSemicolon){
                 getTok(); //Consume semicolon
-                NewAst(StmtReturn, stmt, expr)
-                return (Ast*)stmt;
             }
+            else{  
+                syntaxError(stringifyToken(tokSemicolon));              
+            }
+            return (Ast*)stmt;
         }
+        //expr error already reported, so no need to do it here
         free(expr);
-        return NULL;
     }
+    //TODO handle other statements
     else{
-        //TODO handle other statements
-        return NULL;
+        syntaxError("statement");
     }
+    return NULL;
 }
 
 static char parseParams(Array(Type) *types, Array(vptr) *names){
@@ -232,7 +241,12 @@ static char parseParams(Array(Type) *types, Array(vptr) *names){
     do {    
         Type type = parseType();
         //Each param must consist of a type and a name
-        if (type == typNone || curTok != tokIdent){ 
+        if (type == typNone){ 
+            syntaxError("type name");
+            return 0;
+        }
+        if (curTok != tokIdent){
+            syntaxError(stringifyToken(tokIdent));
             return 0;
         }
         if (!pushArr(vptr)(names, toCstring(&stringBuffer)) ||
@@ -258,20 +272,28 @@ static Ast* parseFunction(Type type){
             initArr(vptr)(&func->paramNames, 0, NULL, &free);
             initArr(Type)(&func->paramTypes, 0, NULL, NULL); 
             if (curTok == tokRParen){
+                getTok(); //Consume right paren
                 goto finishedParsingParams;
             }
+            // Parse parameters. This will report errors so no need to do it here
             else if (parseParams(&func->paramTypes, &func->paramNames)){
+                //Right paren error recovery
                 if (curTok == tokRParen){
-                    finishedParsingParams:
                     getTok(); //Consume right paren
-                    if (curTok == tokSemicolon){
-                        getTok();
-                        return (Ast*)func;
-                    }
-                    else if (func->stmt = parseStmt()){
-                        return (Ast*)func;
-                    }
                 }
+                else{
+                    syntaxError(stringifyToken(tokRParen));
+                }
+                finishedParsingParams:
+                //Parse either ; for declaration or a statement for definition
+                if (curTok == tokSemicolon){
+                    getTok();
+                    return (Ast*)func;
+                }
+                else if (func->stmt = parseStmt()){
+                    return (Ast*)func;
+                }
+                //parseStmt reports errors, so no need for it here
             }
             disposeArr(vptr)(&func->paramNames);
             disposeArr(Type)(&func->paramTypes);
@@ -279,8 +301,11 @@ static Ast* parseFunction(Type type){
         }
         //TODO declarations as well
         free(name);
-        return NULL;
     }
+    else{
+        syntaxError(stringifyToken(tokIdent));
+    }
+    return NULL;
 }
 
 Ast* parseTopLevel(){

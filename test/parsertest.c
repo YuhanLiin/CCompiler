@@ -100,6 +100,7 @@ void testParseBinop(){
 
 void testStmt(){
     test(parseStmt, "return (f) ;", "ret id:f ");
+    test(parseStmt, "return f() ;", "ret call:f:0 ");
 }
 
 void testFunction(){
@@ -119,10 +120,10 @@ void testFunction(){
 
 int main(int argc, char const *argv[])
 {
-    // testParseBasicExpr();
-    // testParseCall();
-    // testParseBinop();
-    // testStmt();
+    testParseBasicExpr();
+    testParseCall();
+    testParseBinop();
+    testStmt();
     testFunction();
     return 0;
 }

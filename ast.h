@@ -71,7 +71,9 @@ typedef struct {
     Array(Type) paramTypes; 
     Array(vptr) paramNames; 
 } Function;
-#define Function(type, name) (Function){astFunction, type, name, NULL}    //Bad to copy so many fields, so limited constructor
+#define Function(type, name) (Function){astFunction, type, name, NULL}   
+
+#define NewAst(T, ptrname, ...) New(T, ptrname, 1) *ptrname = T(__VA_ARGS__);
 
 //Delete ast based on type of ast
 void disposeAst(void* ast);

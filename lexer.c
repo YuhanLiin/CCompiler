@@ -247,46 +247,48 @@ Token lexToken(){
 }
 
 const char_t * stringifyToken(Token tok){
-    case tokEof:
-        return "end of file";
-    case tokReturn:
-        return "keyword \"return\"";
-    case tokInt:
-        return "keyword \"int\"";
-    case tokLong:
-        return "keyword \"long\"";
-    case tokFloat:
-        return "keyword \"float\""; 
-    case tokDouble:
-        return "keyword \"double\"";
-    case tokIdent:
-        return "identifier";
-    case tokNumDouble:
-        return "floating-point number";
-    case tokNumInt:
-        return "integer";
-    case tokString:
-        return "string";
-    case tokPlus:
-        return "'+'";
-    case tokMinus:
-        return "'-'";
-    case tokDiv:
-        return "'/'";
-    case tokMulti:
-        return "'*'";
-    case tokComma:
-        return "','";
-    case tokLParen:
-        return "'('";
-    case tokRParen:
-        return "')'";
-    case tokSemicolon:
-        return "';'";
-    case tokLBrace:
-        return "'{'";
-    case tokRBrace:
-        return "'}'";
-    default:
-        assert(0 && "Unhandled token");
+    switch(tok){
+        case tokEof:
+            return "end of file";
+        case tokReturn:
+            return "keyword \"return\"";
+        case tokInt:
+            return "keyword \"int\"";
+        case tokLong:
+            return "keyword \"long\"";
+        case tokFloat:
+            return "keyword \"float\""; 
+        case tokDouble:
+            return "keyword \"double\"";
+        case tokIdent:
+            return "identifier";
+        case tokNumDouble:
+            return "floating-point number";
+        case tokNumInt:
+            return "integer";
+        case tokString:
+            return "string";
+        case tokPlus:
+            return "'+'";
+        case tokMinus:
+            return "'-'";
+        case tokDiv:
+            return "'/'";
+        case tokMulti:
+            return "'*'";
+        case tokComma:
+            return "','";
+        case tokLParen:
+            return "'('";
+        case tokRParen:
+            return "')'";
+        case tokSemicolon:
+            return "';'";
+        case tokLBrace:
+            return "'{'";
+        case tokRBrace:
+            return "'}'";
+        default:
+            assert(0 && "Unhandled token");
+    }     
 }
