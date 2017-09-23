@@ -80,12 +80,12 @@ static char parseArgs(Array(vptr) *args){
 //primeExpr := Number | String | ( expr ) | Ident ( args? )?
 static Ast* parsePrimaryExpr(){
     switch (curTok){
-        case tokInt: {
+        case tokNumInt: {
             NewAst(ExprInt, expr, intVal)
             getTok(); //Consume number
             return (Ast*)expr;
         }
-        case tokDouble: {
+        case tokNumDouble: {
             NewAst(ExprDouble, expr, floatVal)
             getTok(); //Consume number
             return (Ast*)expr;
@@ -118,17 +118,17 @@ static Ast* parsePrimaryExpr(){
                 //Initialize args array
                 initArr(vptr)(&call->args, 0, NULL, &disposeAst);
                 //If following brackets are not empty, attempt to parse 1 or more args.
-                if (curTok != tokRParen){
-                    if (parseArgs(&call->args)){
-                        if (curTok == tokRParen){
-                            getTok(); //Consume rb
-                            return call;
-                        }
-                    }
+                if (curTok == tokRParen){
+                    goto finishedParsingArgs;
                 } 
                 else{
-                    getTok();
-                    return call;
+                    if (parseArgs(&call->args)){
+                        if (curTok == tokRParen){
+                            finishedParsingArgs:
+                            getTok(); //Consume rb
+                            return (Ast*)call;
+                        }
+                    }
                 }
                 disposeArr(vptr)(&call->args);
                 disposeAst(call);
@@ -136,7 +136,7 @@ static Ast* parsePrimaryExpr(){
             //Otherwise its a normal identifier
             else {
                 NewAst(ExprIdent, ident, name)
-                return ident;
+                return (Ast*)ident;
             }
             free(name);
             return SyntaxError;
@@ -197,7 +197,7 @@ Ast* parseExpr(){
     return expr;
 }
 
-static Ast* parseStmt(){
+Ast* parseStmt(){
     if (curTok == tokReturn){
         getTok(); //Consume return
         Ast* expr = parseExpr();
@@ -205,7 +205,7 @@ static Ast* parseStmt(){
             if (curTok == tokSemicolon){
                 getTok(); //Consume semicolon
                 NewAst(StmtReturn, stmt, expr)
-                return stmt;
+                return (Ast*)stmt;
             }
         }
         free(expr);
@@ -225,7 +225,7 @@ static char parseParams(Array(Type) *types, Array(vptr) *names){
         if (type == typNone || curTok != tokIdent){ 
             return 0;
         }
-        if (!pushArr(vptr)(params, toCstring(stringBuffer)) ||
+        if (!pushArr(vptr)(names, toCstring(&stringBuffer)) ||
             !pushArr(Type)(types, type)
         ) {
             exit(1); //Push param and check for malloc failures
@@ -247,14 +247,14 @@ static Ast* parseFunction(Type type){
             initArr(vptr)(&func->paramNames, 0, NULL, &free);
             initArr(Type)(&func->paramTypes, 0, NULL, NULL); 
             if (curTok == tokRParen){
-                goto finishedParsingSignature
+                goto finishedParsingParams;
             }
-            else if (parseArgs(&func->paramNames, &func->paramTypes)){
+            else if (parseParams(&func->paramTypes, &func->paramNames)){
                 if (curTok == tokRParen){
-                    finishedParsingSignature:
+                    finishedParsingParams:
                     getTok(); //Consume right paren
-                    Ast* stmt = parseStmt(); //Should be compound stmt
-                    if (stmt) return stmt;
+                    Ast* stmt = parseStmt(); //TODO Should be compound stmt
+                    if (stmt) return (Ast*)stmt;
                 }
             }
             disposeArr(vptr)(&func->paramNames);

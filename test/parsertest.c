@@ -7,8 +7,6 @@
 #include "io.c"
 #include "utils.c"
 
-Ast* ast;
-
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){
     if (isError(ast)){   //Syntax error
@@ -16,8 +14,11 @@ void outputAst(Ast* ast){
         return;
     }
     switch(*ast){
-        case astExprNum:
-            outprint("num:%.2Lf ", ((ExprNum*)ast)->num); //Print numbers with 2 digit precision
+        case astExprDouble:
+            outprint("dbl:%.2Lf ", ((ExprDouble*)ast)->num); //Print numbers with 2 digit precision
+            return;
+        case astExprInt:
+            outprint("int:%lld ", ((ExprInt*)ast)->num); //Print int
             return;
         case astExprStr:
             outprint("str:%s ", ((ExprStr*)ast)->str); //Print string
@@ -47,58 +48,43 @@ void outputAst(Ast* ast){
 }
 
 #define test(parsefn, inputStr, expected) do { \
-    disposeLexer();         \
     ioSetup(inputStr);      \
-    outputAst(parsefn());   \
-    assert(!strcmp(output, expected));  \
     initLexer();            \
     initParser();           \
+    outputAst(parsefn());   \
+    assert(!strcmp(output, expected));  \
+    disposeLexer();         \
 } while(0)                  \
 
 void testParseBasicExpr(){
-    setup("55.55");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "num:55.55 "));
-    setup("\"hey\"");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "str:hey "));
-    setup("a");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "id:a "));
-    setup("((a))");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "id:a "));
+    test(parseExpr, "55.55", "dbl:55.55 ");
+    test(parseExpr, "78", "int:78 ");
+    test(parseExpr, "\"hey\"", "str:hey "); 
+    test(parseExpr, "a", "id:a "); 
+    test(parseExpr, "((a))", "id:a "); 
 }
 
 void testParseCall(){
-    setup("  omfg(5,\"\"  , var )");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "call:omfg:3 num:5.00 str: id:var "));
-    setup("abaj()");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "call:abaj:0 "));
+    test(parseExpr, "  omfg(5,\"\"  , var )", "call:omfg:3 int:5 str: id:var "); 
+    test(parseExpr, "abaj()", "call:abaj:0 "); 
 }
 
 void testParseBinop(){
-    setup("1 + 2 * k");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "+ num:1.00 * num:2.00 id:k "));
-    setup("heyo( a + b * c/d - e)");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "call:heyo:1 - + id:a / * id:b id:c id:d id:e "));
-    setup("(a-\"lll\")/d");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "/ - id:a str:lll id:d "));
+    test(parseExpr, "1 + 2.500 * k", "+ int:1 * dbl:2.50 id:k "); 
+    test(parseExpr, "heyo( a + b * c/d - e)", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
+    test(parseExpr, "(a-\"lll\")/d", "/ - id:a str:lll id:d "); 
 }
 
 void testParseError(){
-    setup("((sfgd) ");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "ERROR "));
-    setup("");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "ERROR "));
-    setup("sdg(5");
-    outputAst(parseExpr());
-    assert(!strcmp(output, "ERROR "));
+    test(parseExpr, "((sfgd) ", "ERROR "); 
+    test(parseExpr, "", "ERROR "); 
+    test(parseExpr, "sdg(5", "ERROR "); 
+}
+
+int main(int argc, char const *argv[])
+{
+    testParseBasicExpr();
+    testParseCall();
+    testParseBinop();
+    return 0;
 }

@@ -8,7 +8,7 @@
 
 Token token;
 
-#define setup(str) do {disposeLexer; ioSetup(str); initLexer();} while(0)
+#define setup(str) do {ioSetup(str); initLexer();} while(0)
 #define test(expectedTok) do {token = lexToken(); assert(token == expectedTok);} while(0)
 
 //String literals may need to be replaced for different char types

@@ -7,7 +7,8 @@
 //Acts as a label for ast node type and also base class
 //All nodes must have this as 1st field so that the labels can be checked before casting into correct node type
 typedef enum AstEnum {
-    astExprNum,
+    astExprDouble,
+    astExprInt,
     astExprStr,
     astExprIdent,
     astExprCall,
@@ -20,8 +21,14 @@ typedef enum AstEnum {
 typedef struct {
     Ast label; 
     double num;
-} ExprNum;
-#define ExprNum(num) (ExprNum){astExprNum, num}
+} ExprDouble;
+#define ExprDouble(num) (ExprDouble){astExprDouble, num}
+
+typedef struct {
+    Ast label;
+    long long num;
+} ExprInt;
+#define ExprInt(num) (ExprInt){astExprInt, num}
 
 typedef struct {
     Ast label; 
@@ -52,9 +59,9 @@ typedef struct {
 
 typedef struct {
     Ast label;
-    Expr* expr;
+    Ast* expr;
 } StmtReturn;
-#define StmtReturn(expr) (ReturnStmt){astStmtReturn, expr}
+#define StmtReturn(expr) (StmtReturn){astStmtReturn, expr}
 
 typedef struct {
     Ast label; 

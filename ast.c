@@ -9,8 +9,11 @@
 void disposeAst(void* node){
     Ast* ast = node;
     switch(*ast){
-        case astExprNum:
-            free((ExprNum*)ast);
+        case astExprDouble:
+            free((ExprDouble*)ast);
+            return;
+        case astExprInt:
+            free((ExprInt*)ast);
             return;
         case astExprStr: {
             ExprStr* str = (ExprStr*)ast;

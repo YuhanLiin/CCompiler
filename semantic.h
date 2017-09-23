@@ -1,3 +1,5 @@
+#pragma once
+
 typedef enum {
     typNone,    //Sentinel for a failed type parse
     typInt32,
