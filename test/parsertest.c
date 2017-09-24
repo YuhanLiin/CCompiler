@@ -119,7 +119,8 @@ void testParseError(){
     test(parseExpr, "\"wergrh\n", "");
     test(parseExpr, "\"wergr", "");
     test(parseStmt, "return k(k", "");
-    test(parseStmt, "bind k;", "");
+    test(parseStmt, "/**/bind k;", "");
+    test(parseStmt, "/*   *", "");
 }
 
 int main(int argc, char const *argv[])

@@ -31,6 +31,8 @@ typedef enum {
 extern char_t curChar; //Updated for every character consumed
 extern size_t lineNumber;
 extern size_t linePos;
+extern size_t lineTokenEndNumber;
+extern size_t lineTokenEndPos;
 extern Array(char_t) stringBuffer; //Store identifier and strings
 extern double floatVal; 
 extern long long intVal;
