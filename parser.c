@@ -18,11 +18,11 @@ void syntaxError(const char_t* expected){
             writeErr(lineNumber, linePos, "expected %s, but found end of file.", expected);
         }
         else{
-            writeErr(lineNumber, linePos, "expected %s, but found '%c'.", expected, curChar);
+            writeErr(lineNumber, linePos, "expected %s, but found '%c'.", expected, peekNext());
         }
     }
     else{
-        writeErr(lineNumber, linePos, "expected %s, but found '%s'.", expected, stringifyToken(curTok));
+        writeErr(lineNumber, linePos, "expected %s, but found %s.", expected, stringifyToken(curTok));
     }
 }
 
@@ -146,7 +146,7 @@ static Ast* parsePrimaryExpr(){
                     }
                 }
                 disposeArr(vptr)(&call->args);
-                disposeAst(call);
+                free(call);
             }
             //Otherwise its a normal identifier
             else {
@@ -157,7 +157,7 @@ static Ast* parsePrimaryExpr(){
             return NULL;
         }
         default:
-            syntaxError("identifier");
+            syntaxError("expression");
             return NULL;
     }
 }
@@ -268,7 +268,7 @@ static Ast* parseFunction(Type type){
         //Function call discovered
         if (curTok == tokLParen){
             getTok(); //Consume left paren
-            NewAst(Function, func, type, name);
+            NewAst(Function, func, type, name)
             initArr(vptr)(&func->paramNames, 0, NULL, &free);
             initArr(Type)(&func->paramTypes, 0, NULL, NULL); 
             if (curTok == tokRParen){
@@ -297,7 +297,7 @@ static Ast* parseFunction(Type type){
             }
             disposeArr(vptr)(&func->paramNames);
             disposeArr(Type)(&func->paramTypes);
-            disposeAst(func);
+            free(func);
         }
         //TODO declarations as well
         free(name);

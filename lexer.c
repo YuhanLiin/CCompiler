@@ -1,4 +1,3 @@
-//#include <stdio.h>
 #include "array.h"
 #include "lexer.h"
 #include "utils.h"
@@ -13,6 +12,8 @@ long long intVal;
 
 void initLexer(){ //Can fail due to malloc
     if (!initArr(char_t)(&stringBuffer, 5, NULL, NULL)) exit(1); //Allocate empty string
+    linePos = 0;
+    lineNumber = 1;
 }
 
 void disposeLexer(){
@@ -145,7 +146,6 @@ Token lexToken(){
             while (peekNext() != '"'){
                 //If file ends in middle of a string return token for unexpected char
                 if (peekNext() == End){
-                    getNext();
                     return tokUnexpected;
                 }
                 store(getNext());
