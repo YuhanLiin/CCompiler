@@ -17,6 +17,7 @@ char_t peekNext(){
     return input[ilen];
 }
 
+
 //Output string to output array
 #define outprint(...) do {{ \
     int i = sprintf(&output[olen], __VA_ARGS__);    \
@@ -28,6 +29,5 @@ void ioSetup(const char_t* str){
     memset(output, 0, BUFSIZ*sizeof(char_t));  //Also needs to change for widechar
     olen = 0;
     memset(errorstr, 0, BUFSIZ*sizeof(char_t));
-    elen = 0;
-    //setbuf(stderr, errorstr);
+    setbuf(stderr, errorstr);
 }
