@@ -10,32 +10,47 @@ void disposeAst(void* node){
     Ast* ast = node;
     switch(*ast){
         case astExprDouble:
-            free((ExprDouble*)ast);
-            return;
+            break;
         case astExprInt:
-            free((ExprInt*)ast);
-            return;
+            break;
         case astExprStr: {
             ExprStr* str = (ExprStr*)ast;
             free(str->str);
-            free(str);
-            return;
+            break;
         }   
         case astExprIdent: {
             ExprIdent* ident = (ExprIdent*)ast;
             free(ident->name);
-            free(ident);
-            return;
+            break;
         }
         case astExprCall: {
             ExprCall* call = (ExprCall*)ast;
             free(call->name);
             disposeArr(vptr)(&call->args);
-            free(call);
-            return;
+            break;
+        }
+        case astExprBinop: {
+            ExprBinop* binop = (ExprBinop*)binop;
+            disposeAst(binop->left);
+            disposeAst(binop->right);
+            break;
+        }
+        case astStmtReturn: {
+            disposeAst(((StmtReturn*)ast)->expr);
+            break;
+        }
+        case astFunction: {
+            Function* func = (Function*)ast;
+            disposeAst(func->name);
+            if (func->stmt != NULL){
+                disposeAst(func->stmt);
+            }
+            disposeArr(Type)(&func->paramTypes);
+            disposeArr(vptr)(&func->paramNames);
         }
         //TODO more delete operations
         default:
             assert(0 && "Unhandled ast label"); //Nothing should fall thru the cracks
     }
+    free(ast);
 }
