@@ -1,3 +1,6 @@
+semantictest: test/semantictest.c lexer.c array.c parser.c ast.c semantic.c test/io.c test/utils.c
+	gcc -g test/semantictest.c lexer.c array.c parser.c ast.c semantic.c -o semantictest.exe
+
 lexertest: test/lexertest.c lexer.c array.c test/io.c test/utils.c
 	gcc -g test/lexertest.c lexer.c array.c -o lexertest.exe
 

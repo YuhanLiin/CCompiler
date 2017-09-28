@@ -1,5 +1,6 @@
 #include "semantic.h"
 #include <assert.h>
+#include <string.h>
 
 Type returnType = typNone;
 
@@ -37,7 +38,7 @@ char verifyTopLevel(Ast* ast){
             returnType = func->type;
             char correct = verifyStmt(func->stmt);
             returnType = typNone;
-            return correct;
+            return correct && !strcmp(func->name, "main");
         }
         default:
             //TODO support more top level ast types

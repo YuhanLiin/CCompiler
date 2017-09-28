@@ -3,7 +3,7 @@
 #include "ast.h"
 #include "utils.h"
 #include "parser.h"
-#include "semantic.h"
+#include "symbols.h"
 #include <stdlib.h>
 #include <assert.h>
 

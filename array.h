@@ -1,6 +1,6 @@
 #pragma once
 #include "utils.h"
-#include "semantic.h"
+#include "symbols.h"
 
 #define TYPE char_t
 #include "generics/gen_array.h"
