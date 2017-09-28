@@ -1,9 +1,5 @@
 #pragma once
+#include "symbols.h"
+#include "ast.h"
 
-typedef enum {
-    typNone,    //Sentinel for a failed type parse
-    typInt32,
-    typInt64,
-    typFloat32,
-    typFloat64
-} Type;
+char verifyTopLevel(Ast* ast);
