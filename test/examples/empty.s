@@ -1,14 +1,11 @@
 	.file	"empty.c"
-	.def	__main;	.scl	2;	.type	32;	.endef
 	.text
-	.globl	main
-	.def	main;	.scl	2;	.type	32;	.endef
-main:
+	.globl	empty
+	.def	empty;	.scl	2;	.type	32;	.endef
+empty:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	#subq	$32, %rsp
-	call	__main
-	movl	$0, %eax
-	leave
+	nop
+	popq	%rbp
 	ret
 	.ident	"GCC: (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 7.1.0"

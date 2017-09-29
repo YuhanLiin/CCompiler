@@ -3,9 +3,9 @@
 .LC0:
 	.ascii "Helloworld\0"
 	.text
-	.globl	test
-	.def	test;	.scl	2;	.type	32;	.endef
-test:
+	.globl	lol
+	.def	lol;	.scl	2;	.type	32;	.endef
+lol:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$32, %rsp
