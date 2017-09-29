@@ -70,23 +70,25 @@ void outputAst(Ast* ast){
     }
 }
 
-#define test(parsefn, inputStr, expected) do { \
-    ioSetup(inputStr);      \
-    initLexer();            \
-    initParser();           \
-    outputAst(parsefn());   \
-    assert(!strcmp(output, expected));  \
-    disposeLexer();         \
-} while(0)                  \
+void test(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){ 
+    ioSetup(inputStr);      
+    initLexer();           
+    initParser();
+    Ast* ast = parsefn();          
+    outputAst(ast);
+    assert(!strcmp(output, expected));  
+    disposeLexer();
+    disposeAst(ast);         
+}                 
 
-#define testErr(parsefn, inputStr, expected) do { \
-    ioSetup(inputStr);      \
-    initLexer();            \
-    initParser();           \
-    parsefn();   \
-    assert(!strcmp(errorstr, expected));  \
-    disposeLexer();         \
-} while(0)                  \
+void testErr(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){ 
+    ioSetup(inputStr);      
+    initLexer();            
+    initParser();
+    Ast* ast = parsefn();
+    assert(!strcmp(errorstr, expected));  
+    disposeLexer();
+} 
 
 void testParseBasicExpr(){
     test(parseExpr, "55.55", "dbl:55.55 ");

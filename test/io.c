@@ -20,8 +20,8 @@ char_t peekNext(){
 
 //Output string to output array
 #define outprint(...) do {{ \
-    int i = sprintf(&output[olen], __VA_ARGS__);    \
-    assert(i>=0); olen += i;}} while(0)
+    int __ = sprintf(&output[olen], __VA_ARGS__);    \
+    assert(__>=0); olen += __;}} while(0)
 
 void ioSetup(const char_t* str){
     strcpy(input, str); //Might need to be adjusted for bigger char types

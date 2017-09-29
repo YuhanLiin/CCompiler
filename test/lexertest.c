@@ -8,8 +8,17 @@
 
 Token token;
 
-#define setup(str) do {ioSetup(str); initLexer();} while(0)
-#define test(expectedTok) do {token = lexToken(); assert(token == expectedTok);} while(0)
+void setup(const char_t* str){
+    ioSetup(str);
+    initLexer();
+}
+void test(Token expectedTok) {
+    Token token = lexToken();
+    assert(token == expectedTok);
+}
+void teardown(){
+    disposeLexer();
+}
 
 //String literals may need to be replaced for different char types
 void testTokenIgnored(){
@@ -35,6 +44,9 @@ void testTokenKeywordIdentifier(){
     test(tokIdent);
     assert(strEq(&stringBuffer, "l"));
     test(tokEof);
+    //Eof should be safe to parse multiple times
+    test(tokEof);
+    teardown();
 }
 
 void testTokenString(){
@@ -44,7 +56,9 @@ void testTokenString(){
     test(tokString);
     assert(strEq(&stringBuffer, ""));
     test(tokUnexpected);
-    assert(curChar == End);
+    //Unexpected tokens are not consumed, so use peekNext instead of curChar
+    assert(peekNext() == End);
+    teardown();
 }
 
 void testTokenNumber(){
@@ -60,7 +74,8 @@ void testTokenNumber(){
     test(tokNumDouble);
     assert(doubleEq(floatVal, .7));
     test(tokUnexpected);
-    assert(curChar == '.');
+    assert(peekNext() == '.');
+    teardown();
 }
 
 void testTokenSymbols(){
@@ -74,9 +89,8 @@ void testTokenSymbols(){
     test(tokRBrace);
     test(tokSemicolon);
     test(tokEof);
+    teardown();
 }
-
-
 
 int main(int argc, char const *argv[])
 {

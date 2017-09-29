@@ -14,6 +14,7 @@ static Token getTok(){  //Updates lookahead token
 
 void syntaxError(const char_t* expected){
     if (curTok == tokUnexpected){
+        // Unexpected chars are not consumed, so we have to peek the next char to get it
         char_t c = peekNext();
         if (c == End){
             writeErr(lineTokenEndNumber, lineTokenEndPos, "expected %s, but found end of file.", expected);

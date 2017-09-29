@@ -6,13 +6,13 @@
 #include "io.c"
 #include "utils.c"
 
-#define test(verifier, inputStr, expected) do { \
-    ioSetup(inputStr);      \
-    initLexer();            \
-    initParser();           \
-    assert(verifier(parseTopLevel()) == expected);  \
-    disposeLexer();         \
-} while(0)                  \
+void test(char (*verifier)(Ast*), const char_t* inputStr, char expectedResult) {
+    ioSetup(inputStr);
+    initLexer();
+    initParser();
+    assert(verifier(parseTopLevel()) == expectedResult);
+    disposeLexer();
+}
 
 void testVerifyMain(){
     test(verifyTopLevel, "int main() return 4;", 1);
