@@ -28,7 +28,6 @@ typedef enum {
 } Token;
 
 #define End 0 //Eof character
-extern char_t curChar; //Updated for every character consumed
 extern size_t lineNumber;
 extern size_t linePos;
 extern size_t lineTokenEndNumber;

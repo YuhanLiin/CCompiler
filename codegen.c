@@ -3,8 +3,7 @@
 #include "utils.h"
 #include "ast.h"
 
-// Assume all declarations have been trimmed
-void emitLine(const char* format, ...);
+// Assume all declarations have been trimmed out
 
 // For expression args
 char exprArgStr[30];
@@ -23,7 +22,7 @@ void cmplStmt(Ast* ast){
     switch(*ast){
         case astStmtReturn:
             cmplExpr((Ast*)((StmtReturn*)ast)->expr);
-            emitLine("movq %s, %%rax", exprArgStr);
+            emitLine("\tmovq %s, %%rax", exprArgStr);
             break;
         default:
             assert(0 && "Invalid AST for stmt");
@@ -31,6 +30,9 @@ void cmplStmt(Ast* ast){
 }
 
 void cmplTopLevel(Ast* ast){
+    // Hardcode text section for now
+    emitLine(".text");
+    emitLine("\t.globl main");
     switch(*ast){
         case astFunction:{
             Function* func = (Function*)ast;
@@ -42,8 +44,8 @@ void cmplTopLevel(Ast* ast){
                 emitLine("\tcall __main");
             }
             cmplStmt((Ast*)func->stmt);
-            emitLine("leave");
-            emitLine("ret");
+            emitLine("\tleave");
+            emitLine("\tret");
             break;
         }
         default:
