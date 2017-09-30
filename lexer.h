@@ -35,12 +35,12 @@ extern size_t lineTokenEndPos;
 extern Array(char_t) stringBuffer; //Store identifier and strings
 extern double floatVal; 
 extern long long intVal;
+extern char_t curChar;
 
 void initLexer();   //Allocates stringBuffer. Can exit due to malloc
 void disposeLexer();//Dispose stringBuffer
 //Public functions for peeking and consuming from character stream. Defined elsewhere
-char_t peekNext();  //Called by tokenizer
-char_t consumeNext();
+char_t consumeNext(); //Called by tokenizer
 //Gets the next token
 Token lexToken();
 const char_t * stringifyToken(Token tok);

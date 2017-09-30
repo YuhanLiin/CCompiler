@@ -13,10 +13,6 @@ char_t consumeNext(){
     char_t c = input[ilen++];
     return c;
 }
-char_t peekNext(){
-    return input[ilen];
-}
-
 
 //Output string to output array
 #define outprint(...) do {{ \

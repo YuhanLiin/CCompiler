@@ -12,10 +12,10 @@ void setup(const char_t* str){
     ioSetup(str);
     initLexer();
 }
-void test(Token expectedTok) {
-    Token token = lexToken();
-    assert(token == expectedTok);
-}
+#define test(expectedTok) do {\
+    token = lexToken();\
+    assert(token == expectedTok);\
+} while(0)
 void teardown(){
     disposeLexer();
 }
@@ -56,8 +56,8 @@ void testTokenString(){
     test(tokString);
     assert(strEq(&stringBuffer, ""));
     test(tokUnexpected);
-    //Unexpected tokens are not consumed, so use peekNext instead of curChar
-    assert(peekNext() == End);
+    //Unexpected tokens are not consumed
+    assert(curChar == End);
     teardown();
 }
 
@@ -74,7 +74,7 @@ void testTokenNumber(){
     test(tokNumDouble);
     assert(doubleEq(floatVal, .7));
     test(tokUnexpected);
-    assert(peekNext() == '.');
+    assert(curChar == '.');
     teardown();
 }
 

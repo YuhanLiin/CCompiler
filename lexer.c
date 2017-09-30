@@ -14,18 +14,6 @@ Array(char_t) stringBuffer; //Store identifier and strings
 double floatVal;   //Store number tokens
 long long intVal;
 
-void initLexer(){ //Can fail due to malloc
-    if (!initArr(char_t)(&stringBuffer, 5, NULL, NULL)) exit(1); //Allocate empty string
-    linePos = 0;
-    lineTokenEndPos = 0;
-    lineTokenEndNumber = 1;
-    lineNumber = 1;
-}
-
-void disposeLexer(){
-    disposeArr(char_t)(&stringBuffer);
-}
-
 //Character matchers
 static char isSpace(char_t c){
     return c ==' ' || c =='\t';
@@ -45,13 +33,13 @@ static char isIdentChar(char_t c){
 
 //Consumes char and updates curChar. Called by tokenizer
 static char_t getNext(){
-    curChar = consumeNext();
     //Increases line number or position
     if (isEol(curChar)){
         lineTokenEndNumber++;
         lineTokenEndPos = 0;
     }
     else lineTokenEndPos++;
+    curChar = consumeNext();
     return curChar;
 }
 //Store in string
@@ -61,7 +49,7 @@ static char_t store(char_t c){
 }
 //Get next char if it matches c. REturns whether match occurs
 static char getNextIf(char_t c){
-    if (peekNext() == c){
+    if (curChar == c){
         getNext();
         return 1;
     }
@@ -76,14 +64,28 @@ static char storeNextIf(char_t c){
     return 0;
 }
 
+void initLexer(){ //Can fail due to malloc
+    if (!initArr(char_t)(&stringBuffer, 5, NULL, NULL)) exit(1); //Allocate empty string
+    linePos = 0;
+    lineTokenEndPos = 0;
+    lineTokenEndNumber = 1;
+    lineNumber = 1;
+    curChar = consumeNext();
+}
+
+void disposeLexer(){
+    disposeArr(char_t)(&stringBuffer);
+}
+
 //Recognizes decimal sequence and adds it to floatVal. Returns whether decimals were recognized
 static char lexDecimals(){
-    if (isDigit(peekNext())){
+    if (isDigit(curChar)){
         double d = 0.1;
         do{
-            floatVal += d*(getNext()-'0');
+            floatVal += d * (curChar - '0');
+            getNext();
             d /= 10;
-        } while(isDigit(peekNext()));
+        } while(isDigit(curChar));
         return 1;
     }
     return 0;
@@ -96,7 +98,7 @@ static char lexKeyword(const char_t *keyword){
         }
         keyword++;
     }
-    if (isIdentChar(peekNext())){
+    if (isIdentChar(curChar)){
         return 0;
     }
     return 1;
@@ -108,7 +110,6 @@ Token lexToken(){
     clearArr(char_t)(&stringBuffer);
     floatVal = 0;
     intVal = 0;
-    curChar = 0;
 
     begin:
     //Update line number and position to start of new token
@@ -116,12 +117,12 @@ Token lexToken(){
     linePos = lineTokenEndPos;
 
     //Skip over newlines, whitespace
-    if (isSpace(peekNext()) || isEol(peekNext())){
+    if (isSpace(curChar) || isEol(curChar)){
         getNext();
         goto begin;
     }
      
-    switch (peekNext()) {
+    switch (curChar) {
         case 'r':
             //Return keyword
             if (lexKeyword("return")){
@@ -155,12 +156,13 @@ Token lexToken(){
         //Match string "[anychar]"
         case '"':
             getNext();
-            while (peekNext() != '"'){
+            while (curChar != '"'){
                 //If file ends in middle of a string return token for unexpected char
-                if (peekNext() == End){
+                if (curChar == End){
                     return tokUnexpected;
                 }
-                store(getNext());
+                store(curChar);
+                getNext();
             }
             getNext();
             return tokString;
@@ -194,24 +196,26 @@ Token lexToken(){
         case '/':
             getNext();
             //Single line comment
-            if (peekNext() == '/'){
+            if (curChar == '/'){
                 getNext();
                 //Comment ends when end of line of end of file is seen
-                while (!isEol(peekNext()) && peekNext() != End){
+                while (!isEol(curChar) && curChar != End){
                     getNext();
                 }
                 goto begin; //No token to return, so start lexing again
             }
             //Multi line comment
-            else if (peekNext() == '*'){
+            else if (curChar == '*'){
                 getNext();  //Consume *
+                char_t prev;
                 do {
-                    if (peekNext() == End){
+                    if (curChar == End){
                         return tokUnexpected;
                     }
+                    prev = curChar;
                     getNext();
                   //If the last consumed comment char is * and the one after it is /, then comment is over
-                } while (curChar != '*' || peekNext() != '/');
+                } while (prev != '*' || curChar != '/');
                 getNext(); //Consume /
                 goto begin; //No token to return, so start lexing again
             }
@@ -229,11 +233,12 @@ Token lexToken(){
             return tokEof;
         default:
             //Number [0-9]+(.[0-9]*)?
-            if (isDigit(peekNext())){
+            if (isDigit(curChar)){
                 do{ //Convert first set of digits as integer
                     intVal *= 10;
-                    intVal += getNext() - '0';
-                }while(isDigit(peekNext()));
+                    intVal += curChar - '0';
+                    getNext();
+                }while(isDigit(curChar));
                 //If dot follows, attempt to turn next digits into decimals and return as double
                 if (getNextIf('.')){
                     floatVal = intVal;
@@ -244,11 +249,12 @@ Token lexToken(){
                 return tokNumInt;  //If no dot then it's int
             }
             //Identifier [a-zA-Z][a-zA-Z_0-9]*
-            else if (isIdentChar(peekNext())){
+            else if (isIdentChar(curChar)){
                 identifier:
                 //Continue if alphanumeric match doesnt end at keyword or no keyword exists and return identifier
-                while(isIdentChar(peekNext())) {
-                    store(getNext());
+                while(isIdentChar(curChar)) {
+                    store(curChar);
+                    getNext();
                 }
                 return tokIdent;
             }
