@@ -190,7 +190,7 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
             ExprBase* newRhs = parseBinopExpr(rhs, prec);
             //Attempt to parse subsequent atoms at a precedece equal to current binop
             if (newRhs == NULL){
-                free(rhs); //Responsible for delete rhs, which was created in this scope
+                disposeAst(rhs); //Responsible for delete rhs, which was created in this scope
                 return newRhs;
             }
             rhs = newRhs;
@@ -208,7 +208,7 @@ ExprBase* parseExpr(){
     if (lhs == NULL) return lhs; 
     ExprBase* expr = parseBinopExpr(lhs, 1); //Parse all following binops
     if (expr == NULL){
-        free(lhs);
+        disposeAst(lhs);
     }
     return expr;
 }
@@ -239,17 +239,46 @@ Ast* parseStmt(){
             getTok(); //Consume semicolon
             NewAst(StmtEmpty, stmt)
             return (Ast*)stmt;
-        default: {
+        case tokLBrace:
+            getTok(); //Consume left brace
+            NewAst(StmtBlock, block)
+            initArr(vptr)(&block->stmts, 0, NULL, &disposeAst);
+            while (curTok != tokRBrace){
+                Ast* stmt = parseStmt();
+                if (stmt){
+                    if (!pushArr(vptr)(&block->stmts, stmt)){
+                        exit(1);
+                    }
+                }
+                else{
+                    disposeAst(block);
+                    return NULL;
+                }
+            }
+            getTok();
+            return (Ast*)block;
             //TODO handle other statements
 
-            //Checks for expression statements as last resort
+        //These are tokens that expressions can't start with, so they automatically trigger statement error
+        case tokRBrace:
+        case tokRParen:
+        case tokUnexpected:
+        case tokEof:
+        case tokPlus:
+        case tokMinus:
+        case tokMulti:
+        case tokDiv:
+        case tokComma:
+            syntaxError("statement");
+            return NULL;
+        //Checks for expression statements as last resort. The errors issued here will only be expression errors
+        default: {
             ExprBase* expr = parseExpr();
             if (expr){
                 NewAst(StmtExpr, stmt, expr);
                 checkSemicolon();
-                return (Ast*)expr;
+                return (Ast*)stmt;
             }
-            syntaxError("statement");
             return NULL;
         }
     }      

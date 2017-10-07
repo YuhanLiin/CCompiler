@@ -30,20 +30,26 @@ void outputAst(Ast* ast){
             ExprCall* expr = (ExprCall*)ast;
             outprint("call:%s:%d ", expr->name, expr->args.size);
             for (size_t i=0; i<expr->args.size; i++){
-                outputAst(expr->args.elem[i]);
+                outputAst((Ast*)expr->args.elem[i]);
             }
             return;
         }
         case astExprBinop: {
             ExprBinop* binop = (ExprBinop*)ast;
             outprint("%s ", stringifyOp(binop->op));
-            outputAst(binop->left);
-            outputAst(binop->right);
+            outputAst((Ast*)binop->left);
+            outputAst((Ast*)binop->right);
             return;
         }
         case astStmtReturn:
             outprint("ret ");
-            outputAst(((StmtReturn*)ast)->expr);
+            outputAst((Ast*)((StmtReturn*)ast)->expr);
+            return;
+        case astStmtEmpty:
+            outprint("empty ");
+            return;
+        case astStmtExpr:
+            outputAst((Ast*)((StmtExpr*)ast)->expr);
             return;
         case astFunction: {
             Function* fn = (Function*)ast;
@@ -91,22 +97,22 @@ void testErr(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){
 } 
 
 void testParseBasicExpr(){
-    test(parseExpr, "55.55", "dbl:55.55 ");
-    test(parseExpr, "78", "int:78 ");
-    test(parseExpr, "\"hey\"", "str:hey "); 
-    test(parseExpr, "a", "id:a "); 
-    test(parseExpr, "((a))", "id:a "); 
+    test(parseStmt, "55.55", "dbl:55.55 ");
+    test(parseStmt, "78", "int:78 ");
+    test(parseStmt, "\"hey\"", "str:hey "); 
+    test(parseStmt, "a", "id:a "); 
+    test(parseStmt, "((a))", "id:a "); 
 }
 
 void testParseCall(){
-    test(parseExpr, "  omfg(5,\"\"  , var )", "call:omfg:3 int:5 str: id:var "); 
-    test(parseExpr, "abaj()", "call:abaj:0 "); 
+    test(parseStmt, "  omfg(5,\"\"  , var )", "call:omfg:3 int:5 str: id:var "); 
+    test(parseStmt, "abaj()", "call:abaj:0 "); 
 }
 
 void testParseBinop(){
-    test(parseExpr, "1 + 2.500 * k", "+ int:1 * dbl:2.50 id:k "); 
-    test(parseExpr, "heyo( a + b * c/d - e)", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
-    test(parseExpr, "(a-\"lll\")/d", "/ - id:a str:lll id:d "); 
+    test(parseStmt, "1 + 2.500 * k", "+ int:1 * dbl:2.50 id:k "); 
+    test(parseStmt, "heyo( a + b * c/d - e)", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
+    test(parseStmt, "(a-\"lll\")/d", "/ - id:a str:lll id:d "); 
 }
 
 void testParseStmt(){
@@ -124,16 +130,20 @@ void testParseFunction(){
 }
 
 void testParseError(){
-    testErr(parseExpr, "((sfgd) ", "On line 1, position 8, expected ')', but found end of file.\n"); 
-    testErr(parseExpr, "", "On line 1, position 0, expected expression, but found end of file.\n"); 
-    testErr(parseExpr, "sdg(,", "On line 1, position 4, expected expression, but found ','.\n");
-    testErr(parseExpr, "\"wergrh\n", "On line 2, position 0, expected expression, but found end of file.\n");
-    testErr(parseExpr, "\"wergr", "On line 1, position 6, expected expression, but found end of file.\n");
+    testErr(
+        parseStmt, "((sfgd) ",
+        "On line 1, position 8, expected ')', but found end of file.\nOn line 1, position 8, expected ';', but found end of file.\n"
+    ); 
+    testErr(
+        parseStmt, "", "On line 1, position 0, expected statement, but found end of file.\n"); 
+    testErr(parseStmt, "sdg(,", "On line 1, position 4, expected expression, but found ','.\n");
+    testErr(parseStmt, "\"wergrh\n", "On line 2, position 0, expected statement, but found end of file.\n");
+    testErr(parseStmt, "\"wergr", "On line 1, position 6, expected statement, but found end of file.\n");
     testErr(
         parseStmt, "return k(k",
         "On line 1, position 10, expected ')', but found end of file.\nOn line 1, position 10, expected ';', but found end of file.\n"
     );
-    testErr(parseStmt, "/**/bind k;", "On line 1, position 4, expected statement, but found identifier.\n");
+    testErr(parseStmt, "/**/bind k;", "On line 1, position 9, expected ';', but found identifier.\n");
     testErr(parseStmt, "/*   *", "On line 1, position 6, expected statement, but found end of file.\n");
     testErr(parseTopLevel, "int Blue(a)", "On line 1, position 9, expected type name, but found identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "On line 1, position 13, expected identifier, but found ','.\n");

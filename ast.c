@@ -37,6 +37,11 @@ void disposeAst(void* node){
             disposeAst(((StmtReturn*)ast)->expr);
             break;
         }
+        case astStmtEmpty:
+            break;
+        case astStmtExpr:
+            disposeAst(((StmtExpr*)ast)->expr);
+            break;
         case astFunction: {
             Function* func = (Function*)ast;
             free(func->name);
