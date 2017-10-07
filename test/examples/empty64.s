@@ -5,8 +5,8 @@
 hey:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rcx, 16(%rbp)
-	movq	16(%rbp), %rax
+	movl	%ecx, 16(%rbp)
+	movl	16(%rbp), %eax
 	popq	%rbp
 	ret
 	.ident	"GCC: (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 7.1.0"

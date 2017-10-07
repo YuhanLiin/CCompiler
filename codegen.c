@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "utils.h"
 #include "ast.h"
+#include "codegen.h"
 
 // Assume all declarations have been trimmed out
 
@@ -13,6 +14,7 @@ void cmplExpr(Ast* ast){
         case astExprInt:
             exprArgStr[0] = '$';
             sprintf(&exprArgStr[1], "%d", ((ExprInt*)ast)->num);
+            break;
         default:
             assert(0 && "Invalid AST for expr");
     }
@@ -40,7 +42,7 @@ void cmplTopLevel(Ast* ast){
             emitLine("\tpushq %%rbp");
             emitLine("\tmovq %%rsp, %%rbp");
             if (!strcmp(func->name, "main")){
-                emitLine("\tsubq $32 %%rsp");
+                emitLine("\tsubq $32, %%rsp");
                 emitLine("\tcall __main");
             }
             cmplStmt((Ast*)func->stmt);

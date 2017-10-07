@@ -7,5 +7,5 @@ basic: basic.c
 empty: empty.c
 	gcc empty.c -S -fno-asynchronous-unwind-tables -O0
 
-declaration: declaration.c
-	gcc declaration.c -S -fno-asynchronous-unwind-tables -O0
+empty64: empty64.c
+	gcc empty64.c -S -fno-asynchronous-unwind-tables -O0

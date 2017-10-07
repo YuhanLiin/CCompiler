@@ -79,7 +79,7 @@ static Type parseType(){
 static char parseArgs(Array(vptr) *args){
     //While comma exists consume it and keep parsing expressions
     do {    
-        Ast* arg = parseExpr();
+        ExprBase* arg = parseExpr();
         if (arg == NULL) return 0; //If expression cant be parsed then syntax error
         if (!pushArr(vptr)(args, arg)) exit(1); //Push arg and check for malloc failures
     }while (curTok == tokComma && (getTok() || 1));   
@@ -87,26 +87,26 @@ static char parseArgs(Array(vptr) *args){
 }
 
 //primeExpr := Number | String | ( expr ) | Ident ( args? )?
-static Ast* parsePrimaryExpr(){
+static ExprBase* parsePrimaryExpr(){
     switch (curTok){
         case tokNumInt: {
             NewAst(ExprInt, expr, intVal)
             getTok(); //Consume number
-            return (Ast*)expr;
+            return (ExprBase*)expr;
         }
         case tokNumDouble: {
             NewAst(ExprDouble, expr, floatVal)
             getTok(); //Consume number
-            return (Ast*)expr;
+            return (ExprBase*)expr;
         }
         case tokString: {
             NewAst(ExprStr, expr, toCstring(&stringBuffer))
             getTok(); //Consume string
-            return (Ast*)expr;
+            return (ExprBase*)expr;
         }
         case tokLParen: {
             getTok(); //Consume left paren
-            Ast* expr = parseExpr();
+            ExprBase* expr = parseExpr();
             if (expr){
                 //Look for right paren. If not found just pretend it's there and write to error
                 if (curTok == tokRParen){
@@ -132,7 +132,7 @@ static Ast* parsePrimaryExpr(){
                 //If following brackets are not empty, attempt to parse 1 or more args.
                 if (curTok == tokRParen){
                     getTok(); //Consume rb
-                    return (Ast*)call;
+                    return (ExprBase*)call;
                 } 
                 else{
                     //Attempt to parse arguments. It will throw if unsuccessful so no need to handle it here
@@ -143,7 +143,7 @@ static Ast* parsePrimaryExpr(){
                         else{
                             syntaxError(stringifyToken(tokRParen));
                         }
-                        return (Ast*)call;
+                        return (ExprBase*)call;
                     }
                 }
                 disposeArr(vptr)(&call->args);
@@ -152,7 +152,7 @@ static Ast* parsePrimaryExpr(){
             //Otherwise its a normal identifier
             else {
                 NewAst(ExprIdent, ident, name)
-                return (Ast*)ident;
+                return (ExprBase*)ident;
             }
             free(name);
             return NULL;
@@ -176,9 +176,9 @@ static int operatorPrec(Token op){
 
 //Precedence climbing algorithm for binops. Constructs lhs from subsequent terms. Will not free lhs. Returns updated lhs or error
 //exprBinop := [ [+-/*] primeExpr]*
-static Ast* parseBinopExpr(Ast* lhs, int minPrec){
+static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
     int prec;
-    Ast* rhs = NULL;
+    ExprBase* rhs = NULL;
     Token op;
     //Will first consume any higher/equal precedence binop. Afterwards, due to inner loop, this outer loop will only consume equal precedence binops
     while (operatorPrec(op = curTok) >= minPrec){
@@ -187,7 +187,7 @@ static Ast* parseBinopExpr(Ast* lhs, int minPrec){
         if ((rhs = parsePrimaryExpr()) == NULL) return rhs;
         //While next binop is of higher precedence, accumulate expression into rhs
         while ((prec = operatorPrec(curTok)) > minPrec){
-            Ast* newRhs = parseBinopExpr(rhs, prec);
+            ExprBase* newRhs = parseBinopExpr(rhs, prec);
             //Attempt to parse subsequent atoms at a precedece equal to current binop
             if (newRhs == NULL){
                 free(rhs); //Responsible for delete rhs, which was created in this scope
@@ -197,44 +197,62 @@ static Ast* parseBinopExpr(Ast* lhs, int minPrec){
         }
         //After rhs has been fully built, merge it with lhs and then continue
         NewAst(ExprBinop, newLhs, op, lhs, rhs)
-        lhs = (Ast*)newLhs;
+        lhs = (ExprBase*)newLhs;
     }
     return lhs;
 }
 
 //expr := primeExpr exprBinop
-Ast* parseExpr(){
-    Ast* lhs = parsePrimaryExpr(); //Parse the 1st primary expression
+ExprBase* parseExpr(){
+    ExprBase* lhs = parsePrimaryExpr(); //Parse the 1st primary expression
     if (lhs == NULL) return lhs; 
-    Ast* expr = parseBinopExpr(lhs, 1); //Parse all follwing binops
+    ExprBase* expr = parseBinopExpr(lhs, 1); //Parse all following binops
     if (expr == NULL){
         free(lhs);
     }
     return expr;
 }
 
+//Checks for semicolon at end of statement, throwing error if it's not found
+static void checkSemicolon(){
+    if (curTok == tokSemicolon){
+        getTok(); //Consume semicolon
+    }
+    else{  
+        syntaxError(stringifyToken(tokSemicolon));              
+    }
+}
+
 Ast* parseStmt(){
-    if (curTok == tokReturn){
-        getTok(); //Consume return
-        Ast* expr = parseExpr();
-        if (expr){
-            NewAst(StmtReturn, stmt, expr)
-            if (curTok == tokSemicolon){
-                getTok(); //Consume semicolon
+    switch(curTok){
+        case tokReturn: {
+            getTok(); //Consume return
+            ExprBase* expr = parseExpr();
+            if (expr){
+                NewAst(StmtReturn, stmt, expr)
+                checkSemicolon();
+                return (Ast*)stmt;
             }
-            else{  
-                syntaxError(stringifyToken(tokSemicolon));              
-            }
-            return (Ast*)stmt;
+            return NULL;
         }
-        //expr error already reported, so no need to do it here
-        free(expr);
-    }
-    //TODO handle other statements
-    else{
-        syntaxError("statement");
-    }
-    return NULL;
+        case tokSemicolon:
+            getTok(); //Consume semicolon
+            NewAst(StmtEmpty, stmt)
+            return (Ast*)stmt;
+        default: {
+            //TODO handle other statements
+
+            //Checks for expression statements as last resort
+            ExprBase* expr = parseExpr();
+            if (expr){
+                NewAst(StmtExpr, stmt, expr);
+                checkSemicolon();
+                return (Ast*)expr;
+            }
+            syntaxError("statement");
+            return NULL;
+        }
+    }      
 }
 
 static char parseParams(Array(Type) *types, Array(vptr) *names){

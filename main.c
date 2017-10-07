@@ -6,7 +6,8 @@
 #include "codegen.h"
 
 #include <stdio.h>
-#include <stdargs.h>
+#include <string.h>
+#include <stdarg.h>
 
 FILE* infile;
 FILE* outfile;
@@ -25,4 +26,53 @@ char_t consumeNext(){
         return End;
     }
     return c;
+}
+
+void safeClose(FILE* file, const char* filename){
+    if (fclose(file) != 0){
+        fprintf(stderr, "Warning: File %s did not close successfully\n", filename);
+    }
+}
+
+int main(int argc, char const *argv[])
+{
+    if (argc < 3){
+        printf("Error: No C file name.\n");
+        return 2;
+    }
+    const char* infilename = argv[1];
+    const char* outfilename = argv[2];
+    infile = fopen(infilename, "r");
+    if (infile == NULL){
+        fprintf(stderr, "Error: Input file %s couldn't be opened.\n", infilename);
+        return 2;
+    }
+    outfile = fopen(outfilename, "w");
+    if (outfile == NULL){
+        safeClose(infile, infilename);
+        fprintf(stderr, "Error: Output file %s couldn't be opened.\n", outfilename);
+        return 2;
+    }
+
+    initLexer();
+    initParser();
+    int code = 0;
+    Ast* ast = parseTopLevel();
+    if (ast != NULL){
+        if (verifyTopLevel(ast)){
+            cmplTopLevel(ast);
+        }
+        else{
+            code = 3;   
+        }
+        disposeAst(ast);
+    }
+    else {
+        code = 3;
+        printf("Semantic error placeholder\n");
+    }
+    disposeLexer();
+    safeClose(infile, infilename);
+    safeClose(outfile, outfilename);
+    return code;
 }

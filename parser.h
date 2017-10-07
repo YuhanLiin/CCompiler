@@ -3,7 +3,7 @@
 
 void initParser();
 
-Ast* parseExpr();
+ExprBase* parseExpr();
 Ast* parseStmt();
 Ast* parseTopLevel();
 

@@ -6,62 +6,79 @@
 
 //Acts as a label for ast node type and also base class
 //All nodes must have this as 1st field so that the labels can be checked before casting into correct node type
-typedef enum AstEnum {
+typedef enum {
     astExprDouble,
     astExprInt,
     astExprStr,
     astExprIdent,
     astExprCall,
     astExprBinop,
+    astStmtEmpty,
     astStmtReturn,
+    astStmtExpr,
     astFunction
 } Ast;
 
-//Below macros will function like c++ constructors for ast nodes
-typedef struct {
-    Ast label; 
-    double num;
-} ExprDouble;
-#define ExprDouble(num) (ExprDouble){astExprDouble, num}
-
+//Base structs are always first field. Contain ast label followed by attributes for semantic analysis
 typedef struct {
     Ast label;
+    Type type;
+} ExprBase;
+
+//Below macros will function like c++ constructors for ast nodes
+typedef struct {
+    ExprBase base; 
+    double num;
+} ExprDouble;
+#define ExprDouble(num) (ExprDouble){(ExprBase){astExprDouble, typNone}, num}
+
+typedef struct {
+    ExprBase base;
     long long num;
 } ExprInt;
-#define ExprInt(num) (ExprInt){astExprInt, num}
+#define ExprInt(num) (ExprInt){(ExprBase){astExprInt, typNone}, num}
 
 typedef struct {
-    Ast label; 
+    ExprBase base; 
     char_t* str;
 } ExprStr;
-#define ExprStr(str) (ExprStr){astExprStr, str}
+#define ExprStr(str) (ExprStr){(ExprBase){astExprStr, typNone}, str}
 
 typedef struct {
-    Ast label; 
+    ExprBase base; 
     char_t* name;
 } ExprIdent;
-#define ExprIdent(name) (ExprIdent){astExprIdent, name}
+#define ExprIdent(name) (ExprIdent){(ExprBase){astExprIdent, typNone}, name}
 
 typedef struct {
-    Ast label; 
+    ExprBase base; 
     Token op; 
-    Ast* left; 
-    Ast* right;
+    ExprBase* left; 
+    ExprBase* right;
 } ExprBinop;
-#define ExprBinop(op, left, right) (ExprBinop){astExprBinop, op, left, right}
+#define ExprBinop(op, left, right) (ExprBinop){(ExprBase){astExprBinop, typNone}, op, left, right}
 
 typedef struct {
-    Ast label; 
+    ExprBase base; 
     char_t* name; 
     Array(vptr) args;
 } ExprCall;
-#define ExprCall(id) (ExprCall){astExprCall, id}
+#define ExprCall(id) (ExprCall){(ExprBase){astExprCall, typNone}, id}
+
+typedef struct {Ast label;} StmtEmpty;
+#define StmtEmpty(expr) (StmtEmpty){astStmtEmpty}
 
 typedef struct {
     Ast label;
-    Ast* expr;
+    ExprBase* expr;
 } StmtReturn;
 #define StmtReturn(expr) (StmtReturn){astStmtReturn, expr}
+
+typedef struct {
+    Ast label;
+    ExprBase* expr;
+} StmtExpr;
+#define StmtExpr(expr) (StmtExpr){astStmtExpr, expr}
 
 typedef struct {
     Ast label; 

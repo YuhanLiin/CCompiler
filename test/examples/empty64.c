@@ -1,4 +1,4 @@
-long long hey(long long ll)
+int hey(long ll)
 {
     return ll;
 }
