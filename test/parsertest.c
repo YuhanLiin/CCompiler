@@ -51,6 +51,14 @@ void outputAst(Ast* ast){
         case astStmtExpr:
             outputAst((Ast*)((StmtExpr*)ast)->expr);
             return;
+        case astStmtBlock: {
+            StmtBlock* block = (StmtBlock*)ast;
+            outprint("block:%d ", block->stmts.size);
+            for (size_t i=0; i<block->stmts.size; i++){
+                outputAst(block->stmts.elem[i]);
+            }
+            return;
+        }
         case astFunction: {
             Function* fn = (Function*)ast;
             assert (fn->paramTypes.size == fn->paramNames.size);
@@ -120,6 +128,9 @@ void testParseBinop(){
 void testParseStmt(){
     test(parseStmt, "return (f) ;", "ret id:f ");
     test(parseStmt, "return f() ;", "ret call:f:0 ");
+    test(parseStmt, " ;", "empty ");
+    test(parseStmt, "{}", "block:0 ");
+    test(parseStmt, "{ return 5;;}", "block:2 ret int:5 empty ");
 }
 
 void testParseFunction(){
