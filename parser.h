@@ -2,8 +2,7 @@
 #include "ast.h"
 
 void initParser();
-
-ExprBase* parseExpr();
+char checkParse();
 Ast* parseStmt();
 Ast* parseTopLevel();
 

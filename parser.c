@@ -8,11 +8,17 @@
 #include <assert.h>
 
 Token curTok;  //Lookahead token. Global lexer values correspond to this token
-static Token getTok(){  //Updates lookahead token
+char correct = 1;
+
+static Token getTok(){
     return curTok = lexToken();
 }
 
-void syntaxError(const char_t* expected){
+char checkParse(){
+    return correct;
+}
+
+static void syntaxError(const char_t* expected){
     if (curTok == tokUnexpected){
         // Unexpected chars are not consumed, so we have to peek the next char to get it
         if (curChar == End){
@@ -25,10 +31,12 @@ void syntaxError(const char_t* expected){
     else{
         writeErr(lineNumber, linePos, "expected %s, but found %s.", expected, stringifyToken(curTok));
     }
+    correct = 0;
 }
 
 void initParser(){
     getTok();
+    correct = 1;
 }
 
 //Allocate and return new cstring from a char array
@@ -75,6 +83,9 @@ static Type parseType(){
             return typNone;
     }
 }
+
+static ExprBase* parseExpr();
+
 //args := expr [, expr]*   Assumes args array is already initialized and empty. Return 0 for syntax error
 static char parseArgs(Array(vptr) *args){
     //While comma exists consume it and keep parsing expressions
@@ -203,7 +214,7 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
 }
 
 //expr := primeExpr exprBinop
-ExprBase* parseExpr(){
+static ExprBase* parseExpr(){
     ExprBase* lhs = parsePrimaryExpr(); //Parse the 1st primary expression
     if (lhs == NULL) return lhs; 
     ExprBase* expr = parseBinopExpr(lhs, 1); //Parse all following binops

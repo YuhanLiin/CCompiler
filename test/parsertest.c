@@ -84,7 +84,8 @@ void test(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){
     outputAst(ast);
     assert(!strcmp(output, expected));  
     disposeLexer();
-    disposeAst(ast);         
+    disposeAst(ast);
+    assert(checkParse());
 }                 
 
 void testErr(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){ 
@@ -94,25 +95,26 @@ void testErr(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){
     Ast* ast = parsefn();
     assert(!strcmp(errorstr, expected));  
     disposeLexer();
+    assert(!checkParse());
 } 
 
 void testParseBasicExpr(){
-    test(parseStmt, "55.55", "dbl:55.55 ");
-    test(parseStmt, "78", "int:78 ");
-    test(parseStmt, "\"hey\"", "str:hey "); 
-    test(parseStmt, "a", "id:a "); 
-    test(parseStmt, "((a))", "id:a "); 
+    test(parseStmt, "55.55;", "dbl:55.55 ");
+    test(parseStmt, "78;", "int:78 ");
+    test(parseStmt, "\"hey\";", "str:hey "); 
+    test(parseStmt, "a;", "id:a "); 
+    test(parseStmt, "((a));", "id:a "); 
 }
 
 void testParseCall(){
-    test(parseStmt, "  omfg(5,\"\"  , var )", "call:omfg:3 int:5 str: id:var "); 
-    test(parseStmt, "abaj()", "call:abaj:0 "); 
+    test(parseStmt, "  omfg(5,\"\"  , var );", "call:omfg:3 int:5 str: id:var "); 
+    test(parseStmt, "abaj() ;", "call:abaj:0 "); 
 }
 
 void testParseBinop(){
-    test(parseStmt, "1 + 2.500 * k", "+ int:1 * dbl:2.50 id:k "); 
-    test(parseStmt, "heyo( a + b * c/d - e)", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
-    test(parseStmt, "(a-\"lll\")/d", "/ - id:a str:lll id:d "); 
+    test(parseStmt, "1 + 2.500 * k;", "+ int:1 * dbl:2.50 id:k "); 
+    test(parseStmt, "heyo( a + b * c/d - e);", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
+    test(parseStmt, "(a-\"lll\")/d;", "/ - id:a str:lll id:d "); 
 }
 
 void testParseStmt(){
