@@ -234,6 +234,17 @@ static void checkSemicolon(){
     }
 }
 
+//Caller needs to parse the type. This function only parses the name after it.
+StmtDecl* parseDecl(Type type){
+    if (curTok == tokIdent){
+        NewAst(StmtDecl, decl, type, toCstring(&stringBuffer))
+        getTok();
+        return decl;
+    }
+    syntaxError(stringifyToken(tokIdent));
+    return NULL;
+}
+
 Ast* parseStmt(){
     switch(curTok){
         case tokReturn: {
@@ -282,13 +293,23 @@ Ast* parseStmt(){
         case tokComma:
             syntaxError("statement");
             return NULL;
-        //Checks for expression statements as last resort. The errors issued here will only be expression errors
+        //Checks for expression/declaration statements as last resort
         default: {
-            ExprBase* expr = parseExpr();
-            if (expr){
-                NewAst(StmtExpr, stmt, expr);
-                checkSemicolon();
-                return (Ast*)stmt;
+            Type type = parseType();
+            if (type != typNone){
+                Ast* decl = (Ast*)parseDecl(type);
+                if (decl){
+                    checkSemicolon();
+                }
+                return decl;
+            }
+            else {
+                ExprBase* expr = parseExpr();
+                if (expr){
+                    NewAst(StmtExpr, stmt, expr);
+                    checkSemicolon();
+                    return (Ast*)stmt;
+                }
             }
             return NULL;
         }

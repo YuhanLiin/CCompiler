@@ -17,6 +17,7 @@ typedef enum {
     astStmtReturn,
     astStmtExpr,
     astStmtBlock,
+    astStmtDecl,
     astFunction
 } Ast;
 
@@ -86,6 +87,13 @@ typedef struct {
     Array(vptr) stmts;
 } StmtBlock;
 #define StmtBlock() (StmtBlock){astStmtBlock}
+
+typedef struct {
+    Ast label;
+    Type type;
+    char_t* name;
+} StmtDecl;
+#define StmtDecl(type, name) (StmtDecl){astStmtDecl, type, name}
 
 typedef struct {
     Ast label; 

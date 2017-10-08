@@ -59,6 +59,11 @@ void outputAst(Ast* ast){
             }
             return;
         }
+        case astStmtDecl: {
+            StmtDecl* decl = (StmtDecl*)ast;
+            outprint("var:%s:%s ", stringifyType(decl->type), decl->name);
+            return;
+        }
         case astFunction: {
             Function* fn = (Function*)ast;
             assert (fn->paramTypes.size == fn->paramNames.size);
@@ -131,6 +136,7 @@ void testParseStmt(){
     test(parseStmt, " ;", "empty ");
     test(parseStmt, "{}", "block:0 ");
     test(parseStmt, "{ return 5;;}", "block:2 ret int:5 empty ");
+    test(parseStmt, "long long lli;", "var:i64:lli ");
 }
 
 void testParseFunction(){
@@ -158,6 +164,7 @@ void testParseError(){
     );
     testErr(parseStmt, "/**/bind k;", "On line 1, position 9, expected ';', but found identifier.\n");
     testErr(parseStmt, "/*   *", "On line 1, position 6, expected statement, but found end of file.\n");
+    testErr(parseStmt, "int 5;", "On line 1, position 4, expected identifier, but found integer.\n");
     testErr(parseTopLevel, "int Blue(a)", "On line 1, position 9, expected type name, but found identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "On line 1, position 13, expected identifier, but found ','.\n");
     testErr(parseTopLevel, "int Blue(float f)", "On line 1, position 17, expected statement, but found end of file.\n");

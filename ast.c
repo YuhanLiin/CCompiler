@@ -45,6 +45,9 @@ void disposeAst(void* node){
         case astStmtBlock:
             disposeArr(vptr)(&((StmtBlock*)ast)->stmts);
             break;
+        case astStmtDecl:
+            free(((StmtDecl*)ast)->name);
+            break;
         case astFunction: {
             Function* func = (Function*)ast;
             free(func->name);
@@ -57,7 +60,7 @@ void disposeAst(void* node){
         }
         //TODO more delete operations
         default:
-            assert(0 && "Unhandled ast label"); //Nothing should fall thru the cracks
+            assert(0 && "Unhandled ast label");
     }
     free(ast);
 }
