@@ -234,17 +234,6 @@ static void checkSemicolon(){
     }
 }
 
-//Caller needs to parse the type. This function only parses the name after it.
-StmtDecl* parseDecl(Type type){
-    if (curTok == tokIdent){
-        NewAst(StmtDecl, decl, type, toCstring(&stringBuffer))
-        getTok();
-        return decl;
-    }
-    syntaxError(stringifyToken(tokIdent));
-    return NULL;
-}
-
 Ast* parseStmt(){
     switch(curTok){
         case tokReturn: {
@@ -297,11 +286,15 @@ Ast* parseStmt(){
         default: {
             Type type = parseType();
             if (type != typNone){
-                Ast* decl = (Ast*)parseDecl(type);
-                if (decl){
+                if (curTok == tokIdent){
+                    NewAst(StmtDecl, decl, type, toCstring(&stringBuffer))
+                    getTok();  //Consume identifier
                     checkSemicolon();
+                    return (Ast*)decl;
                 }
-                return decl;
+                else{
+                    syntaxError(stringifyToken(tokIdent));
+                }
             }
             else {
                 ExprBase* expr = parseExpr();
@@ -316,7 +309,7 @@ Ast* parseStmt(){
     }      
 }
 
-static char parseParams(Array(Type) *types, Array(vptr) *names){
+static char parseParams(Array(vptr) *params){
     //While comma exists, consume it (the getTok() call) and keep parsing identifiers
     do {    
         Type type = parseType();
@@ -325,16 +318,14 @@ static char parseParams(Array(Type) *types, Array(vptr) *names){
             syntaxError("type name");
             return 0;
         }
-        if (curTok != tokIdent){
-            syntaxError(stringifyToken(tokIdent));
-            return 0;
+        NewAst(StmtDecl, param, type, NULL)
+        if (curTok == tokIdent){
+            param->name = toCstring(&stringBuffer);
+            getTok();  //Consume name
         }
-        if (!pushArr(vptr)(names, toCstring(&stringBuffer)) ||
-            !pushArr(Type)(types, type)
-        ) {
-            exit(1); //Push param and check for malloc failures
+        if (!pushArr(vptr)(params, param)){
+            exit(1);  //Push param and check for malloc failures
         }
-        getTok(); //Consume the param
     } while (curTok == tokComma && (getTok() || 1));
     return 1;
 }
@@ -349,14 +340,13 @@ static Ast* parseFunction(Type type){
         if (curTok == tokLParen){
             getTok(); //Consume left paren
             NewAst(Function, func, type, name)
-            initArr(vptr)(&func->paramNames, 0, NULL, &free);
-            initArr(Type)(&func->paramTypes, 0, NULL, NULL); 
+            initArr(vptr)(&func->params, 0, NULL, &disposeAst);
             if (curTok == tokRParen){
                 getTok(); //Consume right paren
                 goto finishedParsingParams;
             }
             // Parse parameters. This will report errors so no need to do it here
-            else if (parseParams(&func->paramTypes, &func->paramNames)){
+            else if (parseParams(&func->params)){
                 //Right paren error recovery
                 if (curTok == tokRParen){
                     getTok(); //Consume right paren
@@ -375,8 +365,7 @@ static Ast* parseFunction(Type type){
                 }
                 //parseStmt reports errors, so no need for it here
             }
-            disposeArr(vptr)(&func->paramNames);
-            disposeArr(Type)(&func->paramTypes);
+            disposeArr(vptr)(&func->params);
             free(func);
         }
         //TODO declarations as well

@@ -91,7 +91,7 @@ typedef struct {
 typedef struct {
     Ast label;
     Type type;
-    char_t* name;
+    char_t* name;   //Left null for unnamed params
 } StmtDecl;
 #define StmtDecl(type, name) (StmtDecl){astStmtDecl, type, name}
 
@@ -100,8 +100,7 @@ typedef struct {
     Type type; 
     char_t* name;
     Ast* stmt;  //Leave this null if there is no definition
-    Array(Type) paramTypes; 
-    Array(vptr) paramNames; 
+    Array(vptr) params;  //List of StmtDecl to represent parameters
 } Function;
 #define Function(type, name) (Function){astFunction, type, name, NULL}
 

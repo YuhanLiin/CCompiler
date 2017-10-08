@@ -61,22 +61,25 @@ void outputAst(Ast* ast){
         }
         case astStmtDecl: {
             StmtDecl* decl = (StmtDecl*)ast;
-            outprint("var:%s:%s ", stringifyType(decl->type), decl->name);
+            outprint(stringifyType(decl->type));
+            if (decl->name){
+                outprint(":%s", decl->name);
+            }
+            outprint(" ");
             return;
         }
         case astFunction: {
             Function* fn = (Function*)ast;
-            assert (fn->paramTypes.size == fn->paramNames.size);
-            size_t paramCount = fn->paramTypes.size;
+            size_t paramCount = fn->params.size;
             outprint("fn");
             if (fn->stmt == NULL){
                 outprint("dec");
             }
             outprint(":%s:%s:%d ", stringifyType(fn->type), fn->name, paramCount);
             for (size_t i=0; i<paramCount; i++){
-                Type type = fn->paramTypes.elem[i];
-                char_t* name = fn->paramNames.elem[i];
-                outprint("%s:%s ", stringifyType(type), name);
+                Ast* param = fn->params.elem[i];
+                assert(*param == astStmtDecl);
+                outputAst(param);
             }
             if (fn->stmt){
                 outputAst(fn->stmt);
@@ -136,14 +139,14 @@ void testParseStmt(){
     test(parseStmt, " ;", "empty ");
     test(parseStmt, "{}", "block:0 ");
     test(parseStmt, "{ return 5;;}", "block:2 ret int:5 empty ");
-    test(parseStmt, "long long lli;", "var:i64:lli ");
+    test(parseStmt, "long long lli;", "i64:lli ");
 }
 
 void testParseFunction(){
     //This one also tests all the types so far
     test(
-        parseTopLevel, "long long int main (int a, double b, long c, long long d, long int e, float f);",
-        "fndec:i64:main:6 i32:a f64:b i32:c i64:d i32:e f32:f "
+        parseTopLevel, "long long int main (int a, double b, long c, long long d, long int, float);",
+        "fndec:i64:main:6 i32:a f64:b i32:c i64:d i32 f32 "
     );
     test(parseTopLevel, "double k() return 5;", "fn:f64:k:0 ret int:5 ");
 }
@@ -153,8 +156,7 @@ void testParseError(){
         parseStmt, "((sfgd) ",
         "On line 1, position 8, expected ')', but found end of file.\nOn line 1, position 8, expected ';', but found end of file.\n"
     ); 
-    testErr(
-        parseStmt, "", "On line 1, position 0, expected statement, but found end of file.\n"); 
+    testErr(parseStmt, "", "On line 1, position 0, expected statement, but found end of file.\n"); 
     testErr(parseStmt, "sdg(,", "On line 1, position 4, expected expression, but found ','.\n");
     testErr(parseStmt, "\"wergrh\n", "On line 2, position 0, expected statement, but found end of file.\n");
     testErr(parseStmt, "\"wergr", "On line 1, position 6, expected statement, but found end of file.\n");
@@ -166,7 +168,7 @@ void testParseError(){
     testErr(parseStmt, "/*   *", "On line 1, position 6, expected statement, but found end of file.\n");
     testErr(parseStmt, "int 5;", "On line 1, position 4, expected identifier, but found integer.\n");
     testErr(parseTopLevel, "int Blue(a)", "On line 1, position 9, expected type name, but found identifier.\n");
-    testErr(parseTopLevel, "int Blue(long, )", "On line 1, position 13, expected identifier, but found ','.\n");
+    testErr(parseTopLevel, "int Blue(long, )", "On line 1, position 15, expected type name, but found ')'.\n");
     testErr(parseTopLevel, "int Blue(float f)", "On line 1, position 17, expected statement, but found end of file.\n");
 }
 

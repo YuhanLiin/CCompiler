@@ -54,8 +54,7 @@ void disposeAst(void* node){
             if (func->stmt != NULL){
                 disposeAst(func->stmt);
             }
-            disposeArr(Type)(&func->paramTypes);
-            disposeArr(vptr)(&func->paramNames);
+            disposeArr(vptr)(&func->params);
             break;
         }
         //TODO more delete operations

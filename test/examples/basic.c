@@ -1,4 +1,6 @@
-int main()
+int x(int , int b);
+
+int main(int a)
 {
-    return 1 + 3*"a";
+    return 1;
 }
