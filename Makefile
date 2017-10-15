@@ -11,4 +11,4 @@ parsertest: test/parsertest.c lexer.c array.c parser.c ast.c test/io.c test/util
 	gcc -g test/parsertest.c lexer.c array.c parser.c ast.c -o parsertest.exe
 
 arraytest: test/arraytest.c generics/gen_array.c generics/gen_array.h
-	gcc -g test/arraytest.c
+	gcc -g test/arraytest.c -o arraytest.exe
