@@ -7,3 +7,11 @@ typedef enum {
     typFloat32,
     typFloat64
 } Type;
+
+typedef struct {
+    char* name;
+    size_t scopeId;
+} Symbol;
+
+#define GLOBAL_SCOPE 0;
+

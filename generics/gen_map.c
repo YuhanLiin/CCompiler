@@ -26,7 +26,6 @@ char mapInit(KEY, VAL)(Map(KEY, VAL)* table, size_t initSize, size_t (*hash)(KEY
     table->valDtr = valDtr;
     table->eq = eq;
     table->size = 0;
-    initSize /= LOADFACTOR;
     if (initSize == 0){
         //Minimum size is 1 to prevent modulo arith exception when finding indexes
         initSize = 1;
@@ -116,7 +115,7 @@ static char expand(KEY, VAL)(Map(KEY, VAL)* table){
     Pair(KEY, VAL)* oldData = table->data;
     size_t oldSize = table->allocatedSize;
     //Creates brand new hash table twice as big
-    if (!mapInit(KEY, VAL)(table, table->allocatedSize * 2 + 4, table->hash, table->eq, table->keyDtr, table->valDtr)){
+    if (!mapInit(KEY, VAL)(table, table->allocatedSize * 2, table->hash, table->eq, table->keyDtr, table->valDtr)){
         free(oldData);
         return 0;
     }

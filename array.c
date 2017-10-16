@@ -8,6 +8,6 @@
 #include "generics/gen_array.c"
 #undef TYPE 
 
-#define TYPE Type
+#define TYPE size_t
 #include "generics/gen_array.c"
 #undef TYPE
