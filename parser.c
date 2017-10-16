@@ -92,7 +92,7 @@ static char parseArgs(Array(vptr) *args){
     do {    
         ExprBase* arg = parseExpr();
         if (arg == NULL) return 0; //If expression cant be parsed then syntax error
-        if (!pushArr(vptr)(args, arg)) exit(1); //Push arg and check for malloc failures
+        if (!arrPush(vptr)(args, arg)) exit(1); //Push arg and check for malloc failures
     }while (curTok == tokComma && (getTok() || 1));   
     return 1;
 }
@@ -139,7 +139,7 @@ static ExprBase* parsePrimaryExpr(){
                 getTok(); //Consume left paren
                 NewAst(ExprCall, call, name)
                 //Initialize args array
-                initArr(vptr)(&call->args, 0, NULL, &disposeAst);
+                arrInit(vptr)(&call->args, 0, NULL, &disposeAst);
                 //If following brackets are not empty, attempt to parse 1 or more args.
                 if (curTok == tokRParen){
                     getTok(); //Consume rb
@@ -157,7 +157,7 @@ static ExprBase* parsePrimaryExpr(){
                         return (ExprBase*)call;
                     }
                 }
-                disposeArr(vptr)(&call->args);
+                arrDispose(vptr)(&call->args);
                 free(call);
             }
             //Otherwise its a normal identifier
@@ -253,11 +253,11 @@ Ast* parseStmt(){
         case tokLBrace:
             getTok(); //Consume left brace
             NewAst(StmtBlock, block)
-            initArr(vptr)(&block->stmts, 0, NULL, &disposeAst);
+            arrInit(vptr)(&block->stmts, 0, NULL, &disposeAst);
             while (curTok != tokRBrace){
                 Ast* stmt = parseStmt();
                 if (stmt){
-                    if (!pushArr(vptr)(&block->stmts, stmt)){
+                    if (!arrPush(vptr)(&block->stmts, stmt)){
                         exit(1);
                     }
                 }
@@ -323,7 +323,7 @@ static char parseParams(Array(vptr) *params){
             param->name = toCstring(&stringBuffer);
             getTok();  //Consume name
         }
-        if (!pushArr(vptr)(params, param)){
+        if (!arrPush(vptr)(params, param)){
             exit(1);  //Push param and check for malloc failures
         }
     } while (curTok == tokComma && (getTok() || 1));
@@ -340,7 +340,7 @@ static Ast* parseFunction(Type type){
         if (curTok == tokLParen){
             getTok(); //Consume left paren
             NewAst(Function, func, type, name)
-            initArr(vptr)(&func->params, 0, NULL, &disposeAst);
+            arrInit(vptr)(&func->params, 0, NULL, &disposeAst);
             if (curTok == tokRParen){
                 getTok(); //Consume right paren
                 goto finishedParsingParams;
@@ -365,7 +365,7 @@ static Ast* parseFunction(Type type){
                 }
                 //parseStmt reports errors, so no need for it here
             }
-            disposeArr(vptr)(&func->params);
+            arrDispose(vptr)(&func->params);
             free(func);
         }
         //TODO declarations as well

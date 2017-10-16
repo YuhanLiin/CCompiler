@@ -44,7 +44,7 @@ static char_t getNext(){
 }
 //Store in string
 static char_t store(char_t c){
-    pushArr(char_t)(&stringBuffer, c);
+    arrPush(char_t)(&stringBuffer, c);
     return c;
 }
 //Get next char if it matches c. REturns whether match occurs
@@ -65,7 +65,7 @@ static char storeNextIf(char_t c){
 }
 
 void initLexer(){ //Can fail due to malloc
-    if (!initArr(char_t)(&stringBuffer, 5, NULL, NULL)) exit(1); //Allocate empty string
+    if (!arrInit(char_t)(&stringBuffer, 5, NULL, NULL)) exit(1); //Allocate empty string
     linePos = 0;
     lineTokenEndPos = 0;
     lineTokenEndNumber = 1;
@@ -74,7 +74,7 @@ void initLexer(){ //Can fail due to malloc
 }
 
 void disposeLexer(){
-    disposeArr(char_t)(&stringBuffer);
+    arrDispose(char_t)(&stringBuffer);
 }
 
 //Recognizes decimal sequence and adds it to floatVal. Returns whether decimals were recognized
@@ -107,7 +107,7 @@ static char lexKeyword(const char_t *keyword){
 //Gets the next token
 Token lexToken(){
     //Reset fields
-    clearArr(char_t)(&stringBuffer);
+    arrClear(char_t)(&stringBuffer);
     floatVal = 0;
     intVal = 0;
 

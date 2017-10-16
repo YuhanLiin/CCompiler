@@ -24,7 +24,7 @@ void disposeAst(void* node){
         case astExprCall: {
             ExprCall* call = (ExprCall*)ast;
             free(call->name);
-            disposeArr(vptr)(&call->args);
+            arrDispose(vptr)(&call->args);
             break;
         }
         case astExprBinop: {
@@ -43,7 +43,7 @@ void disposeAst(void* node){
             disposeAst(((StmtExpr*)ast)->expr);
             break;
         case astStmtBlock:
-            disposeArr(vptr)(&((StmtBlock*)ast)->stmts);
+            arrDispose(vptr)(&((StmtBlock*)ast)->stmts);
             break;
         case astStmtDecl:
             free(((StmtDecl*)ast)->name);
@@ -54,7 +54,7 @@ void disposeAst(void* node){
             if (func->stmt != NULL){
                 disposeAst(func->stmt);
             }
-            disposeArr(vptr)(&func->params);
+            arrDispose(vptr)(&func->params);
             break;
         }
         //TODO more delete operations

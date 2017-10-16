@@ -7,7 +7,7 @@
 //Initialize flexible array using a c array, allocating and copying c array into new array
 //If c array is null, then the memory is still allocated according to size but new array starts out empty 
 //Thus, both arr and dtr can be null. On malloc failure, all fields will be NULL or 0
-char initArr(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* dtr)(TYPE)){
+char arrInit(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* dtr)(TYPE)){
     array->size = 0;
     array->allocatedSize = 0; //Initialize size fields as 0
     array->destructor = dtr;
@@ -29,7 +29,7 @@ char initArr(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* d
 }
 
 //Destroys all elements and empties array
-void clearArr(TYPE) (Array(TYPE)* array){
+void arrClear(TYPE) (Array(TYPE)* array){
     if (array->destructor != NULL){
         for (size_t i=0; i<array->size; i++){
             (*array->destructor)(array->elem[i]);
@@ -39,14 +39,14 @@ void clearArr(TYPE) (Array(TYPE)* array){
 }
 
 //Destroys all elements of array and array itself
-void disposeArr(TYPE) (Array(TYPE)* array){
-    clearArr(TYPE) (array);
+void arrDispose(TYPE) (Array(TYPE)* array){
+    arrClear(TYPE) (array);
     free(array->elem);
 }
 
 //Insert element into position and shift all elem after by 1. Reallocate twice the space if needed. 
 //Returns success/fail
-char insertArr(TYPE) (Array(TYPE)* array, TYPE elem, size_t pos){
+char arrInsert(TYPE) (Array(TYPE)* array, TYPE elem, size_t pos){
     if (array->size >= array->allocatedSize){
         size_t newSize = array->allocatedSize * 2 + 4;
         TYPE* newMem = realloc(array->elem, sizeof(TYPE)*newSize);
@@ -62,12 +62,12 @@ char insertArr(TYPE) (Array(TYPE)* array, TYPE elem, size_t pos){
     return 1;
 }
 //Push element into back of array 
-char pushArr(TYPE) (Array(TYPE)* array, TYPE elem){
-    return insertArr(TYPE) (array, elem, array->size);
+char arrPush(TYPE) (Array(TYPE)* array, TYPE elem){
+    return arrInsert(TYPE) (array, elem, array->size);
 }
 
 //Moves element from nth position and retract all following elems by 1. Returns that element without destroying it
-TYPE extractArr(TYPE) (Array(TYPE)* array, size_t pos){
+TYPE arrExtract(TYPE) (Array(TYPE)* array, size_t pos){
     TYPE elem = array->elem[pos];
     for (size_t i=pos+1; i<array->size; i++){
         array->elem[i-1] = array->elem[i];
@@ -76,12 +76,12 @@ TYPE extractArr(TYPE) (Array(TYPE)* array, size_t pos){
     return elem;
 }
 //Pop element from back and returns it. Does not call destructor
-TYPE popArr(TYPE) (Array(TYPE)* array){
-    return extractArr(TYPE) (array, array->size-1);
+TYPE arrPop(TYPE) (Array(TYPE)* array){
+    return arrExtract(TYPE) (array, array->size-1);
 }
 
 //Copy one array's elements and destructor into another. Assumes dest array is unallocated or disposed (no remaining resources)
 //Can fail due to malloc
-char copyArr(TYPE) (Array(TYPE)* dest, const Array(TYPE)* src){
-    return initArr(TYPE)(dest, src->size, src->elem, src->destructor);
+char arrCopy(TYPE) (Array(TYPE)* dest, const Array(TYPE)* src){
+    return arrInit(TYPE)(dest, src->size, src->elem, src->destructor);
 }

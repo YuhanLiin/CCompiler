@@ -14,54 +14,54 @@ typedef struct
     void (*destructor)(TYPE);     //Destructor function for each element. Can be null
 } Array(TYPE);
 
-#ifndef initArr
-#define initArr(t) CONCAT(initArr, t)
+#ifndef arrInit
+#define arrInit(t) CONCAT(arrInit, t)
 #endif
 //Initialize flexible array using a c array, allocating and copying c array into new array
 //If c array is null, then the memory is still allocated according to size but new array starts out empty 
 //Thus, both arr and dtr can be null
-char initArr(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* dtr)(TYPE));
+char arrInit(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* dtr)(TYPE));
 
-#ifndef clearArr
-#define clearArr(t) CONCAT(clearArr, t)
+#ifndef arrClear
+#define arrClear(t) CONCAT(arrClear, t)
 #endif
 //Destroys all elements and empties array
-void clearArr(TYPE) (Array(TYPE)* array);
+void arrClear(TYPE) (Array(TYPE)* array);
 
-#ifndef disposeArr
-#define disposeArr(t) CONCAT(disposeArr, t)
+#ifndef arrDispose
+#define arrDispose(t) CONCAT(arrDispose, t)
 #endif
 //Destroys all elements of array and array itself
-void disposeArr(TYPE) (Array(TYPE)* array);
+void arrDispose(TYPE) (Array(TYPE)* array);
 
-#ifndef insertArr
-#define insertArr(t) CONCAT(insertArr, t)
+#ifndef arrInsert
+#define arrInsert(t) CONCAT(arrInsert, t)
 #endif
 //Insert element into position and shift all elem after by 1. Reallocate twice the space if needed. 
 //Returns success/fail
-char insertArr(TYPE) (Array(TYPE)* array, TYPE elem, size_t pos);
+char arrInsert(TYPE) (Array(TYPE)* array, TYPE elem, size_t pos);
 
-#ifndef pushArr
-#define pushArr(t) CONCAT(pushArr, t)
+#ifndef arrPush
+#define arrPush(t) CONCAT(arrPush, t)
 #endif
 //Push element into back of array 
-char pushArr(TYPE) (Array(TYPE)* array, TYPE elem);
+char arrPush(TYPE) (Array(TYPE)* array, TYPE elem);
 
-#ifndef extractArr
-#define extractArr(t) CONCAT(extractArr, t)
+#ifndef arrExtract
+#define arrExtract(t) CONCAT(arrExtract, t)
 #endif
 //Moves element from nth position and retract all following elems by 1. Returns that element without destroying it
-TYPE extractArr(TYPE) (Array(TYPE)* array, size_t pos);
+TYPE arrExtract(TYPE) (Array(TYPE)* array, size_t pos);
 
-#ifndef popArr
-#define popArr(t) CONCAT(popArr, t)
+#ifndef arrPop
+#define arrPop(t) CONCAT(arrPop, t)
 #endif
 //Pop element from back and returns it. Does not call destructor
-TYPE popArr(TYPE) (Array(TYPE)* array);
+TYPE arrPop(TYPE) (Array(TYPE)* array);
 
-#ifndef copyArr
-#define copyArr(t) CONCAT(copyArr, t)
+#ifndef arrCopy
+#define arrCopy(t) CONCAT(arrCopy, t)
 #endif
 //Copy one array's elements into another. Assumes dest array is unallocated or disposed (no remaining resources)
 //Can fail due to malloc
-char copyArr(TYPE) (Array(TYPE)* dest, const Array(TYPE)* src);
+char arrCopy(TYPE) (Array(TYPE)* dest, const Array(TYPE)* src);
