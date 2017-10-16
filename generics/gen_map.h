@@ -27,4 +27,4 @@ char mapInsert(KEY, VAL)(Map(KEY, VAL)* table, KEY key, VAL value);
 const VAL* mapRemove(KEY, VAL)(Map(KEY, VAL)* table, KEY key, KEY* keyReturn);
 
 #define mapFind(k, v) CONCAT3(mapFind, k, v)
-VAL* mapFind(KEY, VAL)(Map(KEY, VAL)* table, KEY key);
+VAL* mapFind(KEY, VAL)(const Map(KEY, VAL)* table, KEY key);

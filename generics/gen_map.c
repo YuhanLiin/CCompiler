@@ -11,7 +11,7 @@
 #define Pair(k, v) CONCAT3(Pair, k, v)
 typedef struct {
     KEY key;
-    enum {stEmpty=0, stDeleted=1, stFilled=2} status : 8;
+    enum {stEmpty=0, stDeleted=1, stFilled=2} status;
     VAL value;
 } Pair(KEY, VAL);
 
@@ -19,7 +19,7 @@ typedef struct {
 #define GETDATA(table) ((Pair(KEY, VAL)*)table->data)
 #endif
 
-//Inits hashtable to all empty pairs of specific size.
+//Inits map to all empty pairs of specific size.
 char mapInit(KEY, VAL)(Map(KEY, VAL)* table, size_t initSize, size_t (*hash)(KEY), char (*eq)(KEY, KEY), void (*keyDtr)(KEY), void (*valDtr)(VAL)){
     table->hash = hash;
     table->keyDtr = keyDtr;
@@ -28,15 +28,14 @@ char mapInit(KEY, VAL)(Map(KEY, VAL)* table, size_t initSize, size_t (*hash)(KEY
     table->size = 0;
     initSize /= LOADFACTOR;
     if (initSize == 0){
-        table->data = NULL;
+        //Minimum size is 1 to prevent modulo arith exception when finding indexes
+        initSize = 1;
     }
-    else{
-        size_t initAlloc = sizeof(Pair(KEY, VAL)) * initSize;
-        table->data = malloc(initAlloc);
-        if (table->data == NULL) return 0;
-        for (size_t i=0; i<table->size; i++){
-            GETDATA(table)[i].status = stEmpty;
-        }
+    size_t initAlloc = sizeof(Pair(KEY, VAL)) * initSize;
+    table->data = malloc(initAlloc);
+    if (table->data == NULL) return 0;
+    for (size_t i=0; i<initSize; i++){
+        GETDATA(table)[i].status = stEmpty;
     }
     table->allocatedSize = initSize;
     return 1;
@@ -56,7 +55,7 @@ void mapClear(KEY, VAL)(Map(KEY, VAL)* table){
         for (size_t i=0; i<table->allocatedSize; i++){
             pair = &GETDATA(table)[i];
             if (pair->status == stFilled){
-                (*table->keyDtr)(pair->key);
+                (*table->valDtr)(pair->key);
             }
         }
     }
@@ -73,7 +72,7 @@ void mapDispose(KEY, VAL)(Map(KEY, VAL)* table){
 
 #define toIndex(k, v) CONCAT3(toIndex, k, v)
 //Hashes key and modulo it into valid index
-static size_t toIndex(KEY, VAL)(Map(KEY, VAL)* table, KEY key){
+static size_t toIndex(KEY, VAL)(const Map(KEY, VAL)* table, KEY key){
     return (*table->hash)(key) % (table->allocatedSize);
 }
 
@@ -85,6 +84,7 @@ static void update(KEY, VAL)(Map(KEY, VAL)* table, KEY key, VAL value){
     for (size_t i=pos; i<table->allocatedSize; i++){
         pair = &GETDATA(table)[i];
         if (pair->status != stFilled){
+            table->size++;
             goto updatePair;
         }
         else if (table->eq(key, GETDATA(table)[i].key)){
@@ -94,6 +94,7 @@ static void update(KEY, VAL)(Map(KEY, VAL)* table, KEY key, VAL value){
     for (size_t i=0; i<pos; i++){
         pair = &GETDATA(table)[i];
         if (pair->status != stFilled){
+            table->size++;
             goto updatePair;
         }
         else if (table->eq(key, GETDATA(table)[i].key)){
@@ -115,7 +116,7 @@ static char expand(KEY, VAL)(Map(KEY, VAL)* table){
     Pair(KEY, VAL)* oldData = table->data;
     size_t oldSize = table->allocatedSize;
     //Creates brand new hash table twice as big
-    if (!mapInit(KEY, VAL)(table, table->allocatedSize * 2, table->hash, table->eq, table->keyDtr, table->valDtr)){
+    if (!mapInit(KEY, VAL)(table, table->allocatedSize * 2 + 4, table->hash, table->eq, table->keyDtr, table->valDtr)){
         free(oldData);
         return 0;
     }
@@ -126,7 +127,6 @@ static char expand(KEY, VAL)(Map(KEY, VAL)* table){
         }
     }
     free(oldData);
-    table->size++;
     return 1;
 }
 
@@ -138,11 +138,12 @@ char mapInsert(KEY, VAL)(Map(KEY, VAL)* table, KEY key, VAL value){
         if (!expand(KEY, VAL)(table)) return 0;
     }
     update(KEY, VAL)(table, key, value);
+    return 1;
 }
 
 #define getProbe(k, v) CONCAT3(getProbe, k, v)
 //Probes linearly from starting point. Stops at empty slot or filled slot with matching key
-static Pair(KEY, VAL)* getProbe(KEY, VAL)(Map(KEY, VAL)* table, size_t start, KEY key){
+static Pair(KEY, VAL)* getProbe(KEY, VAL)(const Map(KEY, VAL)* table, size_t start, KEY key){
     Pair(KEY, VAL)* pair;
     for (size_t i=start; i<table->allocatedSize; i++){
         pair = &GETDATA(table)[i];
@@ -162,7 +163,7 @@ static Pair(KEY, VAL)* getProbe(KEY, VAL)(Map(KEY, VAL)* table, size_t start, KE
             return pair;
         }
     }
-    assert(0 && "Map shouldn't be empty");
+    return NULL;
 }
 
 //Deletes entry from hash table if it exists. Returns key and value pointer if successful
@@ -176,7 +177,7 @@ const VAL* mapRemove(KEY, VAL)(Map(KEY, VAL)* table, KEY key, KEY* keyReturn){
     return NULL;
 }
 
-VAL* mapFind(KEY, VAL)(Map(KEY, VAL)* table, KEY key){
+VAL* mapFind(KEY, VAL)(const Map(KEY, VAL)* table, KEY key){
     Pair(KEY, VAL)* pair = getProbe(KEY, VAL)(table, toIndex(KEY, VAL)(table, key), key);
     if (pair != NULL){
         return &pair->value;

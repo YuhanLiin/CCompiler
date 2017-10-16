@@ -12,3 +12,6 @@ parsertest: test/parsertest.c lexer.c array.c parser.c ast.c test/io.c test/util
 
 arraytest: test/arraytest.c generics/gen_array.c generics/gen_array.h
 	gcc -g test/arraytest.c -o arraytest.exe
+
+maptest: test/maptest.c generics/gen_map.c generics/gen_map.h
+	gcc -g test/maptest.c -o maptest.exe
