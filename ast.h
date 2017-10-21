@@ -2,7 +2,7 @@
 #include "array.h"
 #include "lexer.h"
 #include "utils.h"
-#include "symbols.h"
+#include "type.h"
 
 //Acts as a label for ast node type and also base class
 //All nodes must have this as 1st field so that the labels can be checked before casting into correct node type

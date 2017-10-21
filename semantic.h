@@ -1,5 +1,5 @@
 #pragma once
-#include "symbols.h"
+#include "type.h"
 #include "ast.h"
 
 char verifyTopLevel(Ast* ast);

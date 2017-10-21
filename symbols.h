@@ -1,17 +1,14 @@
 #pragma once
+#include "ast.h"
 
-typedef enum {
-    typNone,    //Sentinel for a failed type parse
-    typInt32,
-    typInt64,
-    typFloat32,
-    typFloat64
-} Type;
+void initSymbolTable();
 
-typedef struct {
-    char* name;
-    size_t scopeId;
-} Symbol;
+void disposeSymbolTable();
 
-#define GLOBAL_SCOPE 0;
+size_t newScope();
 
+size_t prevScope();
+
+void insertSymbol(char* name, size_t scopeId, Ast* ast);
+
+Ast* findSymbol(char* name, size_t scopeId, char fullLookup);

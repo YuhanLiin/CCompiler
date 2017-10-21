@@ -54,7 +54,7 @@ void mapClear(KEY, VAL)(Map(KEY, VAL)* table){
         for (size_t i=0; i<table->allocatedSize; i++){
             pair = &GETDATA(table)[i];
             if (pair->status == stFilled){
-                (*table->valDtr)(pair->key);
+                (*table->valDtr)(pair->value);
             }
         }
     }
