@@ -26,16 +26,52 @@ void valDtr(int i){
     valCount++;
 }
 
-int main(int argc, char const *argv[])
-{
+const int* valptr;
+
+void testProbing(){
+    Map(char, int) map;
+    mapInit(char, int)(&map, 10, &hashChar, &eqChar, NULL, NULL);
+    mapInsert(char, int)(&map, 0, 1);
+    mapInsert(char, int)(&map, 10, 11);
+    valptr = mapFind(char, int)(&map, 10);
+    assert(*valptr == 11);
+    mapInsert(char, int)(&map, 1, 2);
+    mapInsert(char, int)(&map, 21, 22);
+    valptr = mapFind(char, int)(&map, 1);
+    assert(*valptr == 2);
+    valptr = mapFind(char, int)(&map, 21);
+    assert(*valptr == 22);
+    mapDispose(char, int)(&map);
+}
+
+void testRemoveLoadFactor(){
+    Map(char, int) map;
+    char key;
+    mapInit(char, int)(&map, 2, &hashChar, &eqChar, NULL, NULL);
+    mapInsert(char, int)(&map, 0, 1);
+    mapRemove(char, int)(&map, 0, &key);
+    mapInsert(char, int)(&map, 0, 2);
+    mapInsert(char, int)(&map, 1, 3);
+    valptr = mapFind(char, int)(&map, 0);
+    assert(*valptr == 2);
+    valptr = mapFind(char, int)(&map, 1);
+    assert(*valptr == 3);
+    mapDispose(char, int)(&map);
+}
+
+void testMapInit(){
     char b;
-    const int* valptr;
     char key;
     Map(char, int) map;
     b = mapInit(char, int)(&map, 0, &hashChar, &eqChar, NULL, NULL);
     assert(b == 1);
     mapDispose(char, int)(&map);
+}
 
+void testOperations(){
+    char b;
+    char key;
+    Map(char, int) map;
     mapInit(char, int)(&map, 0, &hashChar, &eqChar, &keyDtr, &valDtr);
     valptr = mapFind(char, int)(&map, 'a');
     assert(valptr == NULL);
@@ -71,5 +107,13 @@ int main(int argc, char const *argv[])
     mapDispose(char, int)(&map);
     assert(keyCount == 2);
     assert(valCount == 2);
+}
+
+int main(int argc, char const *argv[])
+{
+    testMapInit();
+    testOperations();
+    testProbing();
+    testRemoveLoadFactor();
     return 0;
 }
