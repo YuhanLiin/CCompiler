@@ -101,19 +101,19 @@ static char parseArgs(Array(vptr) *args){
 static ExprBase* parsePrimaryExpr(){
     switch (curTok){
         case tokNumInt: {
-            NewAst(ExprInt, expr, intVal)
+            long long i = intVal;
             getTok(); //Consume number
-            return (ExprBase*)expr;
+            return (ExprBase*) newExprInt(i);
         }
         case tokNumDouble: {
-            NewAst(ExprDouble, expr, floatVal)
+            double d = floatVal;
             getTok(); //Consume number
-            return (ExprBase*)expr;
+            return (ExprBase*) newExprDouble(d);
         }
         case tokString: {
-            NewAst(ExprStr, expr, toCstring(&stringBuffer))
+            char_t* str = toCstring(&stringBuffer);
             getTok(); //Consume string
-            return (ExprBase*)expr;
+            return (ExprBase*) newExprStr(str);
         }
         case tokLParen: {
             getTok(); //Consume left paren
@@ -137,9 +137,7 @@ static ExprBase* parsePrimaryExpr(){
             //If bracket follows then its a function call
             if (curTok == tokLParen){  
                 getTok(); //Consume left paren
-                NewAst(ExprCall, call, name)
-                //Initialize args array
-                arrInit(vptr)(&call->args, 0, NULL, &disposeAst);
+                ExprCall* call = newExprCall(name);
                 //If following brackets are not empty, attempt to parse 1 or more args.
                 if (curTok == tokRParen){
                     getTok(); //Consume rb
@@ -162,8 +160,7 @@ static ExprBase* parsePrimaryExpr(){
             }
             //Otherwise its a normal identifier
             else {
-                NewAst(ExprIdent, ident, name)
-                return (ExprBase*)ident;
+                return (ExprBase*) newExprIdent(name);
             }
             free(name);
             return NULL;
@@ -207,8 +204,7 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
             rhs = newRhs;
         }
         //After rhs has been fully built, merge it with lhs and then continue
-        NewAst(ExprBinop, newLhs, op, lhs, rhs)
-        lhs = (ExprBase*)newLhs;
+        lhs = (ExprBase*) newExprBinop(op, lhs, rhs);
     }
     return lhs;
 }
@@ -240,20 +236,17 @@ Ast* parseStmt(){
             getTok(); //Consume return
             ExprBase* expr = parseExpr();
             if (expr){
-                NewAst(StmtReturn, stmt, expr)
                 checkSemicolon();
-                return (Ast*)stmt;
+                return (Ast*) newStmtReturn(expr);
             }
             return NULL;
         }
         case tokSemicolon:
             getTok(); //Consume semicolon
-            NewAst(StmtEmpty, stmt)
-            return (Ast*)stmt;
+            return (Ast*) newStmtEmpty();
         case tokLBrace:
             getTok(); //Consume left brace
-            NewAst(StmtBlock, block)
-            arrInit(vptr)(&block->stmts, 0, NULL, &disposeAst);
+            StmtBlock* block = newStmtBlock();
             while (curTok != tokRBrace){
                 Ast* stmt = parseStmt();
                 if (stmt){
@@ -287,10 +280,10 @@ Ast* parseStmt(){
             Type type = parseType();
             if (type != typNone){
                 if (curTok == tokIdent){
-                    NewAst(StmtDecl, decl, type, toCstring(&stringBuffer))
+                    char_t* str = toCstring(&stringBuffer);
                     getTok();  //Consume identifier
                     checkSemicolon();
-                    return (Ast*)decl;
+                    return (Ast*) newStmtVarDef(type, str);
                 }
                 else{
                     syntaxError(stringifyToken(tokIdent));
@@ -299,9 +292,8 @@ Ast* parseStmt(){
             else {
                 ExprBase* expr = parseExpr();
                 if (expr){
-                    NewAst(StmtExpr, stmt, expr);
                     checkSemicolon();
-                    return (Ast*)stmt;
+                    return (Ast*) newStmtExpr(expr);
                 }
             }
             return NULL;
@@ -318,7 +310,7 @@ static char parseParams(Array(vptr) *params){
             syntaxError("type name");
             return 0;
         }
-        NewAst(StmtDecl, param, type, NULL)
+        StmtVar* param = newStmtVarDef(type, NULL);
         if (curTok == tokIdent){
             param->name = toCstring(&stringBuffer);
             getTok();  //Consume name
@@ -339,8 +331,7 @@ static Ast* parseFunction(Type type){
         //Function call discovered
         if (curTok == tokLParen){
             getTok(); //Consume left paren
-            NewAst(Function, func, type, name)
-            arrInit(vptr)(&func->params, 0, NULL, &disposeAst);
+            Function* func = newFunction(type, name);
             if (curTok == tokRParen){
                 getTok(); //Consume right paren
                 goto finishedParsingParams;

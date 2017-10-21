@@ -18,6 +18,7 @@ typedef enum {
     astStmtExpr,
     astStmtBlock,
     astStmtDecl,
+    astStmtDef,
     astFunction
 } Ast;
 
@@ -26,31 +27,32 @@ typedef struct {
     Ast label;
     Type type;
 } ExprBase;
+#define ExprBase(label) (ExprBase){label, typNone}
 
-//Below macros will function like c++ constructors for ast nodes
+//Actual ast nodes and their allocators
 typedef struct {
     ExprBase base; 
     double num;
 } ExprDouble;
-#define ExprDouble(num) (ExprDouble){(ExprBase){astExprDouble, typNone}, num}
+ExprDouble* newExprDouble(double num);
 
 typedef struct {
     ExprBase base;
     long long num;
 } ExprInt;
-#define ExprInt(num) (ExprInt){(ExprBase){astExprInt, typNone}, num}
+ExprInt* newExprInt(long long num);
 
 typedef struct {
     ExprBase base; 
     char_t* str;
 } ExprStr;
-#define ExprStr(str) (ExprStr){(ExprBase){astExprStr, typNone}, str}
+ExprStr* newExprStr(char_t* str);
 
 typedef struct {
     ExprBase base; 
     char_t* name;
 } ExprIdent;
-#define ExprIdent(name) (ExprIdent){(ExprBase){astExprIdent, typNone}, name}
+ExprIdent* newExprIdent(char_t* name);
 
 typedef struct {
     ExprBase base; 
@@ -58,53 +60,52 @@ typedef struct {
     ExprBase* left; 
     ExprBase* right;
 } ExprBinop;
-#define ExprBinop(op, left, right) (ExprBinop){(ExprBase){astExprBinop, typNone}, op, left, right}
+ExprBinop* newExprBinop(Token op, ExprBase* left, ExprBase* right);
 
 typedef struct {
     ExprBase base; 
     char_t* name; 
     Array(vptr) args;
 } ExprCall;
-#define ExprCall(id) (ExprCall){(ExprBase){astExprCall, typNone}, id}
+ExprCall* newExprCall(char_t* name);
 
 typedef struct {Ast label;} StmtEmpty;
-#define StmtEmpty(expr) (StmtEmpty){astStmtEmpty}
+StmtEmpty* newStmtEmpty();
 
 typedef struct {
     Ast label;
     ExprBase* expr;
 } StmtReturn;
-#define StmtReturn(expr) (StmtReturn){astStmtReturn, expr}
+StmtReturn* newStmtReturn(ExprBase* expr);
 
 typedef struct {
     Ast label;
     ExprBase* expr;
 } StmtExpr;
-#define StmtExpr(expr) (StmtExpr){astStmtExpr, expr}
+StmtExpr* newStmtExpr(ExprBase* expr);
 
 typedef struct {
     Ast label;
     Array(vptr) stmts;
 } StmtBlock;
-#define StmtBlock() (StmtBlock){astStmtBlock}
+StmtBlock* newStmtBlock();
 
 typedef struct {
-    Ast label;
+    Ast label;  //Label can be either astStmtDef or astStmtDecl, depending on if it's variable definition or declaration
     Type type;
     char_t* name;   //Left null for unnamed params
-} StmtDecl;
-#define StmtDecl(type, name) (StmtDecl){astStmtDecl, type, name}
+} StmtVar;
+StmtVar* newStmtVarDef(Type type, char_t* name);
+StmtVar* newStmtVarDecl(Type type, char_t* name);
 
 typedef struct {
     Ast label; 
     Type type; 
     char_t* name;
     Ast* stmt;  //Leave this null if there is no definition
-    Array(vptr) params;  //List of StmtDecl to represent parameters
+    Array(vptr) params;  //List of StmtDef to represent parameters
 } Function;
-#define Function(type, name) (Function){astFunction, type, name, NULL}
-
-#define NewAst(T, ptrname, ...) New(T, ptrname, 1) *ptrname = T(__VA_ARGS__);
+Function* newFunction(Type type, char_t* name);
 
 //Delete ast based on type of ast
 void disposeAst(void* ast);

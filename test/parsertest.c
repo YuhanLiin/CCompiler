@@ -59,8 +59,10 @@ void outputAst(Ast* ast){
             }
             return;
         }
-        case astStmtDecl: {
-            StmtDecl* decl = (StmtDecl*)ast;
+        case astStmtDecl:
+            outprint("dec:");
+        case astStmtDef: {
+            StmtVar* decl = (StmtVar*)ast;
             outprint(stringifyType(decl->type));
             if (decl->name){
                 outprint(":%s", decl->name);
@@ -78,7 +80,7 @@ void outputAst(Ast* ast){
             outprint(":%s:%s:%d ", stringifyType(fn->type), fn->name, paramCount);
             for (size_t i=0; i<paramCount; i++){
                 Ast* param = fn->params.elem[i];
-                assert(*param == astStmtDecl);
+                assert(*param == astStmtDef);
                 outputAst(param);
             }
             if (fn->stmt){
