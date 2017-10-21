@@ -9,6 +9,10 @@ size_t newScope();
 
 size_t prevScope();
 
-void insertSymbol(char* name, size_t scopeId, Ast* ast);
+char insertVar(char* name, ExprBase* expr);
 
-Ast* findSymbol(char* name, size_t scopeId, char fullLookup);
+char insertFunc(char* name, Function* func);
+
+const ExprBase* findVar(char* name);
+
+const Function* findFunc(char* name);

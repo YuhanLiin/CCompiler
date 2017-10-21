@@ -34,12 +34,9 @@ static char eqSymbol(Symbol a, Symbol b){
     return !strcmp(a.name, b.name) && a.scopeId == b.scopeId;
 }
 
-static void cleanSymbol(Symbol sym){
-    free(sym.name);
-}
 
 void initSymbolTable(){
-    mapInit(Symbol, Astptr)(&symbolTable, 4, &hashSymbol, &eqSymbol, &cleanSymbol, NULL);
+    mapInit(Symbol, Astptr)(&symbolTable, 4, &hashSymbol, &eqSymbol, NULL, NULL);
     arrInit(size_t)(&parentScopes, GLOBAL_SCOPE + 1, NULL, NULL);
     curScope = GLOBAL_SCOPE;
 }
@@ -62,19 +59,50 @@ size_t prevScope(){
     return curScope = parentScopes.elem[curScope];
 }
 
-void insertSymbol(char* name, size_t scopeId, Ast* ast){
-    if (!mapInsert(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId), ast)){
+static void insertSymbol(char* name, Ast* ast){
+    if (!mapInsert(Symbol, Astptr)(&symbolTable, Symbol(name, curScope), ast)){
         exit(1);
     }
 }
 
-Ast* findSymbol(char* name, size_t scopeId, char fullLookup){
-    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));
-    if (fullLookup){
-        while (astptr == NULL && scopeId != GLOBAL_SCOPE){
-            scopeId = parentScopes.elem[scopeId];
-            astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));
-        }
+char insertVar(char* name, ExprBase* expr){
+    //Variable can be defined if it hasnt been defined before
+    if (!mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, curScope))){
+        insertSymbol(name, &expr->label);
+        return 1;
     }
-    return *astptr;
+    return 0;
+}
+
+char insertFunc(char* name, Function* func){
+    Function* prev = findFunc(name);
+    //Function can only be defined if function of same name hasn't been defined before
+    if (prev == NULL || prev->stmt == NULL){
+        insertSymbol(name, &func->label);
+        return 1;
+    }
+    return 0;
+}
+
+//Search for a variable from the current to the global scope
+const ExprBase* findVar(char* name){
+    size_t scopeId = curScope;
+    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));
+    while (astptr == NULL && scopeId != GLOBAL_SCOPE){
+        scopeId = parentScopes.elem[scopeId];
+        astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));
+    }
+    if (astptr && **astptr != astFunction){
+        return (ExprBase*)(*astptr);
+    }
+    return NULL;
+}
+
+//Search for a function in the global scope
+const Function* findFunc(char* name){
+    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, GLOBAL_SCOPE));
+    if (astptr && **astptr == astFunction){
+        return (Function*)(*astptr);
+    }
+    return NULL;
 }

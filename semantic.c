@@ -1,11 +1,13 @@
 #include "semantic.h"
+#include "symbols.h"
 #include <assert.h>
 #include <string.h>
 
 Type returnType = typNone;
 
-void semanticError(){
+char semanticError(){
     //TODO actual error messages
+    return 0;
 }
 
 // Fills in the type attributes and verifies they are compatible
@@ -29,6 +31,14 @@ static char verifyExpr(ExprBase* base){
                 semanticError();
             }
             return 0;
+        }
+        case astExprIdent: {
+            ExprBase* value = findVar(((ExprIdent*)base)->name);
+            if (value){
+                base->type = value->type;
+                return 1;
+            }
+            return semanticError();
         }
         default:
             //TODO support more expr ast types
@@ -67,6 +77,10 @@ char verifyTopLevel(Ast* ast){
     switch(*ast){
         case astFunction: {
             Function *func = (Function*)ast;
+            if (!insertFunc(func)){
+                return semanticError();
+            }
+            
             //TODO check params as well. Right now pretend they are empty
             if (func->stmt == NULL){
                 //Declaration only, so no need to verify contents.
