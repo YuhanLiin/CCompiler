@@ -44,21 +44,21 @@ static void verifyArgs(const ExprCall* call, const Function* func){
 }
 
 //Fills in the type attributes. Returns whether the type of the expression was possible to discern
-static char verifyExpr(ExprBase* base){
-    switch(base->label){
+static char verifyExpr(ExprBase* expr){
+    switch(expr->label){
         case astExprInt:
-            base->type = typInt32;
+            expr->type = typInt32;
             return 1;
         case astExprDouble:
-            base->type = typFloat32;
+            expr->type = typFloat32;
             return 1;
         case astExprBinop: {
-            ExprBinop* binop = (ExprBinop*)base;
+            ExprBinop* binop = (ExprBinop*)expr;
             if (verifyExpr(binop->left) && verifyExpr(binop->right)){
                 assert(binop->left->type != typNone);
                 assert(binop->right->type != typNone);
                 if (binop->left->type == binop->right->type){
-                    base->type = binop->left->type;
+                    expr->type = binop->left->type;
                     return 1;
                 }
                 semanticError();
@@ -66,18 +66,18 @@ static char verifyExpr(ExprBase* base){
             return 0;
         }
         case astExprIdent: {
-            const StmtVar* value = findVar(((ExprIdent*)base)->name);
+            const StmtVar* value = findVar(((ExprIdent*)expr)->name);
             if (value){
-                base->type = value->type;
+                expr->type = value->type;
                 return 1;
             }
             return semanticError();
         }
         case astExprCall: {
-            ExprCall* call = (ExprCall*)base;
+            ExprCall* call = (ExprCall*)expr;
             const Function* func = findFunc(call->name);
             if (func){
-                base->type = func->type;
+                expr->type = func->type;
                 verifyArgs(call, func);
                 return 1;
             }
@@ -86,6 +86,14 @@ static char verifyExpr(ExprBase* base){
         default:
             //TODO support more expr ast types
             assert(0 && "Invalid AST for expr");
+    }
+}
+
+static void verifyStmt(Ast* ast);
+
+static void verifyBlockStmt(StmtBlock* blk){
+    for (size_t i=0; i<blk->stmts.size; i++){
+        verifyStmt(blk->stmts.elem[i]);
     }
 }
 
@@ -106,8 +114,12 @@ static void verifyStmt(Ast* ast){
             return;
         case astStmtExpr:
             verifyExpr(((StmtExpr*)ast)->expr);
-        case astStmtBlock:
+        case astStmtBlock: {
+            toNewScope();
+            verifyBlockStmt((StmtBlock*)ast);
+            toPrevScope();
             return;
+        }
         default:
             //TODO support more ast types
             assert(0 && "Invalid AST for stmt");
@@ -141,7 +153,12 @@ void verifyTopLevel(Ast* ast){
             toNewScope();
             verifyAndSetParams(&func->params);
             returnType = func->type;
-            verifyStmt(func->stmt);
+            if (*func->stmt == astStmtBlock){
+                verifyBlockStmt((StmtBlock*)func->stmt);
+            }
+            else {
+                verifyStmt(func->stmt);
+            }
             returnType = typNone;
             toPrevScope();
             return;
