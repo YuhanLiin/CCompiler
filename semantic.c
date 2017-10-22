@@ -19,13 +19,13 @@ static char semanticError(){
     return 0;
 }
 
-static char isVarDefined(char_t* name){
-    const StmtVar* var = findVarCurScope(name);
+static char isVarDefined(const StmtVar* var){
+    var = findVarCurScope(var->name);
     return var != NULL && var->label == astStmtDef;
 }
 
-static char isFuncDefined(char_t* name){
-    const Function* func = findFunc(name);
+static char isFuncDefined(const Function* func){
+    func = findFunc(func->name);
     return func != NULL && func->stmt != NULL;
 }
 
@@ -89,27 +89,25 @@ static char verifyExpr(ExprBase* base){
     }
 }
 
-static char verifyStmt(Ast* ast){
+static void verifyStmt(Ast* ast){
     switch(*ast){
         case astStmtReturn:{
             //TODO auto-casts
             StmtReturn* ret = (StmtReturn*)ast;
             if (verifyExpr(ret->expr)){
                 assert(ret->expr->type != typNone);
-                if (ret->expr->type == returnType){
-                    return 1;
+                if (ret->expr->type != returnType){
+                    semanticError();
                 }
-                semanticError();
             }
-            return 0;
+            return;
         }
         case astStmtEmpty:
-            return 1;
+            return;
         case astStmtExpr:
-            if (verifyExpr(((StmtExpr*)ast)->expr)){
-                return 1;
-            }
-            return 0;
+            verifyExpr(((StmtExpr*)ast)->expr);
+        case astStmtBlock:
+            return;
         default:
             //TODO support more ast types
             assert(0 && "Invalid AST for stmt");
@@ -119,7 +117,7 @@ static char verifyStmt(Ast* ast){
 static void verifyAndSetParams(Array(vptr)* params){
     for (size_t i=0; i<params->size; i++){
         StmtVar* param = params->elem[i];
-        if (param->name == NULL){
+        if (param->name == NULL || isVarDefined(param)){
             semanticError();
         }
         else{
@@ -132,7 +130,7 @@ void verifyTopLevel(Ast* ast){
     switch(*ast){
         case astFunction: {
             Function *func = (Function*)ast;
-            if (isFuncDefined(func->name)){
+            if (isFuncDefined(func)){
                 semanticError();
             }
             insertFunc(func->name, func);
@@ -146,6 +144,7 @@ void verifyTopLevel(Ast* ast){
             verifyStmt(func->stmt);
             returnType = typNone;
             toPrevScope();
+            return;
         }
         default:
             //TODO support more top level ast types
