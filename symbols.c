@@ -1,10 +1,11 @@
 #include "symbols.h"
 #include "ast.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct {
-    char* name;
+    char_t* name;
     size_t scopeId;
 } Symbol;
 #define Symbol(name, id) (Symbol){name, id}
@@ -46,7 +47,7 @@ void disposeSymbolTable(){
     arrDispose(size_t)(&parentScopes);
 }
 
-size_t newScope(){
+size_t toNewScope(){
     //Largest scope ID is n-1, where n is size of parentScopes.
     //New largest scope ID will be n with curScope as parent. Size of parentScope increases as well
     if (!arrPush(size_t)(&parentScopes, curScope)){
@@ -55,54 +56,57 @@ size_t newScope(){
     return curScope = parentScopes.size - 1;
 }
 
-size_t prevScope(){
+size_t toPrevScope(){
     return curScope = parentScopes.elem[curScope];
 }
 
-static void insertSymbol(char* name, Ast* ast){
+static void insertSymbol(char_t* name, Ast* ast){
     if (!mapInsert(Symbol, Astptr)(&symbolTable, Symbol(name, curScope), ast)){
         exit(1);
     }
 }
 
-char insertVar(char* name, ExprBase* expr){
-    //Variable can be defined if it hasnt been defined before
-    if (!mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, curScope))){
-        insertSymbol(name, &expr->label);
-        return 1;
-    }
-    return 0;
+void insertVar(char_t* name, StmtVar* var){
+    insertSymbol(name, &var->label);
 }
 
-char insertFunc(char* name, Function* func){
-    Function* prev = findFunc(name);
-    //Function can only be defined if function of same name hasn't been defined before
-    if (prev == NULL || prev->stmt == NULL){
-        insertSymbol(name, &func->label);
-        return 1;
-    }
-    return 0;
+void insertFunc(char_t* name, Function* func){
+    insertSymbol(name, &func->label);
 }
 
-//Search for a variable from the current to the global scope
-const ExprBase* findVar(char* name){
-    size_t scopeId = curScope;
-    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));
-    while (astptr == NULL && scopeId != GLOBAL_SCOPE){
-        scopeId = parentScopes.elem[scopeId];
-        astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));
-    }
+static const StmtVar* verifyVar(Ast** astptr){
     if (astptr && **astptr != astFunction){
-        return (ExprBase*)(*astptr);
+        return (StmtVar*)(*astptr);
     }
     return NULL;
 }
 
-//Search for a function in the global scope
-const Function* findFunc(char* name){
-    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, GLOBAL_SCOPE));
+static const Function* verifyFunction(Ast** astptr){
     if (astptr && **astptr == astFunction){
         return (Function*)(*astptr);
     }
     return NULL;
+}
+
+//Search for a variable in only current scope
+const StmtVar* findVarCurScope(char_t* name){
+    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, curScope));
+    return verifyVar(astptr);
+}
+
+//Search for a variable from the current to the global scope
+const StmtVar* findVar(char_t* name){
+    size_t scopeId = curScope;
+    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));    
+    while (astptr == NULL && scopeId != GLOBAL_SCOPE){
+        scopeId = parentScopes.elem[scopeId];
+        astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, scopeId));
+    }
+    return verifyVar(astptr);
+}
+
+//Search for a function in the global scope
+const Function* findFunc(char_t* name){
+    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, Symbol(name, GLOBAL_SCOPE));
+    return verifyFunction(astptr);
 }

@@ -2,4 +2,6 @@
 #include "type.h"
 #include "ast.h"
 
-char verifyTopLevel(Ast* ast);
+void initSemantics();
+char checkSemantics();
+void verifyTopLevel(Ast* ast);

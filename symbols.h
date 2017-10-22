@@ -5,14 +5,16 @@ void initSymbolTable();
 
 void disposeSymbolTable();
 
-size_t newScope();
+size_t toNewScope();
 
-size_t prevScope();
+size_t toPrevScope();
 
-char insertVar(char* name, ExprBase* expr);
+void insertVar(char* name, StmtVar* expr);
 
-char insertFunc(char* name, Function* func);
+void insertFunc(char* name, Function* func);
 
-const ExprBase* findVar(char* name);
+const StmtVar* findVarCurScope(char_t* name);
+
+const StmtVar* findVar(char* name);
 
 const Function* findFunc(char* name);

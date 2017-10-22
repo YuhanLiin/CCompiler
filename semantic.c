@@ -4,13 +4,46 @@
 #include <string.h>
 
 Type returnType = typNone;
+char correct = 1;
 
-char semanticError(){
+void initSemantics(){
+    correct = 1;
+}
+char checkSemantics(){
+    return correct;
+}
+
+static char semanticError(){
     //TODO actual error messages
+    correct = 0;
     return 0;
 }
 
-// Fills in the type attributes and verifies they are compatible
+static char isVarDefined(char_t* name){
+    const StmtVar* var = findVarCurScope(name);
+    return var != NULL && var->label == astStmtDef;
+}
+
+static char isFuncDefined(char_t* name){
+    const Function* func = findFunc(name);
+    return func != NULL && func->stmt != NULL;
+}
+
+static void verifyArgs(const ExprCall* call, const Function* func){
+    const Array(vptr)* args = &call->args;
+    const Array(vptr)* params = &func->params;
+    if (args->size == params->size){
+        for (size_t i=0; i<args->size; i++){
+            if (((ExprBase*)args->elem[i])->type != ((StmtVar*)params->elem[i])->type){
+                semanticError();
+            }
+        }
+        return;
+    }
+    semanticError();
+}
+
+//Fills in the type attributes. Returns whether the type of the expression was possible to discern
 static char verifyExpr(ExprBase* base){
     switch(base->label){
         case astExprInt:
@@ -33,9 +66,19 @@ static char verifyExpr(ExprBase* base){
             return 0;
         }
         case astExprIdent: {
-            ExprBase* value = findVar(((ExprIdent*)base)->name);
+            const StmtVar* value = findVar(((ExprIdent*)base)->name);
             if (value){
                 base->type = value->type;
+                return 1;
+            }
+            return semanticError();
+        }
+        case astExprCall: {
+            ExprCall* call = (ExprCall*)base;
+            const Function* func = findFunc(call->name);
+            if (func){
+                base->type = func->type;
+                verifyArgs(call, func);
                 return 1;
             }
             return semanticError();
@@ -73,23 +116,36 @@ static char verifyStmt(Ast* ast){
     }
 }
 
-char verifyTopLevel(Ast* ast){
+static void verifyAndSetParams(Array(vptr)* params){
+    for (size_t i=0; i<params->size; i++){
+        StmtVar* param = params->elem[i];
+        if (param->name == NULL){
+            semanticError();
+        }
+        else{
+            insertVar(param->name, param);
+        }
+    }
+}
+
+void verifyTopLevel(Ast* ast){
     switch(*ast){
         case astFunction: {
             Function *func = (Function*)ast;
-            if (!insertFunc(func)){
-                return semanticError();
+            if (isFuncDefined(func->name)){
+                semanticError();
             }
-            
-            //TODO check params as well. Right now pretend they are empty
+            insertFunc(func->name, func);
             if (func->stmt == NULL){
-                //Declaration only, so no need to verify contents.
-                return 1;
+                //Declaration only, so no more content to verify
+                return;
             }
+            toNewScope();
+            verifyAndSetParams(&func->params);
             returnType = func->type;
-            char valid = verifyStmt(func->stmt);
+            verifyStmt(func->stmt);
             returnType = typNone;
-            return valid && !strcmp(func->name, "main");
+            toPrevScope();
         }
         default:
             //TODO support more top level ast types
