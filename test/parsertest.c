@@ -88,6 +88,13 @@ void outputAst(Ast* ast){
             }
             return;
         }
+        case astTopLevel: {
+            Array(vptr)* globals = &((TopLevel*)ast)->globals;
+            for (size_t i=0; i<globals->size; i++){
+                outputAst(globals->elem[i]);
+            }
+            return;
+        }
         //TODO more print operations
         default:
             assert(0 && "Unhandled ast label"); //Nothing should fall thru the cracks

@@ -57,9 +57,10 @@ int main(int argc, char const *argv[])
     initLexer();
     initParser();
     int code = 0;
-    Ast* ast = parseTopLevel();
+    TopLevel* ast = parseTopLevel();
     if (ast != NULL){
-        if (verifyTopLevel(ast)){
+        verifyTopLevel(ast);
+        if (checkSemantics()){
             cmplTopLevel(ast);
         }
         else{

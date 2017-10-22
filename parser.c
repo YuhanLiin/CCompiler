@@ -368,7 +368,7 @@ static Ast* parseFunction(Type type){
     return NULL;
 }
 
-Ast* parseTopLevel(){
+static Ast* parseGlobal(){
     Type type = parseType();
     if (type == typNone){
         //TODO handle non-functions
@@ -377,4 +377,21 @@ Ast* parseTopLevel(){
     else{
         return parseFunction(type);
     }
+}
+
+TopLevel* parseTopLevel(){
+    TopLevel* toplevel = newTopLevel();
+    while(curTok != tokEof){
+        Ast* ast = parseGlobal();
+        if (ast){
+            if (!arrPush(vptr)(&toplevel->globals, ast)){
+                exit(1);
+            }
+        }
+        else{
+            disposeAst(toplevel);
+            return NULL;
+        }
+    }
+    return toplevel;
 }

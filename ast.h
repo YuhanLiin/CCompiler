@@ -19,7 +19,8 @@ typedef enum {
     astStmtBlock,
     astStmtDecl,
     astStmtDef,
-    astFunction
+    astFunction,
+    astTopLevel
 } Ast;
 
 //Base structs are always first field. Contain ast label followed by attributes for semantic analysis
@@ -106,6 +107,12 @@ typedef struct {
     Array(vptr) params;  //List of StmtDef to represent parameters
 } Function;
 Function* newFunction(Type type, char_t* name);
+
+typedef struct {
+    Ast label;
+    Array(vptr) globals;
+} TopLevel;
+TopLevel* newTopLevel();
 
 //Delete ast based on type of ast
 void disposeAst(void* ast);

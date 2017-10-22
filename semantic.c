@@ -138,7 +138,7 @@ static void verifyAndSetParams(Array(vptr)* params){
     }
 }
 
-void verifyTopLevel(Ast* ast){
+static void verifyGlobal(Ast* ast){
     switch(*ast){
         case astFunction: {
             Function *func = (Function*)ast;
@@ -166,5 +166,11 @@ void verifyTopLevel(Ast* ast){
         default:
             //TODO support more top level ast types
             assert(0 && "Invalid AST for top level");
+    }
+}
+
+void verifyTopLevel(TopLevel* top){
+    for (size_t i=0; i<top->globals.size; i++){
+        verifyGlobal(top->globals.elem[i]);
     }
 }

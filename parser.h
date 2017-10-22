@@ -4,6 +4,6 @@
 void initParser();
 char checkParse();
 Ast* parseStmt();
-Ast* parseTopLevel();
+TopLevel* parseTopLevel();
 
 char isError();

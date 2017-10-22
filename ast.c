@@ -90,6 +90,14 @@ Function* newFunction(Type type, char_t* name){
     arrInit(vptr)(&func->params, 0, NULL, &disposeAst);
     return func;
 }
+
+TopLevel* newTopLevel(){
+    New(TopLevel, toplevel, 1);
+    toplevel->label = astTopLevel;
+    arrInit(vptr)(&toplevel->globals, 0, NULL, &disposeAst);
+    return toplevel;
+}
+
 //Delete ast node based on ast label
 void disposeAst(void* node){
     Ast* ast = node;
@@ -143,6 +151,9 @@ void disposeAst(void* node){
             arrDispose(vptr)(&func->params);
             break;
         }
+        case astTopLevel:
+            arrDispose(vptr)(&((TopLevel*)ast)->globals);
+            break;
         //TODO more delete operations
         default:
             assert(0 && "Unhandled ast label");

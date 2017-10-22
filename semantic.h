@@ -4,4 +4,4 @@
 
 void initSemantics();
 char checkSemantics();
-void verifyTopLevel(Ast* ast);
+void verifyTopLevel(TopLevel* ast);

@@ -31,7 +31,7 @@ void cmplStmt(Ast* ast){
     }
 }
 
-void cmplTopLevel(Ast* ast){
+static void cmplGlobal(Ast* ast){
     // Hardcode text section for now
     emitLine(".text");
     emitLine("\t.globl main");
@@ -52,5 +52,11 @@ void cmplTopLevel(Ast* ast){
         }
         default:
             assert(0 && "Invalid AST for top level");
+    }
+}
+
+void cmplTopLevel(TopLevel* top){
+    for (size_t i=0; i<top->globals.size; i++){
+        cmplGlobal(top->globals.elem[i]);
     }
 }

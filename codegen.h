@@ -1,5 +1,5 @@
 #include "ast.h"
 
-void cmplTopLevel(Ast* ast);
+void cmplTopLevel(TopLevel* ast);
 
 void emitLine(const char* format, ...);
