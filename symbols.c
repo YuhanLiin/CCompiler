@@ -19,9 +19,9 @@ typedef Ast* Astptr;
 #undef VAL
 
 #define GLOBAL_SCOPE 0
-size_t curScope = GLOBAL_SCOPE;
-Array(size_t) parentScopes; //Mapping between scope IDs and their parents
-Map(Symbol, Astptr) symbolTable;
+static size_t curScope = GLOBAL_SCOPE;
+static Array(size_t) parentScopes; //Mapping between scope IDs and their parents
+static Map(Symbol, Astptr) symbolTable;
 
 static size_t hashSymbol(Symbol sym){
     size_t hash = 5381;

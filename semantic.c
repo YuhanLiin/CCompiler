@@ -3,8 +3,8 @@
 #include <assert.h>
 #include <string.h>
 
-Type returnType = typNone;
-char correct = 1;
+static Type returnType = typNone;
+static char correct = 1;
 
 void initSemantics(){
     correct = 1;

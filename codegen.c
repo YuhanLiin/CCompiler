@@ -7,7 +7,7 @@
 // Assume all declarations have been trimmed out
 
 // For expression args
-char exprArgStr[30];
+static char exprArgStr[30];
 
 void cmplExpr(Ast* ast){
     switch(*ast){

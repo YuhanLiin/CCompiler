@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-Token curTok;  //Lookahead token. Global lexer values correspond to this token
-char correct = 1;
+static Token curTok;  //Lookahead token. Global lexer values correspond to this token
+static char correct = 1;
 
 static Token getTok(){
     return curTok = lexToken();
