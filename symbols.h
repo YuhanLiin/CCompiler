@@ -1,20 +1,24 @@
 #pragma once
-#include "ast.h"
+#include "utils.h"
 
-void initSymbolTable();
+typedef struct {
+    char_t* name;
+    size_t scopeId;
+} Symbol;
 
-void disposeSymbolTable();
+#define GLOBAL_SCOPE 0
+extern size_t curScope;
+
+size_t hashSymbol(Symbol sym);
+
+char eqSymbol(Symbol a, Symbol b);
 
 size_t toNewScope();
 
 size_t toPrevScope();
 
-void insertVar(char* name, StmtVar* expr);
+void initScopes();
 
-void insertFunc(char* name, Function* func);
+void disposeScopes();
 
-const StmtVar* findVarCurScope(char_t* name);
-
-const StmtVar* findVar(char* name);
-
-const Function* findFunc(char* name);
+size_t prevScope(size_t scopeId);

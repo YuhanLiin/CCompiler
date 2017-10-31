@@ -1,5 +1,6 @@
 #include "semantic.h"
 #include "symbols.h"
+#include "symtable.h"
 #include <assert.h>
 #include <string.h>
 
@@ -20,13 +21,15 @@ static char semanticError(){
 }
 
 static char isVarDefined(const StmtVar* var){
-    var = findVarCurScope(var->name);
-    return var != NULL && var->label == astStmtDef;
+    const Ast* sym = findSymbolCurScope(var->name);
+    // If variable name exists and is not an externed variable, the new var can't be defined
+    return sym != NULL && !isVarDecl((const StmtVar*)sym);
 }
 
 static char isFuncDefined(const Function* func){
-    func = findFunc(func->name);
-    return func != NULL && func->stmt != NULL;
+    const Ast* sym = findSymbolCurScope(func->name);
+    // If the function name is a exists and is not a declaration, it can't be declared
+    return sym != NULL && !isFuncDecl((const Function*)sym);
 }
 
 static void verifyArgs(const ExprCall* call, const Function* func){

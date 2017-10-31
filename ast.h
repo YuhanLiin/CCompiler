@@ -116,3 +116,6 @@ TopLevel* newTopLevel();
 
 //Delete ast based on type of ast
 void disposeAst(void* ast);
+
+char isVarDecl(const StmtVar* var);
+char isFuncDecl(const Function* func);

@@ -3,6 +3,7 @@
 #include "../utils.h"
 #include "../ast.h"
 #include "../parser.h"
+#include "../symtable.h"
 
 #include "io.c"
 #include "utils.c"

@@ -98,6 +98,14 @@ TopLevel* newTopLevel(){
     return toplevel;
 }
 
+char isVarDecl(const StmtVar* var){
+    return var->label == astStmtDecl;
+}
+
+char isFuncDecl(const Function* func){
+    return func->stmt == NULL;
+}
+
 //Delete ast node based on ast label
 void disposeAst(void* node){
     Ast* ast = node;
