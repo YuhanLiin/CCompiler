@@ -12,12 +12,14 @@ void test(const char_t* inputStr, char expectedResult) {
     ioSetup(inputStr);
     initLexer();
     initParser();
+    initScopes();
     initSymbolTable();
     initSemantics();
     verifyTopLevel(parseTopLevel());
     assert(checkSemantics() == expectedResult);
     disposeLexer();
     disposeSymbolTable();
+    disposeScopes();
 }
 
 void testVerifyMain(){
@@ -33,6 +35,16 @@ void testVerifyArgs(){
     test("int a(int a, int);", 1);
     test("int a(int a, int) return a;", 0);
     test("int a(int a, int a) return a;", 0);
+}
+
+void testFuncDuplication(){
+    test("int a(); float a();", 0);
+    test("int a(); int a(float b);", 0);
+    test("int a(int s); int a(int s){}", 1);
+    test("int a(int s){} int a(int s);", 0);
+    
+    test("int a(int s){} int s();", 1);
+    test("int b(); float k(int b){}", 0);
 }
 
 int main(int argc, char const *argv[])

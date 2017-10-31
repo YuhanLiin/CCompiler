@@ -23,13 +23,30 @@ static char semanticError(){
 static char isVarDefined(const StmtVar* var){
     const Ast* sym = findSymbolCurScope(var->name);
     // If variable name exists and is not an externed variable, the new var can't be defined
-    return sym != NULL && !isVarDecl((const StmtVar*)sym);
+    return sym != NULL && *sym != astStmtDecl;
 }
 
 static char isFuncDefined(const Function* func){
     const Ast* sym = findSymbolCurScope(func->name);
-    // If the function name is a exists and is not a declaration, it can't be declared
-    return sym != NULL && !isFuncDecl((const Function*)sym);
+    //If name doesn't exist, then we can define new func
+    if (sym == NULL){
+        return 0;
+    }
+    //If the symbol is a variable or func definition, we cannot define new func
+    const Function* prev = (const Function*)sym;
+    if (*sym != astFunction || !isFuncDecl(prev)){
+        return 1;
+    }
+    // Even if previous occurrence was a declaration, still need to check whether the signatures are equal
+    if (func->type == prev->type && func->params.size == prev->params.size){
+        for (size_t i=0; i<func->params.size; i++){
+            if (((StmtVar*)func->params.elem[i])->type != ((StmtVar*)func->params.elem[i])->type){
+                return 1;
+            }
+        }
+        return 0;
+    }
+    return 1;
 }
 
 static void verifyArgs(const ExprCall* call, const Function* func){

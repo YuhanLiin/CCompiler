@@ -1,6 +1,6 @@
-int a(){}
+int a();
 
-int a;
+float a();
 
 int a(){
     int x = "asdfd";

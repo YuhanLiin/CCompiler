@@ -17,7 +17,6 @@ typedef Ast* Astptr;
 static Map(Symbol, Astptr) symbolTable;
 
 void initSymbolTable(){
-    initScopes();
     mapInit(Symbol, Astptr)(&symbolTable, 4, &hashSymbol, &eqSymbol, NULL, NULL);
 }
 
