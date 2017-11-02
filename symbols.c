@@ -7,7 +7,10 @@ size_t curScope = GLOBAL_SCOPE;
 static Array(size_t) parentScopes; //Mapping between scope IDs and their parents
 
 void initScopes(){
-    arrInit(size_t)(&parentScopes, GLOBAL_SCOPE + 1, NULL, NULL);
+    if (!arrInit(size_t)(&parentScopes, GLOBAL_SCOPE + 1, NULL, NULL)){
+        exit(1);
+    }
+    parentScopes.elem[GLOBAL_SCOPE] = GLOBAL_SCOPE;
     curScope = GLOBAL_SCOPE;
 }
 
@@ -29,7 +32,7 @@ char eqSymbol(Symbol a, Symbol b){
 
 size_t toNewScope(){
     //Largest scope ID is n-1, where n is size of parentScopes.
-    //New largest scope ID will be n with curScope as parent. Size of parentScope increases as well
+    //New largest scope ID will be n with curScope as parent. Size of parentScopes increases as well
     if (!arrPush(size_t)(&parentScopes, curScope)){
         exit(1);
     }

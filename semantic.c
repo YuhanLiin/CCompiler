@@ -149,7 +149,10 @@ static void verifyStmt(Ast* ast){
 static void verifyAndSetParams(Array(vptr)* params){
     for (size_t i=0; i<params->size; i++){
         StmtVar* param = params->elem[i];
-        if (param->name == NULL || isVarDefined(param)){
+        if (param->name == NULL){
+            semanticError();
+        }
+        else if (isVarDefined(param)){
             semanticError();
         }
         else{

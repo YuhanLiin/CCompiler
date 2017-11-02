@@ -42,14 +42,16 @@ void testFuncDuplication(){
     test("int a(); int a(float b);", 0);
     test("int a(int s); int a(int s){}", 1);
     test("int a(int s){} int a(int s);", 0);
-    
+
     test("int a(int s){} int s();", 1);
-    test("int b(); float k(int b){}", 0);
+    test("int b(); float k(int b){}", 1);
+    //TODO test global vars and function calls
 }
 
 int main(int argc, char const *argv[])
 {
     testVerifyMain();
     testVerifyArgs();
+    testFuncDuplication();
     return 0;
 }
