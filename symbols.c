@@ -6,12 +6,16 @@
 size_t curScope = GLOBAL_SCOPE;
 static Array(size_t) parentScopes; //Mapping between scope IDs and their parents
 
+void resetScopes(){
+    curScope = GLOBAL_SCOPE;
+}
+
 void initScopes(){
     if (!arrInit(size_t)(&parentScopes, GLOBAL_SCOPE + 1, NULL, NULL)){
         exit(1);
     }
     parentScopes.elem[GLOBAL_SCOPE] = GLOBAL_SCOPE;
-    curScope = GLOBAL_SCOPE;
+    resetScopes();
 }
 
 void disposeScopes(){

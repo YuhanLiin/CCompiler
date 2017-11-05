@@ -158,6 +158,7 @@ void testParseFunction(){
         "fndec:i64:main:6 i32:a f64:b i32:c i64:d i32 f32 "
     );
     test(parseTopLevel, "double k() return 5;", "fn:f64:k:0 ret int:5 ");
+    test(parseTopLevel, "int a(); int b(){a();}", "fndec:i32:a:0 fn:i32:b:0 block:1 call:a:0 ");
 }
 
 void testParseError(){

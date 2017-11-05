@@ -45,7 +45,15 @@ void testFuncDuplication(){
 
     test("int a(int s){} int s();", 1);
     test("int b(); float k(int b){}", 1);
-    //TODO test global vars and function calls
+    //TODO test global vars
+}
+
+void testCall(){
+    test("int a(); int b(){a();}", 1);
+    test("int b(){ wtf();}", 0);
+    test("int r(int a, long b){ return r(a, b);}", 1);
+    test("int a(); int b(float f){ a(f);}", 0);
+    test("int a(long l); int b(float f){ a(f);}", 0);
 }
 
 int main(int argc, char const *argv[])
@@ -53,5 +61,6 @@ int main(int argc, char const *argv[])
     testVerifyMain();
     testVerifyArgs();
     testFuncDuplication();
+    testCall();
     return 0;
 }

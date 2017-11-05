@@ -9,3 +9,9 @@ empty: empty.c
 
 empty64: empty64.c
 	gcc empty64.c -S -fno-asynchronous-unwind-tables -O0
+
+duplicate: duplicate.c
+	gcc duplicate.c -S -fno-asynchronous-unwind-tables -O0
+
+params: params.c
+	gcc params.c -S -fno-asynchronous-unwind-tables -O0

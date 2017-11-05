@@ -49,13 +49,19 @@ static char isFuncDefined(const Function* func){
     return 1;
 }
 
+static char verifyExpr(ExprBase* expr);
+
 static void verifyArgs(const ExprCall* call, const Function* func){
     const Array(vptr)* args = &call->args;
     const Array(vptr)* params = &func->params;
     if (args->size == params->size){
         for (size_t i=0; i<args->size; i++){
-            if (((ExprBase*)args->elem[i])->type != ((StmtVar*)params->elem[i])->type){
-                semanticError();
+            ExprBase* arg = (ExprBase*)args->elem[i];
+            StmtVar* param = (StmtVar*)params->elem[i];
+            if (verifyExpr(arg)){
+                if (arg->type != param->type){
+                    semanticError();
+                }  
             }
         }
         return;
@@ -134,8 +140,10 @@ static void verifyStmt(Ast* ast){
             return;
         case astStmtExpr:
             verifyExpr(((StmtExpr*)ast)->expr);
+            return;
         case astStmtBlock: {
             toNewScope();
+            ((StmtBlock*)ast)->scopeId = curScope;
             verifyBlockStmt((StmtBlock*)ast);
             toPrevScope();
             return;
@@ -174,10 +182,12 @@ static void verifyGlobal(Ast* ast){
                 return;
             }
             toNewScope();
+            func->scopeId = curScope;
             verifyAndSetParams(&func->params);
             returnType = func->type;
             if (*func->stmt == astStmtBlock){
                 verifyBlockStmt((StmtBlock*)func->stmt);
+                ((StmtBlock*)func->stmt)->scopeId = curScope;
             }
             else {
                 verifyStmt(func->stmt);
@@ -193,6 +203,7 @@ static void verifyGlobal(Ast* ast){
 }
 
 void verifyTopLevel(TopLevel* top){
+    assert(top != NULL && "Can't perform semantic analysis on bad AST");
     for (size_t i=0; i<top->globals.size; i++){
         verifyGlobal(top->globals.elem[i]);
     }

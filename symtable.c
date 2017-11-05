@@ -17,6 +17,7 @@ typedef Ast* Astptr;
 static Map(Symbol, Astptr) symbolTable;
 
 void initSymbolTable(){
+    resetScopes();
     mapInit(Symbol, Astptr)(&symbolTable, 4, &hashSymbol, &eqSymbol, NULL, NULL);
 }
 
@@ -51,10 +52,11 @@ const Ast* findSymbolCurScope(char_t* name){
 //Search for a variable from the current to the global scope
 const StmtVar* findVar(char_t* name){
     size_t scopeId = curScope;
-    Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, (Symbol){name, scopeId});
-    while (astptr == NULL && scopeId != GLOBAL_SCOPE){
-        scopeId = prevScope(scopeId);
+    Ast** astptr = NULL;
+    while (astptr == NULL) {
         astptr = mapFind(Symbol, Astptr)(&symbolTable, (Symbol){name, scopeId});
+        if (scopeId == GLOBAL_SCOPE) break;
+        scopeId = prevScope(scopeId);
     }
     if (astptr && **astptr != astFunction){
         return (StmtVar*)(*astptr);

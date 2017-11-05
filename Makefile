@@ -1,5 +1,5 @@
-devmain: main.c lexer.c array.c parser.c ast.c semantic.c codegen.c symbols.c symtable.c
-	gcc -g main.c lexer.c array.c parser.c ast.c semantic.c codegen.c symbols.c symtable.c -o test/bin/main.exe
+devmain: main.c lexer.c array.c parser.c ast.c semantic.c codegen.c symbols.c symtable.c address.c
+	gcc -g main.c lexer.c array.c parser.c ast.c semantic.c codegen.c symbols.c symtable.c address.c -o test/bin/main.exe
 
 semantictest: test/semantictest.c lexer.c array.c parser.c ast.c semantic.c symbols.c symtable.c test/io.c test/utils.c
 	gcc -g test/semantictest.c lexer.c array.c parser.c ast.c semantic.c symbols.c symtable.c -o semantictest.exe

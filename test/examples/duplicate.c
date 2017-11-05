@@ -1,7 +1,7 @@
 int a();
 
-float a();
+extern int b;
 
 int a(){
-    int x = "asdfd";
+    b = 6;
 }

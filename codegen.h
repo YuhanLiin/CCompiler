@@ -1,5 +1,8 @@
+#pragma once
+#include "utils.h"
 #include "ast.h"
 
 void cmplTopLevel(TopLevel* ast);
 
-void emitLine(const char* format, ...);
+// IO command. Not supplied by codegen.c
+void emitAsm(const char* format, ...);

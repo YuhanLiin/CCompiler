@@ -87,6 +87,7 @@ StmtExpr* newStmtExpr(ExprBase* expr);
 
 typedef struct {
     Ast label;
+    size_t scopeId;
     Array(vptr) stmts;
 } StmtBlock;
 StmtBlock* newStmtBlock();
@@ -100,7 +101,8 @@ StmtVar* newStmtVarDef(Type type, char_t* name);
 StmtVar* newStmtVarDecl(Type type, char_t* name);
 
 typedef struct {
-    Ast label; 
+    Ast label;
+    size_t scopeId;
     Type type; 
     char_t* name;
     Ast* stmt;  //Leave this null if there is no definition

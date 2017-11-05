@@ -3,6 +3,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "semantic.h"
+#include "symbols.h"
+#include "symtable.h"
 #include "codegen.h"
 
 #include <stdio.h>
@@ -12,11 +14,10 @@
 FILE* infile;
 FILE* outfile;
 
-void emitLine(const char* format, ...) {
+void emitAsm(const char* format, ...) {
     va_list args;
     va_start(args, format);
     vfprintf(outfile, format, args);
-    fprintf(outfile, "\n");
     va_end(args);
 }
 
@@ -59,6 +60,9 @@ int main(int argc, char const *argv[])
     int code = 0;
     TopLevel* ast = parseTopLevel();
     if (ast != NULL){
+        initScopes();
+        initSymbolTable();
+        initSemantics();
         verifyTopLevel(ast);
         if (checkSemantics()){
             cmplTopLevel(ast);
@@ -66,6 +70,8 @@ int main(int argc, char const *argv[])
         else{
             code = 3;   
         }
+        disposeScopes();
+        disposeSymbolTable();
         disposeAst(ast);
     }
     else {

@@ -86,7 +86,10 @@ StmtVar* newStmtVarDecl(Type type, char_t* name){
 
 Function* newFunction(Type type, char_t* name){
     New(Function, func, 1)
-    *func = (Function){astFunction, type, name, NULL};
+    func->label = astFunction;
+    func->type = type;
+    func->name = name;
+    func->stmt = NULL;
     arrInit(vptr)(&func->params, 0, NULL, &disposeAst);
     return func;
 }

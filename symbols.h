@@ -17,6 +17,8 @@ size_t toNewScope();
 
 size_t toPrevScope();
 
+void resetScopes();
+
 void initScopes();
 
 void disposeScopes();

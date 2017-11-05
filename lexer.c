@@ -28,7 +28,7 @@ static char isDigit(char_t c){
     return c >= '0' && c <= '9';
 }
 static char isIdentChar(char_t c){
-    return isAlpha(c) || isDigit(c) || c == '_';
+    return isAlpha(c) || isDigit(c) || c == '_' || c == '$';
 }
 
 //Consumes char and updates curChar. Called by tokenizer
