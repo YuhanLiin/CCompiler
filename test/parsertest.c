@@ -1,11 +1,11 @@
-#include "../array.h"
-#include "../lexer.h"
-#include "../utils.h"
-#include "../ast.h"
-#include "../parser.h"
+#include "array.h"
+#include "lexer/lexer.h"
+#include "utils.h"
+#include "ast/ast.h"
+#include "parser/parser.h"
 
-#include "io.c"
-#include "utils.c"
+#include "./io.c"
+#include "./utils.c"
 
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){

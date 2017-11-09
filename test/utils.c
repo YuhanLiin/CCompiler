@@ -1,6 +1,6 @@
-#include "../lexer.h"
+#include "lexer/lexer.h"
 #include <assert.h>
-#include "../type.h"
+#include "ast/type.h"
 
 char strEq(Array(char_t)* string, const char_t * cstr){
     for (size_t i=0; i<string->size; i++){

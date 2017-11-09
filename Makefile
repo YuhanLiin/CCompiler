@@ -1,17 +1,20 @@
-devmain: main.c lexer.c array.c parser.c ast.c semantic.c codegen.c symbols.c symtable.c address.c
-	gcc -g main.c lexer.c array.c parser.c ast.c semantic.c codegen.c symbols.c symtable.c address.c -o test/bin/main.exe
+c = gcc
+basedir = -iquote C:\Users\linyu\MyCode\c\compiler
 
-semantictest: test/semantictest.c lexer.c array.c parser.c ast.c semantic.c symbols.c symtable.c test/io.c test/utils.c
-	gcc -g test/semantictest.c lexer.c array.c parser.c ast.c semantic.c symbols.c symtable.c -o semantictest.exe
+devmain: main.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c
+	${c} ${basedir} -g main.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c -o test/bin/main.exe
 
-lexertest: test/lexertest.c lexer.c array.c test/io.c test/utils.c
-	gcc -g test/lexertest.c lexer.c array.c -o lexertest.exe
+semantictest: test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
+	${c} ${basedir} -g test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c scope/scope.c semantics/symtable.c  -o semantictest.exe
 
-parsertest: test/parsertest.c lexer.c array.c parser.c ast.c test/io.c test/utils.c
-	gcc -g test/parsertest.c lexer.c array.c parser.c ast.c -o parsertest.exe
+lexertest: test/lexertest.c lexer/lexer.c array.c test/io.c test/utils.c
+	${c} ${basedir} -g test/lexertest.c lexer/lexer.c array.c -o lexertest.exe
+
+parsertest: test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c test/io.c test/utils.c
+	${c} ${basedir} -g test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c -o parsertest.exe
 
 arraytest: test/arraytest.c generics/gen_array.c generics/gen_array.h
-	gcc -g test/arraytest.c -o arraytest.exe
+	${c} ${basedir} -g test/arraytest.c -o arraytest.exe
 
 maptest: test/maptest.c generics/gen_map.c generics/gen_map.h
-	gcc -g test/maptest.c -o maptest.exe
+	${c} ${basedir} -g test/maptest.c -o maptest.exe

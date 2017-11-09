@@ -1,10 +1,10 @@
-#include "../array.h"
-#include "../lexer.h"
-#include "../utils.h"
+#include "array.h"
+#include "lexer/lexer.h"
+#include "utils.h"
 #include <stdlib.h>
 
-#include "io.c"
-#include "utils.c"
+#include "./io.c"
+#include "./utils.c"
 
 Token token;
 

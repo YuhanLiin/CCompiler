@@ -12,6 +12,3 @@
 #define New(T, name, n) T* name = malloc(sizeof(T)*(n)); if (name==NULL){exit(1);}
 
 #define char_t char
-#if char_t == wchar_t
-//TODO substitute char functions with wchar equivalents
-#endif

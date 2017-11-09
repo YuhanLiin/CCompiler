@@ -3,8 +3,8 @@
 
 #define KEY char
 #define VAL int
-#include "../generics/gen_map.h"
-#include "../generics/gen_map.c"
+#include "generics/gen_map.h"
+#include "generics/gen_map.c"
 #undef KEY
 #undef VAL
 

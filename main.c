@@ -1,11 +1,11 @@
 #include "utils.h"
-#include "ast.h"
-#include "lexer.h"
-#include "parser.h"
-#include "semantic.h"
-#include "symbols.h"
-#include "symtable.h"
-#include "codegen.h"
+#include "ast/ast.h"
+#include "lexer/lexer.h"
+#include "parser/parser.h"
+#include "semantics/semantics.h"
+#include "scope/scope.h"
+#include "semantics/symtable.h"
+#include "codegen/codegen.h"
 
 #include <stdio.h>
 #include <string.h>

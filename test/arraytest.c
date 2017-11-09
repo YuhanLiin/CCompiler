@@ -2,17 +2,17 @@
 #include <assert.h>
 
 #define TYPE char
-#include "../generics/gen_array.h"
+#include "generics/gen_array.h"
 #undef TYPE 
 #define TYPE char
-#include "../generics/gen_array.c"
+#include "generics/gen_array.c"
 #undef TYPE 
 
 #define TYPE int
-#include "../generics/gen_array.h"
+#include "generics/gen_array.h"
 #undef TYPE 
 #define TYPE int
-#include "../generics/gen_array.c"
+#include "generics/gen_array.c"
 #undef TYPE 
 
 int deleted[100];

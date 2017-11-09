@@ -1,4 +1,4 @@
-#include "generic.h"
+#include "./generic.h"
 
 #define Map(k, v) CONCAT3(Map, k, v)
 typedef struct {

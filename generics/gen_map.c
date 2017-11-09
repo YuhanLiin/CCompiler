@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
-#include "generic.h"
+#include "./generic.h"
 
 //Type macros required: KEY, VAL
 

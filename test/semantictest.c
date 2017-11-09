@@ -1,12 +1,12 @@
-#include "../semantic.h"
-#include "../symbols.h"
-#include "../utils.h"
-#include "../ast.h"
-#include "../parser.h"
-#include "../symtable.h"
+#include "semantics/semantics.h"
+#include "scope/scope.h"
+#include "utils.h"
+#include "ast/ast.h"
+#include "parser/parser.h"
+#include "semantics/symtable.h"
 
-#include "io.c"
-#include "utils.c"
+#include "./io.c"
+#include "./utils.c"
 
 void test(const char_t* inputStr, char expectedResult) {
     ioSetup(inputStr);

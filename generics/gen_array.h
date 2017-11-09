@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "generic.h"
+#include "./generic.h"
 //Requires definition of TYPE macro (one word type name) before using. Undef after
 
 #ifndef Array
