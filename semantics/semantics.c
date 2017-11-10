@@ -8,6 +8,7 @@ static Type returnType = typNone;
 static char correct = 1;
 
 void initSemantics(){
+    returnType = typNone;
     correct = 1;
 }
 char checkSemantics(){
@@ -49,7 +50,7 @@ static char isFuncDefined(const Function* func){
     return 1;
 }
 
-static char verifyExpr(ExprBase* expr);
+static void verifyExpr(ExprBase* expr);
 
 static void verifyArgs(const ExprCall* call, const Function* func){
     const Array(vptr)* args = &call->args;
@@ -58,7 +59,8 @@ static void verifyArgs(const ExprCall* call, const Function* func){
         for (size_t i=0; i<args->size; i++){
             ExprBase* arg = (ExprBase*)args->elem[i];
             StmtVar* param = (StmtVar*)params->elem[i];
-            if (verifyExpr(arg)){
+            verifyExpr(arg);
+            if (arg->type != typNone){
                 if (arg->type != param->type){
                     semanticError();
                 }  
@@ -69,35 +71,36 @@ static void verifyArgs(const ExprCall* call, const Function* func){
     semanticError();
 }
 
-//Fills in the type attributes. Returns whether the type of the expression was possible to discern
-static char verifyExpr(ExprBase* expr){
+//Fills in the type attributes. Leave them as typNone if there's no way to find the type
+static void verifyExpr(ExprBase* expr){
     switch(expr->label){
         case astExprInt:
             expr->type = typInt32;
-            return 1;
+            return;
         case astExprDouble:
             expr->type = typFloat32;
-            return 1;
+            return;
         case astExprBinop: {
             ExprBinop* binop = (ExprBinop*)expr;
-            if (verifyExpr(binop->left) && verifyExpr(binop->right)){
-                assert(binop->left->type != typNone);
-                assert(binop->right->type != typNone);
+            verifyExpr(binop->left);
+            verifyExpr(binop->right);
+            if (binop->left->type != typNone && binop->right->type != typNone){
                 if (binop->left->type == binop->right->type){
                     expr->type = binop->left->type;
-                    return 1;
+                    return;
                 }
                 semanticError();
             }
-            return 0;
+            return;
         }
         case astExprIdent: {
             const StmtVar* value = findVar(((ExprIdent*)expr)->name);
             if (value){
                 expr->type = value->type;
-                return 1;
+                return;
             }
-            return semanticError();
+            semanticError();
+            return;
         }
         case astExprCall: {
             ExprCall* call = (ExprCall*)expr;
@@ -105,9 +108,10 @@ static char verifyExpr(ExprBase* expr){
             if (func){
                 expr->type = func->type;
                 verifyArgs(call, func);
-                return 1;
+                return;
             }
-            return semanticError();
+            semanticError();
+            return;
         }
         default:
             //TODO support more expr ast types
@@ -128,8 +132,13 @@ static void verifyStmt(Ast* ast){
         case astStmtReturn:{
             //TODO auto-casts
             StmtReturn* ret = (StmtReturn*)ast;
-            if (verifyExpr(ret->expr)){
-                assert(ret->expr->type != typNone);
+            verifyExpr(ret->expr);
+            if (returnType == typNone){
+                // Global scope, cant return
+                semanticError();
+                return;
+            }
+            if (ret->expr->type != typNone){
                 if (ret->expr->type != returnType){
                     semanticError();
                 }
