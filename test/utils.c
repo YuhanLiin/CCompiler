@@ -5,20 +5,24 @@
 #include <stdio.h>
 #include <string.h>
 
+#define assertBegin() fprintf(stderr, "Assertion error in %s, line %d, in %s:\n", __FILE__, __LINE__, __func__)
+
 #define assertEqStr(actual, expected) do {\
     if (strcmp(expected, actual)){\
+        assertBegin();\
         fprintf(\
-            stderr, "Assertion error in %s, line %d: Expected %s to be:\n%s\nbut got:\n%s\n",\
-            __FILE__, __LINE__, #actual, expected, actual\
+            stderr, "Expected %s to be:\n%s\nbut got:\n%s\n",\
+            #actual, expected, actual\
         );\
     }\
 } while(0);
 
 #define assertEqNum(actual, expected) do {\
     if (expected != actual){\
+        assertBegin();\
         fprintf(\
-            stderr, "Assertion error in %s, line %d: Expected %s to be %f, but got %f.\n",\
-            __FILE__, __LINE__, #actual, (expected)*1.0, (actual)*1.0\
+            stderr, "Expected %s to be %.2Lf, but got %.2Lf.\n",\
+            #actual, (expected)*1.0, (actual)*1.0\
         );\
     }\
 } while(0);

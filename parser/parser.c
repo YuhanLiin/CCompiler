@@ -29,11 +29,11 @@ static void syntaxError(const char_t* expected){
             writeError(lineNumber, linePos, "expected %s before end of file.", expected);
         }
         else{
-            writeError(lineNumber, linePos, "expected %s, before '%c'.", expected, curChar);
+            writeError(lineNumber, linePos, "expected %s before '%c'.", expected, curChar);
         }
     }
     else{
-        writeError(lineNumber, linePos, "expected %s, before %s.", expected, stringifyToken(curTok));
+        writeError(lineNumberTokStart, linePosTokStart, "expected %s before %s.", expected, stringifyToken(curTok));
     }
     correct = 0;
 }

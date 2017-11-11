@@ -7,6 +7,8 @@ char_t curChar; //Updated for every character consumed
 //Line number and position at end of every token. Actively updated by lexer
 size_t lineNumber;
 size_t linePos;
+size_t lineNumberTokStart;
+size_t linePosTokStart;
 Array(char_t) stringBuffer; //Store identifier and strings
 double floatVal;   //Store number tokens
 long long intVal;
@@ -65,6 +67,8 @@ void initLexer(){ //Can fail due to malloc
     if (!arrInit(char_t)(&stringBuffer, 5, NULL, NULL)) exit(1); //Allocate empty string
     linePos = 0;
     lineNumber = 1;
+    linePosTokStart = 0;
+    lineNumberTokStart = 1;
     curChar = consumeNext();
 }
 
@@ -107,6 +111,8 @@ Token lexToken(){
     intVal = 0;
 
     begin:
+    lineNumberTokStart = lineNumber;
+    linePosTokStart = linePos;
     //Skip over newlines, whitespace
     if (isSpace(curChar) || isEol(curChar)){
         getNext();
@@ -189,7 +195,7 @@ Token lexToken(){
             //Single line comment
             if (curChar == '/'){
                 getNext();
-                //Comment ends when end of line of end of file is seen
+                //Comment ends when end of line or end of file is seen
                 while (!isEol(curChar) && curChar != End){
                     getNext();
                 }

@@ -166,22 +166,22 @@ void testParseFunction(){
 void testParseError(){
     testErr(
         parseStmt, "((sfgd) ",
-        "On line 1, position 8, expected ')', but found end of file.\nOn line 1, position 8, expected ';', but found end of file.\n"
+        "1:8 expected ')' before end of file.\n1:8 expected ';' before end of file.\n"
     ); 
-    testErr(parseStmt, "", "On line 1, position 0, expected statement, but found end of file.\n"); 
-    testErr(parseStmt, "sdg(,", "On line 1, position 5, expected expression, but found ','.\n");
-    testErr(parseStmt, "\"wergrh\n", "On line 2, position 0, expected statement, but found end of file.\n");
-    testErr(parseStmt, "\"wergr", "On line 1, position 6, expected statement, but found end of file.\n");
+    testErr(parseStmt, "", "1:0 expected statement before end of file.\n"); 
+    testErr(parseStmt, "sdg(,", "1:4 expected expression before ','.\n");
+    testErr(parseStmt, "\"wergrh\n", "2:0 expected statement before end of file.\n");
+    testErr(parseStmt, "\"wergr", "1:6 expected statement before end of file.\n");
     testErr(
         parseStmt, "return k(k",
-        "On line 1, position 10, expected ')', but found end of file.\nOn line 1, position 11, expected ';', but found end of file.\n"
+        "1:10 expected ')' before end of file.\n1:10 expected ';' before end of file.\n"
     );
-    testErr(parseStmt, "/**/bind k;", "On line 1, position 9, expected ';', but found identifier.\n");
-    testErr(parseStmt, "/*   *", "On line 1, position 6, expected statement, but found end of file.\n");
-    testErr(parseStmt, "int 5;", "On line 1, position 4, expected identifier, but found integer.\n");
-    testErr(parseTopLevel, "int Blue(a)", "On line 1, position 9, expected type name, but found identifier.\n");
-    testErr(parseTopLevel, "int Blue(long, )", "On line 1, position 15, expected type name, but found ')'.\n");
-    testErr(parseTopLevel, "int Blue(float f)", "On line 1, position 17, expected statement, but found end of file.\n");
+    testErr(parseStmt, "/**/bind k;", "1:9 expected ';' before identifier.\n");
+    testErr(parseStmt, "/*   *", "1:6 expected statement before end of file.\n");
+    testErr(parseStmt, "int 5;", "1:4 expected identifier before integer.\n");
+    testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
+    testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ')'.\n");
+    testErr(parseTopLevel, "int Blue(float f)", "1:17 expected statement before end of file.\n");
 }
 
 int main(int argc, char const *argv[])

@@ -30,6 +30,8 @@ typedef enum {
 #define End 0 //Eof character
 extern size_t lineNumber;
 extern size_t linePos;
+extern size_t lineNumberTokStart;
+extern size_t linePosTokStart;
 extern Array(char_t) stringBuffer; //Store identifier and strings
 extern double floatVal; 
 extern long long intVal;

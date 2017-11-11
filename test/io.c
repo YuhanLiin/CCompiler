@@ -28,12 +28,12 @@ char_t consumeNext(){
 }
 
 void writeError(size_t line, size_t pos, char_t* message, ...){
-    elen += above0(sprintf(errorstr, "%d:%d", line, pos));
+    elen += above0(sprintf(&errorstr[elen], "%d:%d ", line, pos));
     va_list args;
     va_start(args, message);
-    elen += above0(vsprintf(errorstr, message, args));
+    elen += above0(vsprintf(&errorstr[elen], message, args));
     va_end(args);
-    elen += above0(sprintf(errorstr, "\n"));
+    elen += above0(sprintf(&errorstr[elen], "\n"));
 }
 
 //Output string to output array
@@ -43,8 +43,8 @@ void writeError(size_t line, size_t pos, char_t* message, ...){
 void ioSetup(const char_t* str){
     strcpy(input, str); //Might need to be adjusted for bigger char types
     ilen = 0;
-    memset(output, 0, BUFSIZ*sizeof(char_t));  //Also needs to change for widechar
+    memset(output, 0, MOCKBUFSIZ*sizeof(char_t));  //Also needs to change for widechar
     olen = 0;
-    memset(errorstr, 0, BUFSIZ*sizeof(char_t));
+    memset(errorstr, 0, MOCKBUFSIZ*sizeof(char_t));
     elen = 0;
 }
