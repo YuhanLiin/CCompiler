@@ -1,17 +1,17 @@
 c = gcc
 basedir = -iquote C:\Users\linyu\MyCode\c\compiler
 
-devmain: main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c
-	${c} ${basedir} -g main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c -o test/bin/main.exe
+devmain: main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c
+	${c} ${basedir} -g main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c -o test/bin/main.exe
 
-semantictest: test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
-	${c} ${basedir} -g test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c semantics/semantics.c scope/scope.c semantics/symtable.c  -o semantictest.exe
+semantictest: test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
+	${c} ${basedir} -g test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c  -o semantictest.exe
 
 lexertest: test/lexertest.c lexer/lexer.c array.c test/io.c test/utils.c
 	${c} ${basedir} -g test/lexertest.c lexer/lexer.c array.c -o lexertest.exe
 
-parsertest: test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c test/io.c test/utils.c
-	${c} ${basedir} -g test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c -o parsertest.exe
+parsertest: test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c test/mock_semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
+	${c} ${basedir} -g test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c test/mock_semantics.c scope/scope.c semantics/symtable.c -o parsertest.exe
 
 arraytest: test/arraytest.c generics/gen_array.c generics/gen_array.h
 	${c} ${basedir} -g test/arraytest.c -o arraytest.exe

@@ -5,9 +5,12 @@
 #include "./parser.h"
 #include "ast/type.h"
 #include "io/error.h"
+#include "semantics/semantics.h"
+#include "semantics/symtable.h"
+#include "scope/scope.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <assert.h>
-#include "utils.h"
 
 static Token curTok;  //Lookahead token. Global lexer values correspond to this token
 static char correct = 1;
@@ -16,7 +19,7 @@ static Token getTok(){
     return curTok = lexToken();
 }
 
-char checkParse(){
+char checkSyntax(){
     return correct;
 }
 
@@ -38,6 +41,14 @@ static void syntaxError(const char_t* expected){
 void initParser(){
     getTok();
     correct = 1;
+    initScopes();
+    initSymbolTable();
+    initSemantics();
+}
+
+void disposeParser(){
+    disposeScopes();
+    disposeSymbolTable();
 }
 
 //Allocate and return new cstring from a char array
@@ -102,14 +113,14 @@ static char parseArgs(Array(vptr) *args){
 static ExprBase* parsePrimaryExpr(){
     switch (curTok){
         case tokNumInt: {
-            long long i = intVal;
+            unsigned int i = intVal;
             getTok(); //Consume number
-            return (ExprBase*) newExprInt(i);
+            return (ExprBase*)verifyExprInt(newExprInt(i));
         }
         case tokNumDouble: {
             double d = floatVal;
             getTok(); //Consume number
-            return (ExprBase*) newExprDouble(d);
+            return (ExprBase*)verifyExprDouble(newExprDouble(d));
         }
         case tokString: {
             char_t* str = toCstring(&stringBuffer);
@@ -142,7 +153,7 @@ static ExprBase* parsePrimaryExpr(){
                 //If following brackets are not empty, attempt to parse 1 or more args.
                 if (curTok == tokRParen){
                     getTok(); //Consume rb
-                    return (ExprBase*)call;
+                    return (ExprBase*)verifyExprCall(call);
                 } 
                 else{
                     //Attempt to parse arguments. It will throw if unsuccessful so no need to handle it here
@@ -153,7 +164,7 @@ static ExprBase* parsePrimaryExpr(){
                         else{
                             syntaxError(stringifyToken(tokRParen));
                         }
-                        return (ExprBase*)call;
+                        return (ExprBase*)verifyExprCall(call);
                     }
                 }
                 arrDispose(vptr)(&call->args);
@@ -161,7 +172,7 @@ static ExprBase* parsePrimaryExpr(){
             }
             //Otherwise its a normal identifier
             else {
-                return (ExprBase*) newExprIdent(name);
+                return (ExprBase*)verifyExprIdent(newExprIdent(name));
             }
             free(name);
             return NULL;
@@ -205,7 +216,7 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
             rhs = newRhs;
         }
         //After rhs has been fully built, merge it with lhs and then continue
-        lhs = (ExprBase*) newExprBinop(op, lhs, rhs);
+        lhs = (ExprBase*)verifyExprBinop(newExprBinop(op, lhs, rhs));
     }
     return lhs;
 }
@@ -238,7 +249,7 @@ Ast* parseStmt(){
             ExprBase* expr = parseExpr();
             if (expr){
                 checkSemicolon();
-                return (Ast*) newStmtReturn(expr);
+                return (Ast*)verifyStmtReturn(newStmtReturn(expr));
             }
             return NULL;
         }
@@ -248,6 +259,7 @@ Ast* parseStmt(){
         case tokLBrace:
             getTok(); //Consume left brace
             StmtBlock* block = newStmtBlock();
+            preverifyBlockStmt();
             while (curTok != tokRBrace){
                 Ast* stmt = parseStmt();
                 if (stmt){
@@ -261,7 +273,7 @@ Ast* parseStmt(){
                 }
             }
             getTok();
-            return (Ast*)block;
+            return (Ast*)verifyBlockStmt(block);
             //TODO handle other statements
 
         //These are tokens that expressions can't start with, so they automatically trigger statement error
@@ -284,6 +296,7 @@ Ast* parseStmt(){
                     char_t* str = toCstring(&stringBuffer);
                     getTok();  //Consume identifier
                     checkSemicolon();
+                    //TODO write verifyer for this or throw it somewhere else
                     return (Ast*) newStmtVarDef(type, str);
                 }
                 else{
@@ -346,13 +359,16 @@ static Ast* parseFunction(Type type){
                 else{
                     syntaxError(stringifyToken(tokRParen));
                 }
-                finishedParsingParams:
+                finishedParsingParams:;
+                char isDecl = curTok == tokSemicolon;
+                preverifyFunction(func, isDecl);
                 //Parse either ; for declaration or a statement for definition
-                if (curTok == tokSemicolon){
+                if (isDecl){
                     getTok();
                     return (Ast*)func;
                 }
                 else if (func->stmt = parseStmt()){
+                    verifyFunctionDefinition();
                     return (Ast*)func;
                 }
                 //parseStmt reports errors, so no need for it here

@@ -1,6 +1,27 @@
 #include "lexer/lexer.h"
-#include <assert.h>
+#include "utils.h"
 #include "ast/type.h"
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
+#define assertEqStr(actual, expected) do {\
+    if (strcmp(expected, actual)){\
+        fprintf(\
+            stderr, "Assertion error in %s, line %d: Expected %s to be:\n%s\nbut got:\n%s\n",\
+            __FILE__, __LINE__, #actual, expected, actual\
+        );\
+    }\
+} while(0);
+
+#define assertEqNum(actual, expected) do {\
+    if (expected != actual){\
+        fprintf(\
+            stderr, "Assertion error in %s, line %d: Expected %s to be %f, but got %f.\n",\
+            __FILE__, __LINE__, #actual, (expected)*1.0, (actual)*1.0\
+        );\
+    }\
+} while(0);
 
 char strEq(Array(char_t)* string, const char_t * cstr){
     for (size_t i=0; i<string->size; i++){
@@ -29,20 +50,5 @@ const char_t *stringifyOp(Token tok){
             return "*";
         default:
             assert (0 && "Not an op");
-    }
-}
-
-const char_t *stringifyType(Type type){
-    switch(type){
-        case typInt32:
-            return "i32";
-        case typInt64:
-            return "i64";
-        case typFloat32:
-            return "f32";
-        case typFloat64:
-            return "f64";
-        default:
-            assert(0 && "Invalid type");
     }
 }

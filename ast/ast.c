@@ -12,7 +12,7 @@ ExprDouble* newExprDouble(double num){
     return expr;
 }
 
-ExprInt* newExprInt(long long num){
+ExprInt* newExprInt(unsigned int num){
     New(ExprInt, expr, 1)
     expr->base = ExprBase(astExprInt);
     expr->num = num;

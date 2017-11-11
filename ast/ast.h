@@ -39,9 +39,9 @@ ExprDouble* newExprDouble(double num);
 
 typedef struct {
     ExprBase base;
-    long long num;
+    unsigned int num;
 } ExprInt;
-ExprInt* newExprInt(long long num);
+ExprInt* newExprInt(unsigned int num);
 
 typedef struct {
     ExprBase base; 

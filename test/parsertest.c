@@ -101,27 +101,29 @@ void outputAst(Ast* ast){
     }
 }
 
-void test(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){ 
-    ioSetup(inputStr);      
-    initLexer();           
-    initParser();
-    Ast* ast = parsefn();          
-    outputAst(ast);
-    assert(!strcmp(output, expected));  
-    disposeLexer();
-    disposeAst(ast);
-    assert(checkParse());
-}                 
+#define test(parsefn, inputStr, expected) do {\
+    ioSetup(inputStr);\
+    initLexer();\
+    initParser();\
+    Ast* ast = (Ast*)parsefn();\
+    outputAst(ast);\
+    assertEqStr(output, expected);\
+    disposeParser();\
+    disposeLexer();\
+    disposeAst(ast);\
+    assertEqNum(checkSyntax(), 1);\
+} while(0)
 
-void testErr(Ast* (*parsefn)(), const char_t* inputStr, const char_t* expected){ 
-    ioSetup(inputStr);      
-    initLexer();            
-    initParser();
-    Ast* ast = parsefn();
-    assert(!strcmp(errorstr, expected));  
-    disposeLexer();
-    assert(!checkParse());
-} 
+#define testErr(parsefn, inputStr, expected) do {\
+    ioSetup(inputStr);\
+    initLexer();\
+    initParser();\
+    Ast* ast = (Ast*)parsefn();\
+    assertEqStr(errorstr, expected);\
+    disposeParser();\
+    disposeLexer();\
+    assertEqNum(checkSyntax(), 0);\
+} while(0)
 
 void testParseBasicExpr(){
     test(parseStmt, "55.55;", "dbl:55.55 ");
@@ -148,17 +150,17 @@ void testParseStmt(){
     test(parseStmt, " ;", "empty ");
     test(parseStmt, "{}", "block:0 ");
     test(parseStmt, "{ return 5;;}", "block:2 ret int:5 empty ");
-    test(parseStmt, "long long lli;", "i64:lli ");
+    test(parseStmt, "long long lli;", "long long:lli ");
 }
 
 void testParseFunction(){
     //This one also tests all the types so far
     test(
         parseTopLevel, "long long int main (int a, double b, long c, long long d, long int, float);",
-        "fndec:i64:main:6 i32:a f64:b i32:c i64:d i32 f32 "
+        "fndec:long long:main:6 int:a double:b int:c long long:d int float "
     );
-    test(parseTopLevel, "double k() return 5;", "fn:f64:k:0 ret int:5 ");
-    test(parseTopLevel, "int a(); int b(){a();}", "fndec:i32:a:0 fn:i32:b:0 block:1 call:a:0 ");
+    test(parseTopLevel, "double k() return 5;", "fn:double:k:0 ret int:5 ");
+    test(parseTopLevel, "int a(); int b(){a();}", "fndec:int:a:0 fn:int:b:0 block:1 call:a:0 ");
 }
 
 void testParseError(){

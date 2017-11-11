@@ -2,8 +2,8 @@
 #include "ast/ast.h"
 
 void initParser();
-char checkParse();
+void disposeParser();
+
+char checkSyntax();
 Ast* parseStmt();
 TopLevel* parseTopLevel();
-
-char isError();
