@@ -167,12 +167,12 @@ void testParseError(){
         "On line 1, position 8, expected ')', but found end of file.\nOn line 1, position 8, expected ';', but found end of file.\n"
     ); 
     testErr(parseStmt, "", "On line 1, position 0, expected statement, but found end of file.\n"); 
-    testErr(parseStmt, "sdg(,", "On line 1, position 4, expected expression, but found ','.\n");
+    testErr(parseStmt, "sdg(,", "On line 1, position 5, expected expression, but found ','.\n");
     testErr(parseStmt, "\"wergrh\n", "On line 2, position 0, expected statement, but found end of file.\n");
     testErr(parseStmt, "\"wergr", "On line 1, position 6, expected statement, but found end of file.\n");
     testErr(
         parseStmt, "return k(k",
-        "On line 1, position 10, expected ')', but found end of file.\nOn line 1, position 10, expected ';', but found end of file.\n"
+        "On line 1, position 10, expected ')', but found end of file.\nOn line 1, position 11, expected ';', but found end of file.\n"
     );
     testErr(parseStmt, "/**/bind k;", "On line 1, position 9, expected ';', but found identifier.\n");
     testErr(parseStmt, "/*   *", "On line 1, position 6, expected statement, but found end of file.\n");

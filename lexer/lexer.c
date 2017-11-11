@@ -4,12 +4,9 @@
 #include <assert.h>
 
 char_t curChar; //Updated for every character consumed
-//Line number and position at start of every token. Used for errors
-size_t lineNumber = 1;
-size_t linePos;
 //Line number and position at end of every token. Actively updated by lexer
-size_t lineTokenEndNumber;
-size_t lineTokenEndPos;
+size_t lineNumber;
+size_t linePos;
 Array(char_t) stringBuffer; //Store identifier and strings
 double floatVal;   //Store number tokens
 long long intVal;
@@ -35,10 +32,10 @@ static char isIdentChar(char_t c){
 static char_t getNext(){
     //Increases line number or position
     if (isEol(curChar)){
-        lineTokenEndNumber++;
-        lineTokenEndPos = 0;
+        lineNumber++;
+        linePos = 0;
     }
-    else lineTokenEndPos++;
+    else linePos++;
     curChar = consumeNext();
     return curChar;
 }
@@ -67,8 +64,6 @@ static char storeNextIf(char_t c){
 void initLexer(){ //Can fail due to malloc
     if (!arrInit(char_t)(&stringBuffer, 5, NULL, NULL)) exit(1); //Allocate empty string
     linePos = 0;
-    lineTokenEndPos = 0;
-    lineTokenEndNumber = 1;
     lineNumber = 1;
     curChar = consumeNext();
 }
@@ -112,10 +107,6 @@ Token lexToken(){
     intVal = 0;
 
     begin:
-    //Update line number and position to start of new token
-    lineNumber = lineTokenEndNumber;
-    linePos = lineTokenEndPos;
-
     //Skip over newlines, whitespace
     if (isSpace(curChar) || isEol(curChar)){
         getNext();

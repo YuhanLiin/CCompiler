@@ -4,8 +4,10 @@
 #include "utils.h"
 #include "./parser.h"
 #include "ast/type.h"
+#include "io/error.h"
 #include <stdlib.h>
 #include <assert.h>
+#include "utils.h"
 
 static Token curTok;  //Lookahead token. Global lexer values correspond to this token
 static char correct = 1;
@@ -20,16 +22,15 @@ char checkParse(){
 
 static void syntaxError(const char_t* expected){
     if (curTok == tokUnexpected){
-        // Unexpected chars are not consumed, so we have to peek the next char to get it
         if (curChar == End){
-            writeErr(lineTokenEndNumber, lineTokenEndPos, "expected %s, but found end of file.", expected);
+            writeError(lineNumber, linePos, "expected %s before end of file.", expected);
         }
         else{
-            writeErr(lineTokenEndNumber, lineTokenEndPos, "expected %s, but found '%c'.", expected, curChar);
+            writeError(lineNumber, linePos, "expected %s, before '%c'.", expected, curChar);
         }
     }
     else{
-        writeErr(lineNumber, linePos, "expected %s, but found %s.", expected, stringifyToken(curTok));
+        writeError(lineNumber, linePos, "expected %s, before %s.", expected, stringifyToken(curTok));
     }
     correct = 0;
 }

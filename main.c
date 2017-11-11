@@ -1,4 +1,6 @@
 #include "utils.h"
+#include "io/file.h"
+#include "io/error.h"
 #include "ast/ast.h"
 #include "lexer/lexer.h"
 #include "parser/parser.h"
@@ -9,51 +11,16 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
-
-FILE* infile;
-FILE* outfile;
-
-void emitAsm(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    vfprintf(outfile, format, args);
-    va_end(args);
-}
-
-char_t consumeNext(){
-    int c = fgetc(infile);
-    if (c == EOF){
-        return End;
-    }
-    return c;
-}
-
-void safeClose(FILE* file, const char* filename){
-    if (fclose(file) != 0){
-        fprintf(stderr, "Warning: File %s did not close successfully\n", filename);
-    }
-}
 
 int main(int argc, char const *argv[])
 {
     if (argc < 3){
-        printf("Error: No C file name.\n");
+        fprintf(stderr, "Error: No C file name.\n");
         return 2;
     }
-    const char* infilename = argv[1];
-    const char* outfilename = argv[2];
-    infile = fopen(infilename, "r");
-    if (infile == NULL){
-        fprintf(stderr, "Error: Input file %s couldn't be opened.\n", infilename);
-        return 2;
-    }
-    outfile = fopen(outfilename, "w");
-    if (outfile == NULL){
-        safeClose(infile, infilename);
-        fprintf(stderr, "Error: Output file %s couldn't be opened.\n", outfilename);
-        return 2;
-    }
+    const char_t* infilename = argv[1];
+    const char_t* outfilename = argv[2];
+    openFiles(infilename, outfilename);
 
     initLexer();
     initParser();
@@ -79,7 +46,6 @@ int main(int argc, char const *argv[])
         printf("Semantic error placeholder\n");
     }
     disposeLexer();
-    safeClose(infile, infilename);
-    safeClose(outfile, outfilename);
+    closeFiles(infilename, outfilename);
     return code;
 }
