@@ -320,8 +320,8 @@ Ast* parseStmt(){
 static char parseParams(Array(vptr) *params){
     //While comma exists, consume it (the getTok() call) and keep parsing identifiers
     do {
-        size_t paramline = lineNumberTokStart;
-        size_t parampos = linePosTokStart;
+        size_t paramline = lineNumber;
+        size_t parampos = linePos;
         Type type = parseType();
         //Each param must consist of a type and a name
         if (type == typNone){ 

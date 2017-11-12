@@ -162,7 +162,7 @@ static void verifyAndSetParams(Array(vptr)* params){
             return;
         }
         if (!validateVarDefine(param)){
-            semanticError(param->ast, "parameter '%s' has already been defined", param->name);
+            semanticError(param->ast, "parameter '%s' has already been defined.", param->name);
             return;
         }
         insertVar(param->name, param);
@@ -175,7 +175,7 @@ void verifyFunctionSignature(Function* func, char isDecl){
         semanticError(func->ast, "function name '%s' has already been defined.", func->name);
     }
     else if (!validateFuncPrevDecl(func)){
-        semanticError(func->ast, "definition of '%s' does not match its previous declaration", func->name);
+        semanticError(func->ast, "definition of '%s' does not match its previous declaration.", func->name);
     }
     else{
         insertFunc(func->name, func);
