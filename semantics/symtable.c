@@ -17,12 +17,13 @@ typedef Ast* Astptr;
 static Map(Symbol, Astptr) symbolTable;
 
 void initSymbolTable(){
-    resetScopes();
+    initScopes();
     mapInit(Symbol, Astptr)(&symbolTable, 4, &hashSymbol, &eqSymbol, NULL, NULL);
 }
 
 void disposeSymbolTable(){
     mapDispose(Symbol, Astptr)(&symbolTable);
+    disposeScopes();
 }
 
 
@@ -33,11 +34,11 @@ static void insertSymbol(char_t* name, Ast* ast){
 }
 
 void insertVar(char_t* name, StmtVar* var){
-    insertSymbol(name, &var->label);
+    insertSymbol(name, &var->ast);
 }
 
 void insertFunc(char_t* name, Function* func){
-    insertSymbol(name, &func->label);
+    insertSymbol(name, &func->ast);
 }
 
 //Search for a variable in only current scope
@@ -58,7 +59,7 @@ const StmtVar* findVar(char_t* name){
         if (scopeId == GLOBAL_SCOPE) break;
         scopeId = prevScope(scopeId);
     }
-    if (astptr && **astptr != astFunction){
+    if (astptr && (*astptr)->label != astFunction){
         return (StmtVar*)(*astptr);
     }
     return NULL;
@@ -67,7 +68,7 @@ const StmtVar* findVar(char_t* name){
 //Search for a function in the global scope
 const Function* findFunc(char_t* name){
     Ast** astptr = mapFind(Symbol, Astptr)(&symbolTable, (Symbol){name, GLOBAL_SCOPE});
-    if (astptr && **astptr == astFunction){
+    if (astptr && (*astptr)->label == astFunction){
         return (Function*)(*astptr);
     }
     return NULL;

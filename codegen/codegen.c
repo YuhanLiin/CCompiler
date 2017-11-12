@@ -89,7 +89,7 @@ static void cmplCall(char_t* name, Array(vptr) *args){
 
 // Returns address of the result of the processed expression
 static Address cmplExpr(ExprBase* expr){
-    switch(expr->label){
+    switch(expr->base.ast.label){
         case astExprInt:
             return numberAddress(((ExprInt*)expr)->num);
         case astExprCall:
@@ -103,7 +103,7 @@ static Address cmplExpr(ExprBase* expr){
 }
 
 static void cmplStmt(Ast* ast, size_t retLabel){
-    switch(*ast){
+    switch(ast->label){
         case astStmtReturn: {
             Address expaddr = cmplExpr((ExprBase*)((StmtReturn*)ast)->expr);
             emitAsm("\tmovq ");
@@ -143,7 +143,7 @@ static void cmplParams(Array(vptr) *params){
 }
 
 static void cmplGlobal(Ast* ast){
-    switch(*ast){
+    switch(ast->label){
         case astFunction:{
             Function* func = (Function*)ast;
             //Skip function declarations

@@ -21,39 +21,44 @@ typedef enum {
     astStmtDef,
     astFunction,
     astTopLevel
+} AstLabel;
+
+typedef struct {
+    AstLabel label;
+    size_t lineNumber;
+    size_t linePos;
 } Ast;
 
 //Base structs are always first field. Contain ast label followed by attributes for semantic analysis
 typedef struct {
-    Ast label;
+    Ast ast;
     Type type;
 } ExprBase;
-#define ExprBase(label) (ExprBase){label, typNone}
 
 //Actual ast nodes and their allocators
 typedef struct {
     ExprBase base; 
     double num;
 } ExprDouble;
-ExprDouble* newExprDouble(double num);
+ExprDouble* newExprDouble(size_t lineNumber, size_t linePos, double num);
 
 typedef struct {
     ExprBase base;
     unsigned int num;
 } ExprInt;
-ExprInt* newExprInt(unsigned int num);
+ExprInt* newExprInt(size_t lineNumber, size_t linePos, unsigned int num);
 
 typedef struct {
     ExprBase base; 
     char_t* str;
 } ExprStr;
-ExprStr* newExprStr(char_t* str);
+ExprStr* newExprStr(size_t lineNumber, size_t linePos, char_t* str);
 
 typedef struct {
     ExprBase base; 
     char_t* name;
 } ExprIdent;
-ExprIdent* newExprIdent(char_t* name);
+ExprIdent* newExprIdent(size_t lineNumber, size_t linePos, char_t* name);
 
 typedef struct {
     ExprBase base; 
@@ -61,57 +66,57 @@ typedef struct {
     ExprBase* left; 
     ExprBase* right;
 } ExprBinop;
-ExprBinop* newExprBinop(Token op, ExprBase* left, ExprBase* right);
+ExprBinop* newExprBinop(size_t lineNumber, size_t linePos, Token op, ExprBase* left, ExprBase* right);
 
 typedef struct {
     ExprBase base; 
     char_t* name; 
     Array(vptr) args;
 } ExprCall;
-ExprCall* newExprCall(char_t* name);
+ExprCall* newExprCall(size_t lineNumber, size_t linePos, char_t* name);
 
-typedef struct {Ast label;} StmtEmpty;
-StmtEmpty* newStmtEmpty();
+typedef struct {Ast ast;} StmtEmpty;
+StmtEmpty* newStmtEmpty(size_t label, size_t lineNumber);
 
 typedef struct {
-    Ast label;
-    ExprBase* expr;
+    Ast ast;
+    ExprBase* expr;  //NULL means no return value
 } StmtReturn;
-StmtReturn* newStmtReturn(ExprBase* expr);
+StmtReturn* newStmtReturn(size_t lineNumber, size_t linePos);
 
 typedef struct {
-    Ast label;
+    Ast ast;
     ExprBase* expr;
 } StmtExpr;
-StmtExpr* newStmtExpr(ExprBase* expr);
+StmtExpr* newStmtExpr(size_t lineNumber, size_t linePos, ExprBase* expr);
 
 typedef struct {
-    Ast label;
+    Ast ast;
     size_t scopeId;
     Array(vptr) stmts;
 } StmtBlock;
-StmtBlock* newStmtBlock();
+StmtBlock* newStmtBlock(size_t label, size_t lineNumber);
 
 typedef struct {
-    Ast label;  //Label can be either astStmtDef or astStmtDecl, depending on if it's variable definition or declaration
+    Ast ast;  //Label can be either astStmtDef or astStmtDecl, depending on if it's variable definition or declaration
     Type type;
     char_t* name;   //Left null for unnamed params
 } StmtVar;
-StmtVar* newStmtVarDef(Type type, char_t* name);
-StmtVar* newStmtVarDecl(Type type, char_t* name);
+StmtVar* newStmtVarDef(size_t lineNumber, size_t linePos, Type type, char_t* name);
+StmtVar* newStmtVarDecl(size_t lineNumber, size_t linePos, Type type, char_t* name);
 
 typedef struct {
-    Ast label;
+    Ast ast;
     size_t scopeId;
     Type type; 
     char_t* name;
     Ast* stmt;  //Leave this null if there is no definition
     Array(vptr) params;  //List of StmtDef to represent parameters
 } Function;
-Function* newFunction(Type type, char_t* name);
+Function* newFunction(size_t lineNumber, size_t linePos, Type type, char_t* name);
 
 typedef struct {
-    Ast label;
+    Ast ast;
     Array(vptr) globals;
 } TopLevel;
 TopLevel* newTopLevel();

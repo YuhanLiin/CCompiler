@@ -5,88 +5,91 @@
 #include "utils.h"
 #include <stdlib.h>
 
-ExprDouble* newExprDouble(double num){
+#define Ast(label, lineNumber, linePos) (Ast){label, lineNumber, linePos}
+#define ExprBase(ast) (ExprBase){ast, typNone}
+
+ExprDouble* newExprDouble(size_t lineNumber, size_t linePos, double num){
     New(ExprDouble, expr, 1)
-    expr->base = ExprBase(astExprDouble);
+    expr->base = ExprBase(Ast(astExprDouble, lineNumber, linePos));
     expr->num = num;
     return expr;
 }
 
-ExprInt* newExprInt(unsigned int num){
+ExprInt* newExprInt(size_t lineNumber, size_t linePos, unsigned int num){
     New(ExprInt, expr, 1)
-    expr->base = ExprBase(astExprInt);
+    expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
     expr->num = num;
     return expr;
 }
 
-ExprStr* newExprStr(char_t* str){
+ExprStr* newExprStr(size_t lineNumber, size_t linePos, char_t* str){
     New(ExprStr, expr, 1)
-    expr->base = ExprBase(astExprStr);
+    expr->base = ExprBase(Ast(astExprStr, lineNumber, linePos));
     expr->str = str;
     return expr;
 }
 
-ExprIdent* newExprIdent(char_t* name){
+ExprIdent* newExprIdent(size_t lineNumber, size_t linePos, char_t* name){
     New(ExprIdent, expr, 1)
-    expr->base = ExprBase(astExprIdent);
+    expr->base = ExprBase(Ast(astExprIdent, lineNumber, linePos));
     expr->name = name;
     return expr;
 }
 
-ExprBinop* newExprBinop(Token op, ExprBase* left, ExprBase* right){
+ExprBinop* newExprBinop(size_t lineNumber, size_t linePos, Token op, ExprBase* left, ExprBase* right){
     New(ExprBinop, expr, 1)
-    *expr = (ExprBinop){ExprBase(astExprBinop), op, left, right};
+    *expr = (ExprBinop){ExprBase(Ast(astExprBinop, lineNumber, linePos)), op, left, right};
     return expr;
 }
 
-ExprCall* newExprCall(char_t* name){
+ExprCall* newExprCall(size_t lineNumber, size_t linePos, char_t* name){
     New(ExprCall, expr, 1)
-    expr->base = ExprBase(astExprCall);
+    expr->base = ExprBase(Ast(astExprCall, lineNumber, linePos));
     expr->name = name;
     arrInit(vptr)(&expr->args, 0, NULL, &disposeAst);
     return expr;
 }
 
-StmtEmpty* newStmtEmpty(){
+StmtEmpty* newStmtEmpty(size_t lineNumber, size_t linePos){
     New(StmtEmpty, stmt, 1)
-    stmt->label = astStmtEmpty;
+    stmt->ast = Ast(astStmtEmpty, lineNumber, linePos);
     return stmt;
 }
 
-StmtReturn* newStmtReturn(ExprBase* expr){
+StmtReturn* newStmtReturn(size_t lineNumber, size_t linePos){
     New(StmtReturn, stmt, 1)
-    *stmt = (StmtReturn){astStmtReturn, expr};
+    *stmt = (StmtReturn){Ast(astStmtReturn, lineNumber, linePos), NULL};
     return stmt;
 }
 
-StmtExpr* newStmtExpr(ExprBase* expr){
+StmtExpr* newStmtExpr(size_t lineNumber, size_t linePos, ExprBase* expr){
     New(StmtExpr, stmt, 1)
-    *stmt = (StmtExpr){astStmtExpr, expr};
+    *stmt = (StmtExpr){Ast(astStmtExpr, lineNumber, linePos), expr};
     return stmt;
 }
 
-StmtBlock* newStmtBlock(){
+StmtBlock* newStmtBlock(size_t label, size_t lineNumber){
     New(StmtBlock, blk, 1)
-    blk->label = astStmtBlock;
+    blk->ast = Ast(astStmtBlock, lineNumber, linePos);
     arrInit(vptr)(&blk->stmts, 0, NULL, &disposeAst);
     return blk;
 }
 
-StmtVar* newStmtVarDef(Type type, char_t* name){
+StmtVar* newStmtVarDef(size_t lineNumber, size_t linePos, Type type, char_t* name){
     New(StmtVar, stmt, 1)
-    *stmt = (StmtVar){astStmtDef, type, name};
+    *stmt = (StmtVar){Ast(astStmtDef, lineNumber, linePos), type, name};
     return stmt;
 }
 
-StmtVar* newStmtVarDecl(Type type, char_t* name){
+StmtVar* newStmtVarDecl(size_t lineNumber, size_t linePos, Type type, char_t* name){
     New(StmtVar, stmt, 1)
-    *stmt = (StmtVar){astStmtDecl, type, name};
+    *stmt = (StmtVar){Ast(astStmtDecl, lineNumber, linePos), type, name};
     return stmt;
 }
 
-Function* newFunction(Type type, char_t* name){
+Function* newFunction(size_t lineNumber, size_t linePos, Type type, char_t* name){
     New(Function, func, 1)
-    func->label = astFunction;
+    func->ast = Ast(astFunction, lineNumber, linePos);
     func->type = type;
     func->name = name;
     func->stmt = NULL;
@@ -96,13 +99,13 @@ Function* newFunction(Type type, char_t* name){
 
 TopLevel* newTopLevel(){
     New(TopLevel, toplevel, 1);
-    toplevel->label = astTopLevel;
+    toplevel->ast = Ast(astTopLevel, lineNumber, linePos);
     arrInit(vptr)(&toplevel->globals, 0, NULL, &disposeAst);
     return toplevel;
 }
 
 char isVarDecl(const StmtVar* var){
-    return var->label == astStmtDecl;
+    return var->ast.label == astStmtDecl;
 }
 
 char isFuncDecl(const Function* func){
@@ -111,8 +114,9 @@ char isFuncDecl(const Function* func){
 
 //Delete ast node based on ast label
 void disposeAst(void* node){
+    if (node == NULL) return;
     Ast* ast = node;
-    switch(*ast){
+    switch(ast->label){
         case astExprDouble:
             break;
         case astExprInt:

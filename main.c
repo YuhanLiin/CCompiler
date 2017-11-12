@@ -5,6 +5,7 @@
 #include "lexer/lexer.h"
 #include "parser/parser.h"
 #include "codegen/codegen.h"
+#include "semantics/symtable.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +22,7 @@ int main(int argc, char const *argv[])
 
     initLexer();
     initParser();
+    initSymbolTable();
     int code = 0;
     TopLevel* ast = parseTopLevel();
     if (ast != NULL){
@@ -35,7 +37,7 @@ int main(int argc, char const *argv[])
     else {
         code = 3;
     }
-    disposeParser();
+    disposeSymbolTable();
     disposeLexer();
     closeFiles(infilename, outfilename);
     return code;

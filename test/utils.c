@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define assertBegin() fprintf(stderr, "Assertion error in %s, line %d, in %s:\n", __FILE__, __LINE__, __func__)
+#define assertBegin() fprintf(stderr, "\nAssertion error in %s, line %d, in %s:\n", __FILE__, __LINE__, __func__)
 
 #define assertEqStr(actual, expected) do {\
     if (strcmp(expected, actual)){\

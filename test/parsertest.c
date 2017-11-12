@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "ast/ast.h"
 #include "parser/parser.h"
+#include "semantics/symtable.h"
 
 #include "./io.c"
 #include "./utils.c"
@@ -13,7 +14,7 @@ void outputAst(Ast* ast){
         outprint("ERROR ");
         return;
     }
-    switch(*ast){
+    switch(ast->label){
         case astExprDouble:
             outprint("dbl:%.2Lf ", ((ExprDouble*)ast)->num); //Print numbers with 2 digit precision
             return;
@@ -80,7 +81,7 @@ void outputAst(Ast* ast){
             outprint(":%s:%s:%d ", stringifyType(fn->type), fn->name, paramCount);
             for (size_t i=0; i<paramCount; i++){
                 Ast* param = fn->params.elem[i];
-                assert(*param == astStmtDef);
+                assert(param->label == astStmtDef);
                 outputAst(param);
             }
             if (fn->stmt){
@@ -105,10 +106,11 @@ void outputAst(Ast* ast){
     ioSetup(inputStr);\
     initLexer();\
     initParser();\
+    initSymbolTable();\
     Ast* ast = (Ast*)parsefn();\
     outputAst(ast);\
     assertEqStr(output, expected);\
-    disposeParser();\
+    disposeSymbolTable();\
     disposeLexer();\
     disposeAst(ast);\
     assertEqNum(checkSyntax(), 1);\
@@ -118,9 +120,10 @@ void outputAst(Ast* ast){
     ioSetup(inputStr);\
     initLexer();\
     initParser();\
+    initSymbolTable();\
     Ast* ast = (Ast*)parsefn();\
     assertEqStr(errorstr, expected);\
-    disposeParser();\
+    disposeSymbolTable();\
     disposeLexer();\
     assertEqNum(checkSyntax(), 0);\
 } while(0)

@@ -15,5 +15,5 @@ void preverifyBlockStmt(){}
 StmtBlock* verifyBlockStmt(StmtBlock* blk){return blk;}
 StmtReturn* verifyStmtReturn(StmtReturn* ret){return ret;}
 
-void preverifyFunction(Function* func, char isDecl){}
-void verifyFunctionDefinition(){}
+void verifyFunctionSignature(Function* func, char isDecl){}
+void verifyFunctionBody(){}

@@ -5,7 +5,6 @@
 void initSemantics();
 char checkSemantics();
 
-//void verifyTopLevel(TopLevel* ast);
 ExprInt* verifyExprInt(ExprInt* expint);
 ExprDouble* verifyExprDouble(ExprDouble* expdb);
 ExprBinop* verifyExprBinop(ExprBinop* binop);
@@ -16,5 +15,5 @@ void preverifyBlockStmt();
 StmtBlock* verifyBlockStmt(StmtBlock* blk);
 StmtReturn* verifyStmtReturn(StmtReturn* ret);
 
-void preverifyFunction(Function* func, char isDecl);
-void verifyFunctionDefinition();
+void verifyFunctionSignature(Function* func, char isDecl);
+void verifyFunctionBody();

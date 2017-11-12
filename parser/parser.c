@@ -41,22 +41,7 @@ static void syntaxError(const char_t* expected){
 void initParser(){
     getTok();
     correct = 1;
-    initScopes();
-    initSymbolTable();
     initSemantics();
-}
-
-void disposeParser(){
-    disposeScopes();
-    disposeSymbolTable();
-}
-
-//Allocate and return new cstring from a char array
-static char_t* toCstring(const Array(char_t)* str){
-    New(char_t, cstr, str->size+1)
-    memcpy(cstr, str->elem, sizeof(char_t)*(str->size+1));
-    cstr[str->size] = 0;
-    return cstr;
 }
 
 //IMPORTANT: Extra unprocessed lookahead will always be present at start and end of every parser function call
@@ -101,7 +86,7 @@ static ExprBase* parseExpr();
 //args := expr [, expr]*   Assumes args array is already initialized and empty. Return 0 for syntax error
 static char parseArgs(Array(vptr) *args){
     //While comma exists consume it and keep parsing expressions
-    do {    
+    do {
         ExprBase* arg = parseExpr();
         if (arg == NULL) return 0; //If expression cant be parsed then syntax error
         if (!arrPush(vptr)(args, arg)) exit(1); //Push arg and check for malloc failures
@@ -113,19 +98,19 @@ static char parseArgs(Array(vptr) *args){
 static ExprBase* parsePrimaryExpr(){
     switch (curTok){
         case tokNumInt: {
-            unsigned int i = intVal;
+            ExprInt* expr = verifyExprInt(newExprInt(lineNumberTokStart, linePosTokStart, intVal));
             getTok(); //Consume number
-            return (ExprBase*)verifyExprInt(newExprInt(i));
+            return (ExprBase*)expr;
         }
         case tokNumDouble: {
-            double d = floatVal;
+            ExprDouble* expr = verifyExprDouble(newExprDouble(lineNumberTokStart, linePosTokStart, floatVal));
             getTok(); //Consume number
-            return (ExprBase*)verifyExprDouble(newExprDouble(d));
+            return (ExprBase*)expr;
         }
         case tokString: {
-            char_t* str = toCstring(&stringBuffer);
+            ExprStr* expr = newExprStr(lineNumberTokStart, linePosTokStart, toCstring(&stringBuffer));
             getTok(); //Consume string
-            return (ExprBase*) newExprStr(str);
+            return (ExprBase*)expr;
         }
         case tokLParen: {
             getTok(); //Consume left paren
@@ -145,11 +130,13 @@ static ExprBase* parsePrimaryExpr(){
         }
         case tokIdent: {
             char_t* name = toCstring(&stringBuffer);
+            size_t nameline = lineNumberTokStart;
+            size_t namepos = linePosTokStart;
             getTok(); //consume identifier
             //If bracket follows then its a function call
             if (curTok == tokLParen){  
                 getTok(); //Consume left paren
-                ExprCall* call = newExprCall(name);
+                ExprCall* call = newExprCall(nameline, namepos, name);
                 //If following brackets are not empty, attempt to parse 1 or more args.
                 if (curTok == tokRParen){
                     getTok(); //Consume rb
@@ -159,7 +146,7 @@ static ExprBase* parsePrimaryExpr(){
                     //Attempt to parse arguments. It will throw if unsuccessful so no need to handle it here
                     if (parseArgs(&call->args)){
                         if (curTok == tokRParen){
-                            getTok(); //Consume rb  
+                            getTok(); //Consume rb
                         }
                         else{
                             syntaxError(stringifyToken(tokRParen));
@@ -172,7 +159,7 @@ static ExprBase* parsePrimaryExpr(){
             }
             //Otherwise its a normal identifier
             else {
-                return (ExprBase*)verifyExprIdent(newExprIdent(name));
+                return (ExprBase*)verifyExprIdent(newExprIdent(nameline, namepos, name));
             }
             free(name);
             return NULL;
@@ -202,6 +189,8 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
     Token op;
     //Will first consume any higher/equal precedence binop. Afterwards, due to inner loop, this outer loop will only consume equal precedence binops
     while (operatorPrec(op = curTok) >= minPrec){
+        size_t opLine = lineNumber;
+        size_t opPos = linePos;
         getTok(); //Consume binop
         //Attempt to parse 1st atom of rhs expression
         if ((rhs = parsePrimaryExpr()) == NULL) return rhs;
@@ -216,7 +205,7 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
             rhs = newRhs;
         }
         //After rhs has been fully built, merge it with lhs and then continue
-        lhs = (ExprBase*)verifyExprBinop(newExprBinop(op, lhs, rhs));
+        lhs = (ExprBase*)verifyExprBinop(newExprBinop(opLine, opPos, op, lhs, rhs));
     }
     return lhs;
 }
@@ -245,20 +234,32 @@ static void checkSemicolon(){
 Ast* parseStmt(){
     switch(curTok){
         case tokReturn: {
+            StmtReturn* ret = newStmtReturn(lineNumberTokStart, linePosTokStart);
             getTok(); //Consume return
-            ExprBase* expr = parseExpr();
-            if (expr){
-                checkSemicolon();
-                return (Ast*)verifyStmtReturn(newStmtReturn(expr));
+            if (curTok == tokSemicolon){
+                getTok();
             }
-            return NULL;
+            else{
+                ExprBase* expr = parseExpr();
+                if (expr){
+                    ret->expr = expr;
+                    checkSemicolon();
+                }
+                else{
+                    disposeAst(ret);
+                    return NULL;
+                }
+            }
+            return (Ast*)verifyStmtReturn(ret);
         }
-        case tokSemicolon:
+        case tokSemicolon: {
+            StmtEmpty* empty = newStmtEmpty(lineNumberTokStart, linePosTokStart);
             getTok(); //Consume semicolon
-            return (Ast*) newStmtEmpty();
-        case tokLBrace:
+            return (Ast*) empty;
+        }
+        case tokLBrace: {
+            StmtBlock* block = newStmtBlock(lineNumberTokStart, linePosTokStart);
             getTok(); //Consume left brace
-            StmtBlock* block = newStmtBlock();
             preverifyBlockStmt();
             while (curTok != tokRBrace){
                 Ast* stmt = parseStmt();
@@ -275,6 +276,7 @@ Ast* parseStmt(){
             getTok();
             return (Ast*)verifyBlockStmt(block);
             //TODO handle other statements
+        }
 
         //These are tokens that expressions can't start with, so they automatically trigger statement error
         case tokRBrace:
@@ -293,11 +295,11 @@ Ast* parseStmt(){
             Type type = parseType();
             if (type != typNone){
                 if (curTok == tokIdent){
-                    char_t* str = toCstring(&stringBuffer);
+                    StmtVar* def = newStmtVarDef(lineNumberTokStart, linePosTokStart, type, toCstring(&stringBuffer));
                     getTok();  //Consume identifier
                     checkSemicolon();
                     //TODO write verifyer for this or throw it somewhere else
-                    return (Ast*) newStmtVarDef(type, str);
+                    return (Ast*) def;
                 }
                 else{
                     syntaxError(stringifyToken(tokIdent));
@@ -307,7 +309,7 @@ Ast* parseStmt(){
                 ExprBase* expr = parseExpr();
                 if (expr){
                     checkSemicolon();
-                    return (Ast*) newStmtExpr(expr);
+                    return (Ast*) newStmtExpr(expr->ast.lineNumber, expr->ast.linePos, expr);
                 }
             }
             return NULL;
@@ -317,14 +319,16 @@ Ast* parseStmt(){
 
 static char parseParams(Array(vptr) *params){
     //While comma exists, consume it (the getTok() call) and keep parsing identifiers
-    do {    
+    do {
+        size_t paramline = lineNumberTokStart;
+        size_t parampos = linePosTokStart;
         Type type = parseType();
         //Each param must consist of a type and a name
         if (type == typNone){ 
             syntaxError("type name");
             return 0;
         }
-        StmtVar* param = newStmtVarDef(type, NULL);
+        StmtVar* param = newStmtVarDef(paramline, parampos, type, NULL);
         if (curTok == tokIdent){
             param->name = toCstring(&stringBuffer);
             getTok();  //Consume name
@@ -341,11 +345,12 @@ static Ast* parseFunction(Type type){
     //Assume the type has already been parsed and consumed
     if (curTok == tokIdent){
         char_t* name = toCstring(&stringBuffer);
+        size_t nameline = lineNumberTokStart;
+        size_t namepos = linePosTokStart;
         getTok(); //Consume identifier
-        //Function call discovered
         if (curTok == tokLParen){
             getTok(); //Consume left paren
-            Function* func = newFunction(type, name);
+            Function* func = newFunction(nameline, namepos, type, name);
             if (curTok == tokRParen){
                 getTok(); //Consume right paren
                 goto finishedParsingParams;
@@ -361,14 +366,14 @@ static Ast* parseFunction(Type type){
                 }
                 finishedParsingParams:;
                 char isDecl = curTok == tokSemicolon;
-                preverifyFunction(func, isDecl);
+                verifyFunctionSignature(func, isDecl);
                 //Parse either ; for declaration or a statement for definition
                 if (isDecl){
                     getTok();
                     return (Ast*)func;
                 }
                 else if (func->stmt = parseStmt()){
-                    verifyFunctionDefinition();
+                    verifyFunctionBody();
                     return (Ast*)func;
                 }
                 //parseStmt reports errors, so no need for it here
