@@ -163,6 +163,18 @@ Token lexToken(){
             }
             getNext();
             return tokString;
+        case '\'':
+            getNext();
+            if (curChar == End || isEol(curChar)){
+                return tokUnexpected;
+            }
+            intVal = curChar;
+            getNext();
+            if (curChar != '\''){
+                return tokUnexpected;
+            }
+            getNext();
+            return tokNumChar;
         case '+':
             getNext();
             return tokPlus;
@@ -218,9 +230,13 @@ Token lexToken(){
             }
             return tokDiv;
         case '.':
-            //double .[0-9]+
+            //double .[0-9]+(f|F)?
             getNext(); 
             if (lexDecimals()){
+                if (curChar == 'f' || curChar == 'F'){
+                    getNext();
+                    return tokNumFloat;
+                }
                 return tokNumDouble;
             }
             else{
@@ -240,10 +256,29 @@ Token lexToken(){
                 if (getNextIf('.')){
                     floatVal = intVal;
                     lexDecimals();
-                    //Regardless of whether decimals can be parsed, still return double
+                    //Regardless of whether decimals can be parsed, still return double/float
+                    if (curChar == 'f' || curChar == 'F'){
+                        getNext();
+                        return tokNumFloat;
+                    }
                     return tokNumDouble;
                 }
-                return tokNumInt;  //If no dot then it's int
+                if (curChar == 'l' || curChar == 'L'){
+                    getNext();
+                    if (curChar == 'l' || curChar == 'L'){
+                        getNext();
+                        if (curChar == 'u' || curChar == 'U'){
+                            getNext();
+                            return tokNumULong;
+                        }
+                        return tokNumLong;
+                    }
+                }
+                if (curChar == 'u' || curChar == 'U'){
+                    getNext();
+                    return tokNumUInt;
+                }
+                return tokNumInt;
             }
             //Identifier [a-zA-Z][a-zA-Z_0-9]*
             else if (isIdentChar(curChar)){
@@ -279,7 +314,7 @@ const char_t * stringifyToken(Token tok){
             return "identifier";
         case tokNumDouble:
             return "floating-point number";
-        case tokNumInt:
+        case tokNumLong:
             return "integer";
         case tokString:
             return "string";

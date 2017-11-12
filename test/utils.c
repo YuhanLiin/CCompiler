@@ -21,20 +21,21 @@
     if (expected != actual){\
         assertBegin();\
         fprintf(\
-            stderr, "Expected %s to be %.2Lf, but got %.2Lf.\n",\
-            #actual, (expected)*1.0, (actual)*1.0\
+            stderr, "Expected %s to be %d, but got %d.\n",\
+            #actual, expected, actual\
         );\
     }\
 } while(0);
 
-char strEq(Array(char_t)* string, const char_t * cstr){
-    for (size_t i=0; i<string->size; i++){
-        if (cstr[i] == '\0' || cstr[i] != string->elem[i]){
-            return 0;
-        }
-    }
-    return 1;
-}
+#define assertEqFlt(actual, expected) do {\
+    if (!doubleEq(expected, actual)){\
+        assertBegin();\
+        fprintf(\
+            stderr, "Expected %s to be %.2f, but got %.2f.\n",\
+            #actual, expected, actual\
+        );\
+    }\
+} while(0);
 
 char doubleEq(const double a, const double b){
     double diff = a - b;

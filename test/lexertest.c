@@ -14,7 +14,7 @@ void setup(const char_t* str){
 }
 #define test(expectedTok) do {\
     token = lexToken();\
-    assert(token == expectedTok);\
+    assertEqNum(token, expectedTok);\
 } while(0)
 void teardown(){
     disposeLexer();
@@ -26,23 +26,24 @@ void testTokenIgnored(){
     test(tokEof);
     setup("/*");
     test(tokUnexpected);
+    teardown();
 }
 
 void testTokenKeywordIdentifier(){
     setup("ret return returning _DEF72  double long int float l ");
     test(tokIdent);
-    assert(strEq(&stringBuffer, "ret"));
+    assertEqStr(toCstring(&stringBuffer), "ret");
     test(tokReturn);
     test(tokIdent);
-    assert(strEq(&stringBuffer, "returning"));
+    assertEqStr(toCstring(&stringBuffer), "returning");
     test(tokIdent);
-    assert(strEq(&stringBuffer, "_DEF72"));
+    assertEqStr(toCstring(&stringBuffer), "_DEF72");
     test(tokDouble);
     test(tokLong);
     test(tokInt);
     test(tokFloat);
     test(tokIdent);
-    assert(strEq(&stringBuffer, "l"));
+    assertEqStr(toCstring(&stringBuffer), "l");
     test(tokEof);
     //Eof should be safe to parse multiple times
     test(tokEof);
@@ -52,9 +53,9 @@ void testTokenKeywordIdentifier(){
 void testTokenString(){
     setup("\"bobobobob \" \"\" \" a");
     test(tokString);
-    assert(strEq(&stringBuffer, "bobobobob "));
+    assertEqStr(toCstring(&stringBuffer), "bobobobob ");
     test(tokString);
-    assert(strEq(&stringBuffer, ""));
+    assertEqStr(toCstring(&stringBuffer), "");
     test(tokUnexpected);
     //Unexpected tokens are not consumed
     assert(curChar == End);
@@ -64,17 +65,30 @@ void testTokenString(){
 void testTokenNumber(){
     setup("500(500.)60.54.7 ..");
     test(tokNumInt);
-    assert(intVal == 500);
+    assertEqNum(intVal, 500);
     test(tokLParen);
     test(tokNumDouble);
-    assert(doubleEq(floatVal, 500));
+    assertEqFlt(floatVal, 500);
     test(tokRParen);
     test(tokNumDouble);
-    assert(doubleEq(floatVal, 60.54));
+    assertEqFlt(floatVal, 60.54);
     test(tokNumDouble);
-    assert(doubleEq(floatVal, .7));
+    assertEqFlt(floatVal, .7);
     test(tokUnexpected);
-    assert(curChar == '.');
+    assertEqNum(curChar, '.');
+    teardown();
+}
+
+void testTokenNumberExtensions(){
+    setup("500L 500l 500Ll 500u 500lU 500LLU 5.5f 5.5F");
+    test(tokNumInt);
+    test(tokNumInt);
+    test(tokNumLong);
+    test(tokNumUInt);
+    test(tokNumUInt);
+    test(tokNumULong);
+    test(tokNumFloat);
+    test(tokNumFloat);
     teardown();
 }
 
@@ -97,6 +111,7 @@ int main(int argc, char const *argv[])
     testTokenIgnored();
     testTokenSymbols();
     testTokenNumber();
+    testTokenNumberExtensions();
     testTokenString();
     testTokenKeywordIdentifier();
     return 0;

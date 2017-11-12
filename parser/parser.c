@@ -97,7 +97,7 @@ static char parseArgs(Array(vptr) *args){
 //primeExpr := Number | String | ( expr ) | Ident ( args? )?
 static ExprBase* parsePrimaryExpr(){
     switch (curTok){
-        case tokNumInt: {
+        case tokNumLong: {
             ExprInt* expr = verifyExprInt(newExprInt(lineNumberTokStart, linePosTokStart, intVal));
             getTok(); //Consume number
             return (ExprBase*)expr;

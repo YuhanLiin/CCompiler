@@ -41,12 +41,14 @@ typedef struct {
     double num;
 } ExprDouble;
 ExprDouble* newExprDouble(size_t lineNumber, size_t linePos, double num);
+ExprDouble* newExprFloat(size_t lineNumber, size_t linePos, float num);
 
 typedef struct {
     ExprBase base;
-    unsigned int num;
+    unsigned long long num;
 } ExprInt;
 ExprInt* newExprInt(size_t lineNumber, size_t linePos, unsigned int num);
+ExprInt* newExprLong(size_t lineNumber, size_t linePos, unsigned long long num);
 
 typedef struct {
     ExprBase base; 

@@ -3,6 +3,7 @@
 #include "lexer/lexer.h"
 #include "assert.h"
 #include "utils.h"
+#include "ast/type.h"
 #include <stdlib.h>
 
 #define Ast(label, lineNumber, linePos) (Ast){label, lineNumber, linePos}
@@ -11,13 +12,29 @@
 ExprDouble* newExprDouble(size_t lineNumber, size_t linePos, double num){
     New(ExprDouble, expr, 1)
     expr->base = ExprBase(Ast(astExprDouble, lineNumber, linePos));
+    expr->base.type = typFloat64;
+    expr->num = num;
+    return expr;
+}
+ExprDouble* newExprFloat(size_t lineNumber, size_t linePos, float num){
+    New(ExprDouble, expr, 1)
+    expr->base = ExprBase(Ast(astExprDouble, lineNumber, linePos));
+    expr->base.type = typFloat32;
     expr->num = num;
     return expr;
 }
 
+ExprInt* newExprLong(size_t lineNumber, size_t linePos, unsigned long long num){
+    New(ExprInt, expr, 1)
+    expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
+    expr->base.type = typInt64;
+    expr->num = num;
+    return expr;
+}
 ExprInt* newExprInt(size_t lineNumber, size_t linePos, unsigned int num){
     New(ExprInt, expr, 1)
     expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
+    expr->base.type = typInt32;
     expr->num = num;
     return expr;
 }

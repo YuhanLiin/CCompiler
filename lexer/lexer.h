@@ -11,9 +11,17 @@ typedef enum {
     tokLong,    //keyword long
     tokFloat,   //keyword float
     tokDouble,  //keyword double
+    tokUnsigned,//Keyword unsigned
+    tokSigned,  //Keyword signed
+    tokChar,    //Keyword char
     tokIdent,   //Identifier [a-zA-Z][a-zA-Z_0-9]*  stored in stringBuffer
     tokNumDouble,  //64-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]* in floatVal
-    tokNumInt,     //64-bit int literal [0-9]+
+    tokNumFloat,   //32-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]*(f|F)
+    tokNumULong,    //64-bit int literal unsigned [0-9]+(ll|LL)U
+    tokNumLong,     //64-bit int literal [0-9]+(LL|ll)
+    tokNumUInt, //32-bit int literal unsigned [0-9](l|L)?U
+    tokNumInt,  //32-bit int literal [0-9]+(l|L)?
+    tokNumChar, //'.'
     tokString,  //String literal "[anychar]" stored in stringBuffer
     tokPlus,    //Operator +
     tokMinus,   //Operator -
