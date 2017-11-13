@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "ast/type.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 #define Ast(label, lineNumber, linePos) (Ast){label, lineNumber, linePos}
 #define ExprBase(ast) (ExprBase){ast, typNone}
@@ -17,25 +18,40 @@ ExprDouble* newExprDouble(size_t lineNumber, size_t linePos, double num){
     return expr;
 }
 ExprDouble* newExprFloat(size_t lineNumber, size_t linePos, float num){
-    New(ExprDouble, expr, 1)
-    expr->base = ExprBase(Ast(astExprDouble, lineNumber, linePos));
+    New(ExprFloat, expr, 1)
+    expr->base = ExprBase(Ast(astExprFloat, lineNumber, linePos));
     expr->base.type = typFloat32;
     expr->num = num;
     return expr;
 }
 
-ExprInt* newExprLong(size_t lineNumber, size_t linePos, unsigned long long num){
-    New(ExprInt, expr, 1)
-    expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
+ExprLong* newExprLong(size_t lineNumber, size_t linePos, int64_t num){
+    New(ExprLong, expr, 1)
+    expr->base = ExprBase(Ast(astExprLong, lineNumber, linePos));
     expr->base.type = typInt64;
-    expr->num = num;
+    expr->num.sign = num;
     return expr;
 }
-ExprInt* newExprInt(size_t lineNumber, size_t linePos, unsigned int num){
+ExprLong* newExprULong(size_t lineNumber, size_t linePos, uint64_t num){
+    New(ExprLong, expr, 1)
+    expr->base = ExprBase(Ast(astExprLong, lineNumber, linePos));
+    expr->base.type = typUInt64;
+    expr->num.unsign = num;
+    return expr;
+}
+
+ExprInt* newExprInt(size_t lineNumber, size_t linePos, int32_t num){
     New(ExprInt, expr, 1)
     expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
     expr->base.type = typInt32;
-    expr->num = num;
+    expr->num.sign = num;
+    return expr;
+}
+ExprInt* newExprUInt(size_t lineNumber, size_t linePos, uint32_t num){
+    New(ExprInt, expr, 1)
+    expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
+    expr->base.type = typUInt32;
+    expr->num.unsign = num;
     return expr;
 }
 

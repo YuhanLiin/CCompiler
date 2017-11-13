@@ -168,7 +168,7 @@ Token lexToken(){
             if (curChar == End || isEol(curChar)){
                 return tokUnexpected;
             }
-            intVal = curChar;
+            intVal = (unsigned char)curChar;
             getNext();
             if (curChar != '\''){
                 return tokUnexpected;

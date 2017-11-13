@@ -63,7 +63,7 @@ void testTokenString(){
 }
 
 void testTokenNumber(){
-    setup("500(500.)60.54.7 ..");
+    setup("500(500.)60.54.7 '/' ..");
     test(tokNumInt);
     assertEqNum(intVal, 500);
     test(tokLParen);
@@ -74,6 +74,8 @@ void testTokenNumber(){
     assertEqFlt(floatVal, 60.54);
     test(tokNumDouble);
     assertEqFlt(floatVal, .7);
+    test(tokNumChar);
+    assertEqNum(intVal, '/');
     test(tokUnexpected);
     assertEqNum(curChar, '.');
     teardown();

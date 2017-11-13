@@ -3,11 +3,14 @@
 #include "lexer/lexer.h"
 #include "utils.h"
 #include "ast/type.h"
+#include <stdint.h>
 
 //Acts as a label for ast node type and also base class
 //All nodes must have this as 1st field so that the labels can be checked before casting into correct node type
 typedef enum {
+    astExprFloat,
     astExprDouble,
+    astExprLong,
     astExprInt,
     astExprStr,
     astExprIdent,
@@ -41,14 +44,32 @@ typedef struct {
     double num;
 } ExprDouble;
 ExprDouble* newExprDouble(size_t lineNumber, size_t linePos, double num);
-ExprDouble* newExprFloat(size_t lineNumber, size_t linePos, float num);
 
 typedef struct {
     ExprBase base;
-    unsigned long long num;
+    float num;
+} ExprFloat;
+ExprFloat* newExprFloat(size_t lineNumber, size_t linePos, float num);
+
+typedef struct {
+    ExprBase base;
+    union {
+        int32_t sign;
+        uint32_t unsign;
+    } num;
 } ExprInt;
-ExprInt* newExprInt(size_t lineNumber, size_t linePos, unsigned int num);
-ExprInt* newExprLong(size_t lineNumber, size_t linePos, unsigned long long num);
+ExprInt* newExprInt(size_t lineNumber, size_t linePos, int32_t num);
+ExprInt* newExprUInt(size_t lineNumber, size_t linePos, uint32_t num);
+
+typedef struct {
+    ExprBase base;
+    union {
+        int64_t sign;
+        uint64_t unsign;
+    } num;
+} ExprLong;
+ExprLong* newExprLong(size_t lineNumber, size_t linePos, int64_t num);
+ExprLong* newExprULong(size_t lineNumber, size_t linePos, uint64_t num);
 
 typedef struct {
     ExprBase base; 
