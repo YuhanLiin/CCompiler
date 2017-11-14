@@ -37,7 +37,7 @@ void outputAst(Ast* ast){
         }
         case astExprBinop: {
             ExprBinop* binop = (ExprBinop*)ast;
-            outprint("%s ", stringifyOp(binop->op));
+            outprint("%s ", stringifyToken(binop->op));
             outputAst((Ast*)binop->left);
             outputAst((Ast*)binop->right);
             return;

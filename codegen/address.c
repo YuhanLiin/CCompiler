@@ -1,6 +1,7 @@
 #include "codegen/address.h"
 #include "utils.h"
 #include "scope/scope.h"
+#include <stdint.h>
 
 
 #define KEY Symbol
@@ -44,9 +45,9 @@ Address registerAddress(Register reg){
 Address symbolAddress(char_t *symbol){
     return (Address){symbolMode, {.symbol = symbol}};
 }
-Address numberAddress(long long int num){
+Address numberAddress(int64_t num){
     return (Address){numberMode, {.num = num}};
 }
-Address indirectAddress(long long int offset, Register reg){
+Address indirectAddress(int64_t offset, Register reg){
     return (Address){indirectMode, {.indirect = {.offset = offset, .reg = reg}}};
 }

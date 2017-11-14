@@ -151,8 +151,9 @@ void disposeAst(void* node){
     Ast* ast = node;
     switch(ast->label){
         case astExprDouble:
-            break;
         case astExprInt:
+        case astExprLong:
+        case astExprFloat:
             break;
         case astExprStr: {
             free(((ExprStr*)ast)->str);

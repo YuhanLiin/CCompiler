@@ -1,6 +1,7 @@
 #pragma once
 #include "array.h"
 #include "utils.h"
+#include <stdint.h>
 
 //All possible tokens
 typedef enum {
@@ -14,6 +15,7 @@ typedef enum {
     tokUnsigned,//Keyword unsigned
     tokSigned,  //Keyword signed
     tokChar,    //Keyword char
+    tokShort,   //Keyword short
     tokIdent,   //Identifier [a-zA-Z][a-zA-Z_0-9]*  stored in stringBuffer
     tokNumDouble,  //64-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]* in floatVal
     tokNumFloat,   //32-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]*(f|F)
@@ -42,7 +44,7 @@ extern size_t lineNumberTokStart;
 extern size_t linePosTokStart;
 extern Array(char_t) stringBuffer; //Store identifier and strings
 extern double floatVal; 
-extern long long intVal;
+extern uint64_t intVal;
 extern char_t curChar;
 
 void initLexer();   //Allocates stringBuffer. Can exit due to malloc

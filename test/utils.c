@@ -5,7 +5,14 @@
 #include <stdio.h>
 #include <string.h>
 
+int DITCH_LEVEL = 0;
+
 #define assertBegin() fprintf(stderr, "\nAssertion error in %s, line %d, in %s:\n", __FILE__, __LINE__, __func__)
+
+#define assertFailHandler() do {\
+    if (DITCH_LEVEL == 1) return;\
+    if (DITCH_LEVEL == 2) exit(4);\
+} while(0)
 
 #define assertEqStr(actual, expected) do {\
     if (strcmp(expected, actual)){\
@@ -14,6 +21,7 @@
             stderr, "Expected %s to be:\n%s\nbut got:\n%s\n",\
             #actual, expected, actual\
         );\
+        assertFailHandler();\
     }\
 } while(0);
 
@@ -24,6 +32,7 @@
             stderr, "Expected %s to be %d, but got %d.\n",\
             #actual, expected, actual\
         );\
+        assertFailHandler();\
     }\
 } while(0);
 
@@ -41,19 +50,4 @@ char doubleEq(const double a, const double b){
     double diff = a - b;
     static double tolerance = 0.0001;
     return -tolerance < diff || diff < tolerance;
-}
-
-const char_t *stringifyOp(Token tok){
-    switch(tok){
-        case tokPlus:
-            return "+";
-        case tokMinus:
-            return "-";
-        case tokDiv:
-            return "/";
-        case tokMulti:
-            return "*";
-        default:
-            assert (0 && "Not an op");
-    }
 }

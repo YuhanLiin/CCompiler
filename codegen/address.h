@@ -1,5 +1,6 @@
 #pragma once
 #include "utils.h"
+#include <stdint.h>
 
 typedef enum {$rbp, $rsp, $rax, $rcx, $rdx, $r8, $r9} Register;
 
@@ -12,9 +13,9 @@ typedef struct {
     } mode;
     union {
         Register reg;
-        long long int num;
+        int64_t num;
         char_t* symbol;
-        struct {Register reg; long long int offset;} indirect;
+        struct {Register reg; int64_t offset;} indirect;
     } val;
 } Address;
 
@@ -22,9 +23,9 @@ Address registerAddress(Register reg);
 
 Address symbolAddress(char_t *symbol);
 
-Address numberAddress(long long int num);
+Address numberAddress(int64_t num);
 
-Address indirectAddress(long long int offset, Register reg);
+Address indirectAddress(int64_t offset, Register reg);
 
 void initAddrTable();
 

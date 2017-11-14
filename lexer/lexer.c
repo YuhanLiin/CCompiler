@@ -2,6 +2,7 @@
 #include "./lexer.h"
 #include "utils.h"
 #include <assert.h>
+#include <stdint.h>
 
 char_t curChar; //Updated for every character consumed
 //Line number and position at end of every token. Actively updated by lexer
@@ -11,7 +12,7 @@ size_t lineNumberTokStart;
 size_t linePosTokStart;
 Array(char_t) stringBuffer; //Store identifier and strings
 double floatVal;   //Store number tokens
-long long intVal;
+uint64_t intVal;
 
 //Character matchers
 static char isSpace(char_t c){
@@ -149,6 +150,31 @@ Token lexToken(){
             if (lexKeyword("double")){
                 return tokDouble;
             } 
+            goto identifier;
+        case 'u':
+            //unsigned
+            if (lexKeyword("unsigned")){
+                return tokUnsigned;
+            }
+            goto identifier;
+        case 'c':
+            //char
+            if (lexKeyword("char")){
+                return tokChar;
+            }
+            goto identifier;
+        case 's':
+            //signed or short
+            store('s');
+            getNext();
+            if (curChar == 'i'){
+                if (lexKeyword("igned")){
+                    return tokSigned;
+                }
+            }
+            else if (lexKeyword("hort")){
+                return tokShort;
+            }
             goto identifier;
         //Match string "[anychar]"
         case '"':
@@ -310,12 +336,26 @@ const char_t * stringifyToken(Token tok){
             return "keyword \"float\""; 
         case tokDouble:
             return "keyword \"double\"";
+        case tokUnsigned:
+            return "keyword \"unsigned\"";
+        case tokSigned:
+            return "keyword \"signed\"";
+        case tokChar:
+            return "keyword \"char\"";
+        case tokShort:
+            return "keyword \"short\"";
         case tokIdent:
             return "identifier";
         case tokNumDouble:
+        case tokNumFloat:
             return "floating-point number";
         case tokNumLong:
+        case tokNumInt:
+        case tokNumULong:
+        case tokNumUInt:
             return "integer";
+        case tokNumChar:
+            return "character";
         case tokString:
             return "string";
         case tokPlus:

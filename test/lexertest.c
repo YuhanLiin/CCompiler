@@ -13,8 +13,7 @@ void setup(const char_t* str){
     initLexer();
 }
 #define test(expectedTok) do {\
-    token = lexToken();\
-    assertEqNum(token, expectedTok);\
+    assertEqNum(lexToken(), expectedTok);\
 } while(0)
 void teardown(){
     disposeLexer();
@@ -30,7 +29,7 @@ void testTokenIgnored(){
 }
 
 void testTokenKeywordIdentifier(){
-    setup("ret return returning _DEF72  double long int float l ");
+    setup("ret return returning _DEF72  double long int float char short signed unsigned shorts");
     test(tokIdent);
     assertEqStr(toCstring(&stringBuffer), "ret");
     test(tokReturn);
@@ -42,8 +41,12 @@ void testTokenKeywordIdentifier(){
     test(tokLong);
     test(tokInt);
     test(tokFloat);
+    test(tokChar);
+    test(tokShort);
+    test(tokSigned);
+    test(tokUnsigned);
     test(tokIdent);
-    assertEqStr(toCstring(&stringBuffer), "l");
+    assertEqStr(toCstring(&stringBuffer), "shorts");
     test(tokEof);
     //Eof should be safe to parse multiple times
     test(tokEof);
@@ -110,6 +113,7 @@ void testTokenSymbols(){
 
 int main(int argc, char const *argv[])
 {
+    DITCH_LEVEL = 1;
     testTokenIgnored();
     testTokenSymbols();
     testTokenNumber();
