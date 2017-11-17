@@ -13,45 +13,27 @@
 ExprDouble* newExprDouble(size_t lineNumber, size_t linePos, double num){
     New(ExprDouble, expr, 1)
     expr->base = ExprBase(Ast(astExprDouble, lineNumber, linePos));
-    expr->base.type = typFloat64;
     expr->num = num;
     return expr;
 }
-ExprDouble* newExprFloat(size_t lineNumber, size_t linePos, float num){
+ExprFloat* newExprFloat(size_t lineNumber, size_t linePos, float num){
     New(ExprFloat, expr, 1)
     expr->base = ExprBase(Ast(astExprFloat, lineNumber, linePos));
-    expr->base.type = typFloat32;
     expr->num = num;
     return expr;
 }
 
-ExprLong* newExprLong(size_t lineNumber, size_t linePos, int64_t num){
+ExprLong* newExprLong(size_t lineNumber, size_t linePos, uint64_t num){
     New(ExprLong, expr, 1)
     expr->base = ExprBase(Ast(astExprLong, lineNumber, linePos));
-    expr->base.type = typInt64;
-    expr->num.sign = num;
-    return expr;
-}
-ExprLong* newExprULong(size_t lineNumber, size_t linePos, uint64_t num){
-    New(ExprLong, expr, 1)
-    expr->base = ExprBase(Ast(astExprLong, lineNumber, linePos));
-    expr->base.type = typUInt64;
-    expr->num.unsign = num;
+    expr->num = num;
     return expr;
 }
 
-ExprInt* newExprInt(size_t lineNumber, size_t linePos, int32_t num){
+ExprInt* newExprInt(size_t lineNumber, size_t linePos, uint32_t num){
     New(ExprInt, expr, 1)
     expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
-    expr->base.type = typInt32;
-    expr->num.sign = num;
-    return expr;
-}
-ExprInt* newExprUInt(size_t lineNumber, size_t linePos, uint32_t num){
-    New(ExprInt, expr, 1)
-    expr->base = ExprBase(Ast(astExprInt, lineNumber, linePos));
-    expr->base.type = typUInt32;
-    expr->num.unsign = num;
+    expr->num = num;
     return expr;
 }
 

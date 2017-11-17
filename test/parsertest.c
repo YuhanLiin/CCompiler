@@ -11,15 +11,21 @@
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){
     if (ast == NULL){   //Syntax error
-        outprint("ERROR ");
+        outprint(errorstr);
         return;
     }
     switch(ast->label){
         case astExprDouble:
             outprint("dbl:%.2Lf ", ((ExprDouble*)ast)->num); //Print numbers with 2 digit precision
             return;
+        case astExprFloat:
+            outprint("flt:%.2f ", ((ExprFloat*)ast)->num);
+            return;
+        case astExprLong:
+            outprint("long:%lld ", ((ExprLong*)ast)->num);
+            return;
         case astExprInt:
-            outprint("int:%lld ", ((ExprInt*)ast)->num); //Print int
+            outprint("int:%d ", ((ExprInt*)ast)->num); //Print int
             return;
         case astExprStr:
             outprint("str:%s ", ((ExprStr*)ast)->str); //Print string
@@ -130,7 +136,11 @@ void outputAst(Ast* ast){
 
 void testParseBasicExpr(){
     test(parseStmt, "55.55;", "dbl:55.55 ");
+    test(parseStmt, "55.55f;", "flt:55.55 ");
     test(parseStmt, "78;", "int:78 ");
+    test(parseStmt, "78U;", "int:78 ");
+    test(parseStmt, "78LLU;", "long:78 ");
+    test(parseStmt, "78Ll;", "long:78 ");
     test(parseStmt, "\"hey\";", "str:hey "); 
     test(parseStmt, "a;", "id:a "); 
     test(parseStmt, "((a));", "id:a "); 
@@ -142,9 +152,9 @@ void testParseCall(){
 }
 
 void testParseBinop(){
-    test(parseStmt, "1 + 2.500 * k;", "+ int:1 * dbl:2.50 id:k "); 
-    test(parseStmt, "heyo( a + b * c/d - e);", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
-    test(parseStmt, "(a-\"lll\")/d;", "/ - id:a str:lll id:d "); 
+    test(parseStmt, "1 + 2.500 * k;", "'+' int:1 '*' dbl:2.50 id:k "); 
+    test(parseStmt, "heyo( a + b * c/d - e);", "call:heyo:1 '-' '+' id:a '/' '*' id:b id:c id:d id:e "); 
+    test(parseStmt, "(a-\"lll\")/d;", "'/' '-' id:a str:lll id:d "); 
 }
 
 void testParseStmt(){
@@ -163,7 +173,8 @@ void testParseFunction(){
         "fndec:long long:main:6 int:a double:b int:c long long:d int float "
     );
     test(parseTopLevel, "double k() return 5;", "fn:double:k:0 ret int:5 ");
-    test(parseTopLevel, "int a(); int b(){a();}", "fndec:int:a:0 fn:int:b:0 block:1 call:a:0 ");
+    test(parseTopLevel, "unsigned char a(); signed short b(){a();}", "fndec:unsigned char:a:0 fn:short:b:0 block:1 call:a:0 ");
+    test(parseTopLevel, "signed long x(unsigned short int, signed int);", "fndec:int:x:2 unsigned short int ");
 }
 
 void testParseError(){
@@ -182,9 +193,12 @@ void testParseError(){
     testErr(parseStmt, "/**/bind k;", "1:9 expected ';' before identifier.\n");
     testErr(parseStmt, "/*   *", "1:6 expected statement before end of file.\n");
     testErr(parseStmt, "int 5;", "1:4 expected identifier before integer.\n");
+    testErr(parseStmt, "signed s;", "1:7 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ')'.\n");
     testErr(parseTopLevel, "int Blue(float f)", "1:17 expected statement before end of file.\n");
+    testErr(parseTopLevel, "signed float a();", "1:7 expected type name before keyword \"float\".\n");
+    testErr(parseTopLevel, "signed int a(unsigned);", "1:21 expected type name before ')'.\n");
 }
 
 int main(int argc, char const *argv[])

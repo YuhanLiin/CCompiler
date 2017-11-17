@@ -53,23 +53,15 @@ ExprFloat* newExprFloat(size_t lineNumber, size_t linePos, float num);
 
 typedef struct {
     ExprBase base;
-    union {
-        int32_t sign;
-        uint32_t unsign;
-    } num;
+    uint32_t num;
 } ExprInt;
-ExprInt* newExprInt(size_t lineNumber, size_t linePos, int32_t num);
-ExprInt* newExprUInt(size_t lineNumber, size_t linePos, uint32_t num);
+ExprInt* newExprInt(size_t lineNumber, size_t linePos, uint32_t num);
 
 typedef struct {
     ExprBase base;
-    union {
-        int64_t sign;
-        uint64_t unsign;
-    } num;
+    uint64_t num;
 } ExprLong;
-ExprLong* newExprLong(size_t lineNumber, size_t linePos, int64_t num);
-ExprLong* newExprULong(size_t lineNumber, size_t linePos, uint64_t num);
+ExprLong* newExprLong(size_t lineNumber, size_t linePos, uint64_t num);
 
 typedef struct {
     ExprBase base; 

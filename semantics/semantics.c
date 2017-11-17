@@ -58,9 +58,26 @@ ExprInt* verifyExprInt(ExprInt* expint){
     expint->base.type = typInt32;
     return expint;
 }
+ExprInt* verifyExprUnsignedInt(ExprInt* expint){
+    expint->base.type = typUInt32;
+    return expint;
+}
+
+ExprLong* verifyExprLong(ExprLong* expint){
+    expint->base.type = typInt64;
+    return expint;
+}
+ExprLong* verifyExprUnsignedLong(ExprLong* expint){
+    expint->base.type = typUInt64;
+    return expint;
+}
 
 ExprDouble* verifyExprDouble(ExprDouble* expdb){
     expdb->base.type = typFloat32;
+    return expdb;
+}
+ExprFloat* verifyExprFloat(ExprFloat* expdb){
+    expdb->base.type = typFloat64;
     return expdb;
 }
 

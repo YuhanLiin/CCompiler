@@ -65,6 +65,17 @@ void testTokenString(){
     teardown();
 }
 
+void testTokenChar(){
+    setup("'");
+    test(tokUnexpected);
+    assert(curChar == End);
+    teardown();
+    setup("''");
+    test(tokUnexpected);
+    assert(curChar == End);
+    teardown();
+}
+
 void testTokenNumber(){
     setup("500(500.)60.54.7 '/' ..");
     test(tokNumInt);
@@ -116,6 +127,7 @@ int main(int argc, char const *argv[])
     DITCH_LEVEL = 1;
     testTokenIgnored();
     testTokenSymbols();
+    testTokenChar();
     testTokenNumber();
     testTokenNumberExtensions();
     testTokenString();

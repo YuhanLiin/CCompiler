@@ -47,38 +47,80 @@ void initParser(){
 //IMPORTANT: Extra unprocessed lookahead will always be present at start and end of every parser function call
 //Return 0 for syntax error and stop processing tokens
 
-//Attempt to parse and return a built in type
-static Type parseType(){
-    //TODO add signed/unsigned support
-    switch (curTok){
+static char canParseType(){
+    switch(curTok){
+        case tokChar:
+        case tokShort:
         case tokInt:
-            getTok();
-            return typInt32;
-        case tokFloat:
-            getTok();
-            return typFloat32;
-        case tokDouble:
-            getTok();
-            return typFloat64;
         case tokLong:
+        case tokFloat:
+        case tokDouble:
+        case tokSigned:
+        case tokUnsigned:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+//Parses and returns signed versions of all integers types.
+static Type parseIntegerType(){
+    switch (curTok){
+        case tokChar:
+            getTok();
+            return typInt8;
+        case tokShort:
             getTok();
             if (curTok == tokInt){
                 getTok();
-                return typInt32;
             }
-            else if (curTok == tokLong){
+            return typInt16;
+        case tokInt:
+            getTok();
+            return typInt32;
+        case tokLong:
+            getTok();
+            if (curTok == tokLong){
                 getTok();
                 if (curTok == tokInt){
                     getTok();
                 }
                 return typInt64;
             }
-            else{
-                return typInt32;
+            else if (curTok == tokInt){
+                getTok();
             }
+            return typInt32;
         default:
             return typNone;
     }
+}
+
+//Attempt to parse and return a built in type
+static Type parseType(){
+    if (curTok == tokDouble){
+        getTok();
+        return typFloat64;
+    }
+    else if (curTok == tokFloat){
+        getTok();
+        return typFloat32;
+    }
+    // Signed/Unsigned types start here
+    if (curTok == tokUnsigned){
+        getTok();
+        switch(parseIntegerType()){
+            case typInt8: return typUInt8;
+            case typInt16: return typUInt16;
+            case typInt32: return typUInt32;
+            case typInt64: return typUInt64;
+            default: return typNone;
+        }
+    }
+    else if (curTok == tokSigned){
+        getTok();
+    }
+    return parseIntegerType();
 }
 
 static ExprBase* parseExpr();
@@ -97,8 +139,28 @@ static char parseArgs(Array(vptr) *args){
 //primeExpr := Number | String | ( expr ) | Ident ( args? )?
 static ExprBase* parsePrimaryExpr(){
     switch (curTok){
-        case tokNumLong: {
+        case tokNumInt: {
             ExprInt* expr = verifyExprInt(newExprInt(lineNumberTokStart, linePosTokStart, intVal));
+            getTok();
+            return (ExprBase*)expr;
+        }
+        case tokNumUInt: {
+            ExprInt* expr = verifyExprUnsignedInt(newExprInt(lineNumberTokStart, linePosTokStart, intVal));
+            getTok();
+            return (ExprBase*)expr;
+        }
+        case tokNumLong: {
+            ExprLong* expr = verifyExprLong(newExprLong(lineNumberTokStart, linePosTokStart, intVal));
+            getTok(); //Consume number
+            return (ExprBase*)expr;
+        }
+        case tokNumULong: {
+            ExprLong* expr = verifyExprUnsignedLong(newExprLong(lineNumberTokStart, linePosTokStart, intVal));
+            getTok(); //Consume number
+            return (ExprBase*)expr;
+        }
+        case tokNumFloat: {
+            ExprFloat* expr = verifyExprFloat(newExprFloat(lineNumberTokStart, linePosTokStart, floatVal));
             getTok(); //Consume number
             return (ExprBase*)expr;
         }
@@ -292,8 +354,12 @@ Ast* parseStmt(){
             return NULL;
         //Checks for expression/declaration statements as last resort
         default: {
-            Type type = parseType();
-            if (type != typNone){
+            if (canParseType()){
+                Type type = parseType();
+                if (type == typNone){
+                    syntaxError("type name");
+                    return NULL;
+                }
                 if (curTok == tokIdent){
                     StmtVar* def = newStmtVarDef(lineNumberTokStart, linePosTokStart, type, toCstring(&stringBuffer));
                     getTok();  //Consume identifier
@@ -341,8 +407,12 @@ static char parseParams(Array(vptr) *params){
 }
 
 //function := type ident ( params? ) stmt
-static Ast* parseFunction(Type type){
-    //Assume the type has already been parsed and consumed
+static Ast* parseFunction(){
+    Type type = parseType();
+    if (type == typNone){
+        syntaxError("type name");
+        return NULL;
+    }
     if (curTok == tokIdent){
         char_t* name = toCstring(&stringBuffer);
         size_t nameline = lineNumberTokStart;
@@ -391,13 +461,12 @@ static Ast* parseFunction(Type type){
 }
 
 static Ast* parseGlobal(){
-    Type type = parseType();
-    if (type == typNone){
-        //TODO handle non-functions
-        return NULL;
+    if (canParseType()){
+        return parseFunction();
     }
     else{
-        return parseFunction(type);
+        //TODO handle non-functions
+        return NULL;
     }
 }
 
