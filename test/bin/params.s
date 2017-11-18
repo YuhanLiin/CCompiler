@@ -19,11 +19,11 @@ main:
 	subq $32, %rsp
 	call __main
 	pushq $5
-	subq $32, %rsp
 	movq $4, %r9
 	movq $3, %r8
 	movq $2, %rdx
 	movq $1, %rcx
+	subq $32, %rsp
 	call a
 	movq %rax, %rax
 	jmp .L1

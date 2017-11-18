@@ -101,36 +101,43 @@ static Address cmplExpr(ExprBase* ast);
 // Args array ptr can be null, signifying a call with no args
 static void cmplCall(char_t* name, Array(vptr) *args){
     if (args != NULL){
-        int i;
-        Address expraddr;
+        Address argAddrs[args->size];
+        // First compute all args and push onto stack if its a register
+        for (size_t i=0; i<args->size; i++){
+            argAddrs[i] = cmplExpr((ExprBase*)args->elem[i]);
+            if (argAddrs[i].mode == registerMode){
+                emitPush(argAddrs[i]);
+                argAddrs[i] = indirectAddress(-frameOffset, $rbp);
+            }
+        }
+        int j;
         // Push each argument onto the stack from right to left
-        for (i=args->size-1; i>=4; i--){
-            expraddr = cmplExpr((ExprBase*)args->elem[i]);
-            emitPush(expraddr);
+        for (j=args->size-1; j>=4; j--){
+            emitPush(argAddrs[j]);
         }
         // For the last 4 args, put them into registers instead
-        for (i; i>=0; i--){
-            expraddr = cmplExpr((ExprBase*)args->elem[i]);
-            emitIns2("movq", expraddr, registerAddress(paramRegisters[i]));
+        for (j; j>=0; j--){
+            emitIns2("movq", argAddrs[j], registerAddress(paramRegisters[j]));
         }
     }
     emitSubRsp(32);
     emitIns1("call", symbolAddress(name));
 }
 
+// Move left operand onto stack and destructively operate on it
 static Address cmplBinop(ExprBinop* binop){
+    // r10 will be used as intermediate for all binop operations
+    const Address intermediate = registerAddress($r10);
     Address left = cmplExpr(binop->left);
-    // If left operand is not on stack move it onto the stack
-    if (left.mode != indirectMode){
-        emitPush(left);
-        left = indirectAddress(-frameOffset, $rbp);
-    }
+    // Move left operand onto the stack
+    emitPush(left);
+    left = indirectAddress(-frameOffset, $rbp);
+
     Address right = cmplExpr(binop->right);
     // Can't have both operands on stack, so move second one to $r10. $rax is also unsafe since we need it for mul/div 
     if (right.mode == indirectMode || (right.mode == registerMode && right.val.reg == $rax)){
-        Register moveTo = $r10;
-        emitIns2("movq", right, registerAddress(moveTo));
-        right = registerAddress(moveTo);
+        emitIns2("movq", right, intermediate);
+        right = intermediate;
     }
     // Left operand will always be the destination operand that is mutated
     switch(binop->op){
