@@ -2,7 +2,11 @@
 #include "utils.h"
 #include <stdint.h>
 
-typedef enum {$rbp, $rsp, $rax, $rcx, $rdx, $r8, $r9} Register;
+typedef enum {
+    $rbp, $rsp,
+    $rax, $rcx, $rdx, $r8, $r9,
+    $rbx, $rdi, $rsi, $r12, $r13, $r14, $r15
+} Register;
 
 typedef struct {
     enum {
@@ -13,7 +17,7 @@ typedef struct {
     } mode;
     union {
         Register reg;
-        int64_t num;
+        uint64_t num;
         char_t* symbol;
         struct {Register reg; int64_t offset;} indirect;
     } val;
@@ -23,7 +27,7 @@ Address registerAddress(Register reg);
 
 Address symbolAddress(char_t *symbol);
 
-Address numberAddress(int64_t num);
+Address numberAddress(uint64_t num);
 
 Address indirectAddress(int64_t offset, Register reg);
 

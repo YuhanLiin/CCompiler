@@ -4,6 +4,7 @@
 #include "ast/ast.h"
 #include "lexer/lexer.h"
 #include "parser/parser.h"
+#include "semantics/semantics.h"
 #include "codegen/codegen.h"
 #include "semantics/symtable.h"
 

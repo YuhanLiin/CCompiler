@@ -30,15 +30,41 @@ char isSignedType(Type type){
         case typInt32: return 1;
         case typUInt64: return 0;
         case typInt64: return 1;
-        case typFloat32: return 1;
-        case typFloat64: return 1;
         default:
             assert(0 && "Not a type for which signedness matters");
     }
 }
 
-Type intTypePromotion(Type type){
+char isIntType(Type type){
+    switch(type){
+        case typUInt8:
+        case typUInt16:
+        case typUInt32:
+        case typInt8:
+        case typInt16:
+        case typInt32:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+char isFloatType(Type type){
+    switch(type){
+        case typFloat32:
+        case typFloat64:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+//Can also serve as integer promotions
+Type argTypePromotion(Type type){
     switch (type){
+        case typFloat32:
+        case typFloat64:
+            return typFloat64;
         case typUInt32:
             return typUInt32;
         case typUInt8:
@@ -70,8 +96,8 @@ Type arithTypePromotion(Type t1, Type t2){
     if (t1 == typInt64 || t2 == typInt64){
         return typInt64;
     }
-    t1 = intTypePromotion(t1);
-    t2 = intTypePromotion(t2);
+    t1 = argTypePromotion(t1);
+    t2 = argTypePromotion(t2);
     if (t1 == typUInt32 || t2 == typUInt32){
         return typUInt32;
     }

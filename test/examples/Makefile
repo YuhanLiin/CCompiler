@@ -15,3 +15,9 @@ duplicate: duplicate.c
 
 params: params.c
 	gcc params.c -S -fno-asynchronous-unwind-tables -O0
+
+convert: convert.c
+	gcc convert.c -S -fno-asynchronous-unwind-tables -O0
+
+arith: arith.c
+	gcc arith.c -S -fno-asynchronous-unwind-tables -O0

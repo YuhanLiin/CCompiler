@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include "lexer/lexer.h"
 #include "utils.h"
 #include "ast/ast.h"
 #include "scope/scope.h"
@@ -10,10 +11,10 @@
 static size_t maxLabelNum = 0;
 static const Register paramRegisters[] = {$rcx, $rdx, $r8, $r9};
 
-static const void emitLabelStmt(const char_t *op, size_t label){
+static void emitLabelStmt(const char_t *op, size_t label){
     emitAsm("\t%s .L%d\n", op, label);
 }
-static const void emitLabelDecl(size_t label){
+static void emitLabelDecl(size_t label){
     emitAsm(".L%d:\n", label);
 }
 
@@ -48,7 +49,7 @@ static void emitAddr(Address addr){
             emitAsm(addr.val.symbol);
             break;
         case numberMode:
-            emitAsm("$%lld", addr.val.num);
+            emitAsm("$%llu", addr.val.num);
             break;
         case indirectMode:
             emitAsm("%lld(%s)", addr.val.indirect.offset, registerStr(addr.val.indirect.reg));
@@ -56,6 +57,22 @@ static void emitAddr(Address addr){
         default:
             assert(0 && "Unsupported addressing mode");
     }
+}
+
+static void emitIns0(const char_t* opcode){
+    emitAsm("\t%s\n", opcode);
+}
+static void emitIns1(const char_t* opcode, Address a){
+    emitAsm("\t%s ", opcode);
+    emitAddr(a);
+    emitAsm("\n");
+}
+static void emitIns2(const char_t* opcode, Address a, Address b){
+    emitAsm("\t%s ", opcode);
+    emitAddr(a);
+    emitAsm(", ");
+    emitAddr(b);
+    emitAsm("\n");
 }
 
 static Address cmplExpr(ExprBase* ast);
@@ -68,35 +85,81 @@ static void cmplCall(char_t* name, Array(vptr) *args){
         // Push each argument onto the stack from right to left
         for (i=args->size-1; i>=4; i--){
             expraddr = cmplExpr((ExprBase*)args->elem[i]);
-            emitAsm("\tpushq ");
-            emitAddr(expraddr);
-            emitAsm("\n");
+            emitIns1("pushq", expraddr);
         }
         // For the last 4 args, put them into registers instead
         emitAsm("\tsubq $32, %s\n", registerStr($rsp));
         for (i; i>=0; i--){
             expraddr = cmplExpr((ExprBase*)args->elem[i]);
-            emitAsm("\tmovq ");
-            emitAddr(expraddr);
-            emitAsm(", %s\n", registerStr(paramRegisters[i]));
+            emitIns2("movq", expraddr, registerAddress(paramRegisters[i]));
         }
     }
     else{
-        emitAsm("\tsubq $32, %s\n", registerStr($rsp));
+        emitIns2("subq", numberAddress(32), registerAddress($rsp));
     }
-    emitAsm("\tcall %s\n", name);
+    emitIns1("call", symbolAddress(name));
+}
+
+static Address cmplBinop(ExprBinop* binop){
+    Address left = cmplExpr(binop->left);
+    // If left operand is not on stack move it onto the stack
+    if (left.mode != indirectMode){
+        emitIns1("pushq", left);
+        left = indirectAddress(-8, $rsp);
+    }
+    Address right = cmplExpr(binop->right);
+    // Can't have both operands on stack, so move second one to $rbx. $rax is also unsafe since we need it for mul/div 
+    if (right.mode == indirectMode || (right.mode == registerMode && right.val.reg == $rax)){
+        Register moveTo = $rbx;
+        emitIns2("movq", right, registerAddress(moveTo));
+        right = registerAddress(moveTo);
+    }
+    // Left operand will always be the destination operand that is mutated
+    switch(binop->op){
+        case tokPlus:
+            emitIns2("addq", right, left);
+            return left;
+        case tokMinus:
+            emitIns2("subq", right, left);
+            return left;
+        case tokMulti:
+            emitIns2("movq", left, registerAddress($rax));
+            if (isSignedType(binop->base.type)){
+                emitIns1("imulq", right);
+            }
+            else{
+                emitIns1("mulq", right);
+            }
+            return registerAddress($rax);
+        case tokDiv:
+            emitIns2("movq", left, registerAddress($rax));
+            if (isSignedType(binop->base.type)){
+                emitIns0("cqto");
+                emitIns1("idivq", right);
+            }
+            else{
+                emitIns2("movq", numberAddress(0), registerAddress($rdx));
+                emitIns1("divq", right);
+            }
+            return registerAddress($rax);
+    }
 }
 
 // Returns address of the result of the processed expression
 static Address cmplExpr(ExprBase* expr){
-    switch(expr->base.ast.label){
+    switch(expr->ast.label){
         case astExprInt:
             return numberAddress(((ExprInt*)expr)->num);
+        case astExprLong:
+            return numberAddress(((ExprLong*)expr)->num);
         case astExprCall:
             cmplCall(((ExprCall*)expr)->name, &((ExprCall*)expr)->args);
             return registerAddress($rax);
         case astExprIdent:
             return findAddress(((ExprIdent*)expr)->name);
+        case astExprBinop: {
+            return cmplBinop((ExprBinop*)expr);
+        }
         default:
             assert(0 && "Unsupported AST for expr");
     }
@@ -106,9 +169,7 @@ static void cmplStmt(Ast* ast, size_t retLabel){
     switch(ast->label){
         case astStmtReturn: {
             Address expaddr = cmplExpr((ExprBase*)((StmtReturn*)ast)->expr);
-            emitAsm("\tmovq ");
-            emitAddr(expaddr);
-            emitAsm(", %s\n", registerStr($rax));
+            emitIns2("movq", expaddr, registerAddress($rax));
             emitLabelStmt("jmp", retLabel);
             break;
         }
@@ -134,9 +195,7 @@ static void cmplParams(Array(vptr) *params){
         Address location = indirectAddress(16 + i*8, $rbp);
         // Right now dumps all param registers into shadow space. Safe but inefficient
         if (i < 4){
-            emitAsm("\tmovq %s, ", registerStr(paramRegisters[i]));
-            emitAddr(location);
-            emitAsm("\n");
+            emitIns2("movq", registerAddress(paramRegisters[i]), location);
         }
         insertAddress(param->name, location);
     }
@@ -152,8 +211,8 @@ static void cmplGlobal(Ast* ast){
             }
             emitAsm(".globl %s\n", func->name);
             emitAsm("%s:\n", func->name);
-            emitAsm("\tpushq %s\n", registerStr($rbp));
-            emitAsm("\tmovq %s, %s\n", registerStr($rsp), registerStr($rbp));
+            emitIns1("pushq", registerAddress($rbp));
+            emitIns2("movq", registerAddress($rsp), registerAddress($rbp));
 
             // Set global scope variable so that symbol table can be used
             curScope = func->scopeId;
@@ -166,8 +225,8 @@ static void cmplGlobal(Ast* ast){
             cmplStmt((Ast*)func->stmt, retLabel);
             // Return code
             emitLabelDecl(retLabel);
-            emitAsm("\tleave\n");
-            emitAsm("\tret\n");
+            emitIns0("leave");
+            emitIns0("ret");
             // Reset scope back to global
             curScope = GLOBAL_SCOPE;
             break;

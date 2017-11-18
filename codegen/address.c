@@ -45,7 +45,7 @@ Address registerAddress(Register reg){
 Address symbolAddress(char_t *symbol){
     return (Address){symbolMode, {.symbol = symbol}};
 }
-Address numberAddress(int64_t num){
+Address numberAddress(uint64_t num){
     return (Address){numberMode, {.num = num}};
 }
 Address indirectAddress(int64_t offset, Register reg){

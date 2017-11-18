@@ -84,7 +84,8 @@ ExprFloat* verifyExprFloat(ExprFloat* expdb){
 ExprBinop* verifyExprBinop(ExprBinop* binop){
     //Perform type verifcation only if both expression types have been verified
     if (binop->left->type != typNone && binop->right->type != typNone){
-        if (binop->left->type == binop->right->type){
+        Type promoted = arithTypePromotion(binop->left->type, binop->right->type);
+        if (promoted != typNone){
             binop->base.type = binop->left->type;
         }
         else{
@@ -117,7 +118,7 @@ static void verifyArgs(ExprCall* call, const Function* func){
             StmtVar* param = (StmtVar*)params->elem[i];
             //Typecheck only valid args
             if (arg->type != typNone){
-                if (arg->type != param->type){
+                if (!checkTypeConvert(arg->type, param->type)){
                     semanticError(
                         arg->ast,
                         "no way to convert argument type '%s' to parameter type '%s'.",
@@ -148,6 +149,7 @@ void preverifyBlockStmt(){
 }
 
 StmtBlock* verifyBlockStmt(StmtBlock* blk){
+    blk->scopeId = curScope;
     toPrevScope();
     return blk;
 }
@@ -160,7 +162,7 @@ StmtReturn* verifyStmtReturn(StmtReturn* ret){
     }
     //Check if expression type was findable before matching it to return type. Prevents cascading errors
     else if (ret->expr->type != typNone){
-        if (ret->expr->type != returnType){
+        if (!checkTypeConvert(ret->expr->type, returnType)){
             semanticError(
                 ret->expr->ast,
                 "no way to convert value type '%s' to return type '%s'.",
@@ -199,6 +201,7 @@ void verifyFunctionSignature(Function* func, char isDecl){
     }
     if (!isDecl){
         toNewScope();
+        func->scopeId = curScope;
         returnType = func->type;
         verifyAndSetParams(&func->params);
     }

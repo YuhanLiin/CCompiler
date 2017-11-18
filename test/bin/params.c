@@ -1,4 +1,4 @@
-int a(int x, int y, int z, int c, int d);
+int a(int x, int y, int z, int c, int d) return x;
 
-int b(int x, int y, int z, int c, int d)
-    return a(x, y, z, c, d);
+int main()
+    return a(1, 2, 3, 4, 5);

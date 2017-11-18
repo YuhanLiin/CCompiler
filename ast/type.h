@@ -17,3 +17,11 @@ typedef enum {
 } Type;
 
 const char_t* stringifyType(Type type);
+
+Type argTypePromotion(Type type);
+char checkTypeConvert(Type from, Type to);
+Type arithTypePromotion(Type t1, Type t2);
+
+char isSignedType(Type type);
+char isIntType(Type type);
+char isFloatType(Type type);
