@@ -8,7 +8,14 @@
 #include "codegen/address.h"
 #include "codegen/codegen.h"
 
+//IMPORTANT Right now everything is in 64-bit mode, including constants. 
+//This means upper bits will always be extended out so no danger for now. Type conversion will need to be handled when this ends
+
+// # of labels used so far
 static size_t maxLabelNum = 0;
+// Distance of rsp from rbp
+static size_t frameOffset = 0;
+// Registers used as params in the MS x64 calling convention
 static const Register paramRegisters[] = {$rcx, $rdx, $r8, $r9};
 
 static void emitLabelStmt(const char_t *op, size_t label){
@@ -35,6 +42,10 @@ static const char_t* registerStr(Register reg){
             return "%r8";
         case $r9:
             return "%r9";
+        case $r10:
+            return "%r10";
+        case $r11:
+            return "%r11";
         default:
             assert(0 && "Unsupported register type");
     }
@@ -75,6 +86,16 @@ static void emitIns2(const char_t* opcode, Address a, Address b){
     emitAsm("\n");
 }
 
+static void emitPush(Address a){
+    emitIns1("pushq", a);
+    frameOffset += 8;
+}
+// rsp should only be offsetted by a compiled-time value
+static void emitSubRsp(uint64_t num){
+    emitIns2("subq", numberAddress(num), registerAddress($rsp));
+    frameOffset += num;
+}
+
 static Address cmplExpr(ExprBase* ast);
 
 // Args array ptr can be null, signifying a call with no args
@@ -85,18 +106,15 @@ static void cmplCall(char_t* name, Array(vptr) *args){
         // Push each argument onto the stack from right to left
         for (i=args->size-1; i>=4; i--){
             expraddr = cmplExpr((ExprBase*)args->elem[i]);
-            emitIns1("pushq", expraddr);
+            emitPush(expraddr);
         }
         // For the last 4 args, put them into registers instead
-        emitAsm("\tsubq $32, %s\n", registerStr($rsp));
         for (i; i>=0; i--){
             expraddr = cmplExpr((ExprBase*)args->elem[i]);
             emitIns2("movq", expraddr, registerAddress(paramRegisters[i]));
         }
     }
-    else{
-        emitIns2("subq", numberAddress(32), registerAddress($rsp));
-    }
+    emitSubRsp(32);
     emitIns1("call", symbolAddress(name));
 }
 
@@ -104,13 +122,13 @@ static Address cmplBinop(ExprBinop* binop){
     Address left = cmplExpr(binop->left);
     // If left operand is not on stack move it onto the stack
     if (left.mode != indirectMode){
-        emitIns1("pushq", left);
-        left = indirectAddress(-8, $rsp);
+        emitPush(left);
+        left = indirectAddress(-frameOffset, $rbp);
     }
     Address right = cmplExpr(binop->right);
-    // Can't have both operands on stack, so move second one to $rbx. $rax is also unsafe since we need it for mul/div 
+    // Can't have both operands on stack, so move second one to $r10. $rax is also unsafe since we need it for mul/div 
     if (right.mode == indirectMode || (right.mode == registerMode && right.val.reg == $rax)){
-        Register moveTo = $rbx;
+        Register moveTo = $r10;
         emitIns2("movq", right, registerAddress(moveTo));
         right = registerAddress(moveTo);
     }
@@ -218,6 +236,8 @@ static void cmplGlobal(Ast* ast){
             curScope = func->scopeId;
             // Create a new label for the return location
             size_t retLabel = maxLabelNum++;
+            // $rbp = $rsp, so set the offset to 0
+            frameOffset = 0;
             cmplParams(&func->params);
             if (!strcmp(func->name, "main")){
                 cmplCall("__main", NULL);

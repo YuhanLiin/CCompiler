@@ -4,8 +4,8 @@
 
 typedef enum {
     $rbp, $rsp,
-    $rax, $rcx, $rdx, $r8, $r9,
-    $rbx, $rdi, $rsi, $r12, $r13, $r14, $r15
+    $rax, $rcx, $rdx, $r8, $r9, $r10, $r11
+    // ,$rbx, $rdi, $rsi, $r12, $r13, $r14, $r15
 } Register;
 
 typedef struct {
