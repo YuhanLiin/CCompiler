@@ -13,6 +13,9 @@ lexertest: test/lexertest.c lexer/lexer.c array.c test/io.c test/utils.c
 parsertest: test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c test/mock_semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
 	${c} ${basedir} -g test/parsertest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c test/mock_semantics.c scope/scope.c semantics/symtable.c -o parsertest.exe
 
+typetest: test/typetest.c ast/type.c
+	${c} ${basedir} -g test/typetest.c ast/type.c -o typetest.exe
+
 arraytest: test/arraytest.c generics/gen_array.c generics/gen_array.h
 	${c} ${basedir} -g test/arraytest.c -o arraytest.exe
 
