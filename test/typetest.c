@@ -1,4 +1,4 @@
-#include "./utils.c"
+#include "test/utils.c"
 #include "ast/type.h"
 
 static void testSignedType(){

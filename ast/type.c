@@ -82,7 +82,7 @@ Type argTypePromotion(Type type){
 
 //TODO actual conversion checks
 char checkTypeConvert(Type from, Type to){
-    return from == to;
+    return 1;
 }
 
 //Prioritizes floats then longs

@@ -3,8 +3,8 @@
 #include "utils.h"
 #include <stdlib.h>
 
-#include "./io.c"
-#include "./utils.c"
+#include "test/io.c"
+#include "test/utils.c"
 
 Token token;
 

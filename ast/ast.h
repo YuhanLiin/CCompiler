@@ -38,7 +38,7 @@ typedef struct {
     Type type;
 } ExprBase;
 
-//Actual ast nodes and their allocators
+//Actual ast nodes and their allocators. Output should be a valid AST node for semantic validation
 typedef struct {
     ExprBase base; 
     double num;

@@ -5,8 +5,8 @@
 #include "parser/parser.h"
 #include "semantics/symtable.h"
 
-#include "./io.c"
-#include "./utils.c"
+#include "test/io.c"
+#include "test/utils.c"
 
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){

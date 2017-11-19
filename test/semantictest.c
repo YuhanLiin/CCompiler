@@ -1,76 +1,147 @@
-#include "semantics/symtable.h"
 #include "semantics/semantics.h"
-#include "utils.h"
+#include "scope/scope.h"
+#include "semantics/symtable.h"
 #include "ast/ast.h"
-#include "parser/parser.h"
+#include "ast/type.h"
+#include "lexer/lexer.h"
+#include "utils.h"
 
-#include "./io.c"
-#include "./utils.c"
+#include "test/utils.c"
+#include "test/io.c"
 
-#define test(inputStr) do {\
-    ioSetup(inputStr);\
-    initLexer();\
-    initParser();\
-    initSymbolTable();\
-    parseTopLevel();\
-    assertEqNum(checkSemantics(), 1);\
-    disposeLexer();\
-    disposeSymbolTable();\
-} while(0)
+// Specifically tests the AST transformations of the semantics module. 
+// Error messages and symtable insertions are tested in the correctness integration tests
 
-#define testErr(inputStr, expected) do{\
-    ioSetup(inputStr);\
-    initLexer();\
-    initParser();\
-    initSymbolTable();\
-    parseTopLevel();\
-    assertEqNum(checkSemantics(), 0);\
-    assertEqStr(errorstr, expected);\
-    disposeLexer();\
-    disposeSymbolTable();\
-} while(0)
+static void testVerifyLiteralAndBinop(){
+    initSemantics();
 
-#define pls "pls"
+    ExprInt* integer = newExprInt(1, 2, 3);
+    assertEqNum(verifyExprInt(integer)->base.type, typInt32);
+    assertEqNum(verifyExprUnsignedInt(integer)->base.type, typUInt32);
+    disposeAst(integer);
 
-void testVerifyMain(){
-    test("int main() return 4;");
-    //These 2 will change in future
-    testErr("int main() return 4.5;", "1:18 no way to convert value type 'float' to return type 'int'.\n");
-    test("float main() return 44.4;");
+    ExprLong* longint = newExprLong(1, 2, 3);
+    assertEqNum(verifyExprLong(longint)->base.type, typInt64);
+    assertEqNum(verifyExprUnsignedLong(longint)->base.type, typUInt64);
+    disposeAst(longint);
+
+    ExprDouble* dbl = newExprDouble(1, 2, 5.5);
+    assertEqNum(verifyExprDouble(dbl)->base.type, typFloat64);
+    disposeAst(dbl);
+
+    ExprFloat* flt = newExprFloat(1, 2, 5.5);
+    assertEqNum(verifyExprFloat(flt)->base.type, typFloat32);
+    disposeAst(flt);
+
+    ExprBinop* binop = newExprBinop(
+        1, 2, tokPlus,
+        (ExprBase*)verifyExprInt(newExprInt(1, 2, 3)),
+        (ExprBase*)verifyExprUnsignedLong(newExprLong(1, 2, 3))
+    );
+    assertEqNum(verifyExprBinop(binop)->base.type, typUInt64);
+    disposeAst(binop);
 }
 
-void testVerifyArgs(){
-    test("int a(int a, int b, int c) return a+b+c;");
-    testErr("int a(int a, int b, int c) return d;", "1:34 attempting to reference undeclared variable 'd'.\n");
-    test("int a(int a, int);");
-    testErr("int a(int a, int) return a;", "1:16 nameless parameter in function definition.\n");
-    testErr("int a(int a, int a) return a;", "1:16 parameter 'a' has already been defined.\n");
+static void testVerifyIdent(){
+    initSemantics();
+    initSymbolTable();
+
+    New(char_t, varName, 4)
+    New(char_t, identName, 4)
+    strcpy(varName, "var");
+    strcpy(identName, "var");
+
+    StmtVar* var = newStmtVarDef(1, 2, typUInt8, varName);
+    insertVar(varName, var);
+    ExprIdent* ident = newExprIdent(1, 2, identName);
+    assertEqNum(verifyExprIdent(ident)->base.type, var->type);
+    disposeAst(var);
+    disposeAst(ident);
+
+    disposeSymbolTable();
 }
 
-void testFuncDuplication(){
-    testErr("int a(); float a();", "1:15 definition of 'a' does not match its previous declaration.\n");
-    testErr("int a(); int a(float b);", "1:13 definition of 'a' does not match its previous declaration.\n");
-    test("int a(int s); int a(int s){}");
-    testErr("int a(int s){} int a(int s);", "1:19 function name 'a' has already been defined.\n");
+static void testVerifyCall(){
+    initSemantics();
+    initSymbolTable();
 
-    test("int a(int s){} int s();");
-    test("int b(); float k(int b){}");
-    //TODO test global vars
+    New(char_t, funcName, 5)
+    New(char_t, callName, 5)
+    strcpy(funcName, "func");
+    strcpy(callName, "func");
+
+    Function* func = newFunction(1, 2, typFloat32, funcName);
+    insertFunc(funcName, func);
+    ExprCall* call = newExprCall(1, 2, callName);
+    assertEqNum(verifyExprCall(call)->base.type, func->type);
+    disposeAst(call);
+    disposeAst(func);
+
+    disposeSymbolTable();
 }
 
-void testCall(){
-    test("int a(); int b(){a();}");
-    testErr("int b(){ wtf();}", "1:9 attempting to call undeclared function 'wtf'.\n");
-    test("int r(int a, long b){ return r(a, b);}");
-    testErr("int a(); int b(float f){ a(f);}", "1:25 wrong number of arguments for calling function 'a'.\n");
-    testErr("int a(long l); int b(float f){ a(f);}", "1:33 no way to convert argument type 'float' to parameter type 'int'.\n");
+static void testVerifyBlock(){
+    initSemantics();
+    initSymbolTable();
+
+    StmtBlock* blk = newStmtBlock(1, 2);
+    size_t before = curScope;
+    preverifyBlockStmt();
+    assertNotEqNum(curScope, before);
+    size_t after = curScope;
+    verifyBlockStmt(blk);
+    assertEqNum(blk->scopeId , after);
+    assertEqNum(curScope, before);
+
+    disposeAst(blk);
+    disposeSymbolTable();
+}
+
+static void testVerifyFunctionDecl(){
+    initSemantics();
+    initSymbolTable();
+
+    New(char_t, funcName, 5)
+    strcpy(funcName, "func");
+
+    Function* func = newFunction(1, 2, typUInt64, funcName);
+    size_t scopeId = curScope;
+    verifyFunctionSignature(func, 1);
+    assertEqNum(scopeId, curScope);
+    assertNotEqNum(findFunc(funcName), NULL);
+
+    disposeAst(func);
+    disposeSymbolTable();
+}
+
+static void testVerifyFunctionDef(){
+    initSemantics();
+    initSymbolTable();
+
+    New(char_t, funcName, 5)
+    strcpy(funcName, "func");
+
+    Function* func = newFunction(1, 2, typUInt64, funcName);
+    size_t before = curScope;
+    verifyFunctionSignature(func, 0);
+    assertNotEqNum(before, curScope);
+    size_t after = curScope;
+    assertEqNum(func->scopeId, after);
+    assertNotEqNum(findFunc(funcName), NULL);
+    verifyFunctionBody();
+    assertEqNum(curScope, before);
+
+    disposeAst(func);
+    disposeSymbolTable();
 }
 
 int main(int argc, char const *argv[])
 {
-    testVerifyMain();
-    testVerifyArgs();
-    testFuncDuplication();
-    testCall();
+    testVerifyLiteralAndBinop();
+    testVerifyIdent();
+    testVerifyCall();
+    testVerifyBlock(); 
+    testVerifyFunctionDecl();
+    testVerifyFunctionDef();
     return 0;
 }

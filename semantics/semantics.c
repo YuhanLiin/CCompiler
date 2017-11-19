@@ -73,11 +73,11 @@ ExprLong* verifyExprUnsignedLong(ExprLong* expint){
 }
 
 ExprDouble* verifyExprDouble(ExprDouble* expdb){
-    expdb->base.type = typFloat32;
+    expdb->base.type = typFloat64;
     return expdb;
 }
 ExprFloat* verifyExprFloat(ExprFloat* expdb){
-    expdb->base.type = typFloat64;
+    expdb->base.type = typFloat32;
     return expdb;
 }
 
@@ -86,7 +86,7 @@ ExprBinop* verifyExprBinop(ExprBinop* binop){
     if (binop->left->type != typNone && binop->right->type != typNone){
         Type promoted = arithTypePromotion(binop->left->type, binop->right->type);
         if (promoted != typNone){
-            binop->base.type = binop->left->type;
+            binop->base.type = promoted;
         }
         else{
             semanticError(

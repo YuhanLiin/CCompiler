@@ -36,6 +36,17 @@ int DITCH_LEVEL = 0;
     }\
 } while(0);
 
+#define assertNotEqNum(actual, notEqual) do {\
+    if (notEqual == actual){\
+        assertBegin();\
+        fprintf(\
+            stderr, "Expected %s to NOT equal %d\n",\
+            #actual, notEqual\
+        );\
+        assertFailHandler();\
+    }\
+} while(0);
+
 #define assertEqFlt(actual, expected) do {\
     if (!doubleEq(expected, actual)){\
         assertBegin();\
@@ -43,6 +54,7 @@ int DITCH_LEVEL = 0;
             stderr, "Expected %s to be %.2f, but got %.2f.\n",\
             #actual, expected, actual\
         );\
+        assertFailHandler();\
     }\
 } while(0);
 

@@ -4,8 +4,11 @@ basedir = -iquote C:\Users\linyu\MyCode\c\compiler
 devmain: main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c
 	${c} ${basedir} -g main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c -o test/bin/main.exe
 
-semantictest: test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
-	${c} ${basedir} -g test/semantictest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c  -o semantictest.exe
+correctnesstest: test/correctnesstest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
+	${c} ${basedir} -g test/correctnesstest.c lexer/lexer.c array.c parser/parser.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c  -o correctnesstest.exe
+
+semantictest: test/semantictest.c array.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
+	${c} ${basedir} -g test/semantictest.c array.c lexer/lexer.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c  -o semantictest.exe
 
 lexertest: test/lexertest.c lexer/lexer.c array.c test/io.c test/utils.c
 	${c} ${basedir} -g test/lexertest.c lexer/lexer.c array.c -o lexertest.exe
