@@ -127,6 +127,10 @@ char isFuncDecl(const Function* func){
     return func->stmt == NULL;
 }
 
+char hasRetExpr(const StmtReturn* ret){
+    return ret->expr != NULL;
+}
+
 //Delete ast node based on ast label
 void disposeAst(void* node){
     if (node == NULL) return;

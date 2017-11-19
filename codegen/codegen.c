@@ -172,6 +172,11 @@ static Address cmplBinop(ExprBinop* binop){
 
 // Returns address of the result of the processed expression
 static Address cmplExpr(ExprBase* expr){
+    assert(
+        (expr->ast.label == astExprCall || expr->type != typVoid) && 
+        "Other than calls, void expressions can't exist."
+    );
+    assert(expr->type != typNone && "None expressions can't exist at all.");
     switch(expr->ast.label){
         case astExprInt:
             return numberAddress(((ExprInt*)expr)->num);
@@ -193,8 +198,10 @@ static Address cmplExpr(ExprBase* expr){
 static void cmplStmt(Ast* ast, size_t retLabel){
     switch(ast->label){
         case astStmtReturn: {
-            Address expaddr = cmplExpr((ExprBase*)((StmtReturn*)ast)->expr);
-            emitIns2("movq", expaddr, registerAddress($rax));
+            if (hasRetExpr((StmtReturn*)ast))){
+                Address expaddr = cmplExpr((ExprBase*)((StmtReturn*)ast)->expr);
+                emitIns2("movq", expaddr, registerAddress($rax));
+            }
             emitLabelStmt("jmp", retLabel);
             break;
         }
@@ -217,6 +224,7 @@ static void cmplStmt(Ast* ast, size_t retLabel){
 static void cmplParams(Array(vptr) *params){
     for (size_t i=0; i<params->size; i++){
         StmtVar* param = params->elem[i];
+        assert(param->type != typNone && param->type != typVoid && "Can't have void/none params");
         Address location = indirectAddress(16 + i*8, $rbp);
         // Right now dumps all param registers into shadow space. Safe but inefficient
         if (i < 4){

@@ -141,3 +141,4 @@ void disposeAst(void* ast);
 
 char isVarDecl(const StmtVar* var);
 char isFuncDecl(const Function* func);
+char hasRetExpr(const StmtReturn* ret);

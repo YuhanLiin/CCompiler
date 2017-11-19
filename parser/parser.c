@@ -98,13 +98,16 @@ static Type parseIntegerType(){
 
 //Attempt to parse and return a built in type
 static Type parseType(){
-    if (curTok == tokDouble){
-        getTok();
-        return typFloat64;
-    }
-    else if (curTok == tokFloat){
-        getTok();
-        return typFloat32;
+    switch(curTok){
+        case tokDouble:
+            getTok();
+            return typFloat64;
+        case tokFloat:
+            getTok();
+            return typFloat32;
+        case tokVoid:
+            getTok();
+            return typVoid;
     }
     // Signed/Unsigned types start here
     if (curTok == tokUnsigned){

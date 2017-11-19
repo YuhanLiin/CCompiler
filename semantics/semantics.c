@@ -16,6 +16,8 @@ char checkSemantics(){
     return correct;
 }
 
+#define VOID_ERROR_MSG "cannot use a void-returning function call as an expression."
+
 #define semanticError(ast, ...) do {correct = 0; writeError((ast).lineNumber, (ast).linePos, __VA_ARGS__);} while(0)
 
 static char validateVarDefine(const StmtVar* var){
@@ -82,8 +84,16 @@ ExprFloat* verifyExprFloat(ExprFloat* expdb){
 }
 
 ExprBinop* verifyExprBinop(ExprBinop* binop){
-    //Perform type verifcation only if both expression types have been verified
-    if (binop->left->type != typNone && binop->right->type != typNone){
+    if (binop->left->type == typVoid || binop->right->type == typVoid){
+        if (binop->left->type == typVoid){
+            semanticError(binop->left.ast, VOID_ERROR_MSG);
+        }
+        if (binop->right->type == typVoid){
+            semanticError(binop->right.ast, VOID_ERROR_MSG);
+        }
+    }
+    //Perform type verifcation only if both expression types have been verified and are not void
+    else if (binop->left->type != typNone && binop->right->type != typNone){
         Type promoted = arithTypePromotion(binop->left->type, binop->right->type);
         if (promoted != typNone){
             binop->base.type = promoted;
@@ -116,8 +126,11 @@ static void verifyArgs(ExprCall* call, const Function* func){
         for (size_t i=0; i<args->size; i++){
             ExprBase* arg = (ExprBase*)args->elem[i];
             StmtVar* param = (StmtVar*)params->elem[i];
+            if (arg->type == typVoid){
+                semanticError(arg->ast, VOID_ERROR_MSG);
+            }
             //Typecheck only valid args
-            if (arg->type != typNone){
+            else if (arg->type != typNone){
                 if (!checkTypeConvert(arg->type, param->type)){
                     semanticError(
                         arg->ast,
@@ -155,22 +168,38 @@ StmtBlock* verifyBlockStmt(StmtBlock* blk){
 }
 
 StmtReturn* verifyStmtReturn(StmtReturn* ret){
-    //TODO auto-casts
     if (returnType == typNone){
         // Global scope, cant return
         semanticError(ret->ast, "returning from global scope.");
     }
-    //Check if expression type was findable before matching it to return type. Prevents cascading errors
-    else if (ret->expr->type != typNone){
-        if (!checkTypeConvert(ret->expr->type, returnType)){
-            semanticError(
-                ret->expr->ast,
-                "no way to convert value type '%s' to return type '%s'.",
-                stringifyType(ret->expr->type), stringifyType(returnType)
-            );
+    else if (hasRetExpr(ret)){
+        if (returnType == typVoid){
+            semanticError(ret->ast, "cannot return a value from a void function.");
+        }
+        else if (ret->expr->type == typVoid){
+            semanticError(ret->expr->ast, VOID_ERROR_MSG);
+        }
+        //Check if expression type was findable before matching it to return type. Prevents cascading errors
+        else if (ret->expr->type != typNone){
+            if (!checkTypeConvert(ret->expr->type, returnType)){
+                semanticError(
+                    ret->expr->ast,
+                    "no way to convert value type '%s' to return type '%s'.",
+                    stringifyType(ret->expr->type), stringifyType(returnType)
+                );
+            }
         }
     }
     return ret;
+}
+
+static void verifyParamTypes(Array(vptr)* params){
+    for (size_t i=0; i<params->size; i++){
+        StmtVar* param = params->elem[i];
+        if (param->type == typVoid){
+            semanticError(param->ast, "function parameters cannot have type void.");
+        }
+    }
 }
 
 static void verifyAndSetParams(Array(vptr)* params){
@@ -199,6 +228,7 @@ void verifyFunctionSignature(Function* func, char isDecl){
     else{
         insertFunc(func->name, func);
     }
+    verifyParamTypes(&func->params);
     if (!isDecl){
         toNewScope();
         func->scopeId = curScope;
