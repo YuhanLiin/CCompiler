@@ -29,7 +29,7 @@ void testTokenIgnored(){
 }
 
 void testTokenKeywordIdentifier(){
-    setup("ret return returning _DEF72  double long int float char short signed unsigned shorts");
+    setup("ret return returning _DEF72  double long int float char short signed unsigned void shorts");
     test(tokIdent);
     assertEqStr(toCstring(&stringBuffer), "ret");
     test(tokReturn);
@@ -37,6 +37,7 @@ void testTokenKeywordIdentifier(){
     assertEqStr(toCstring(&stringBuffer), "returning");
     test(tokIdent);
     assertEqStr(toCstring(&stringBuffer), "_DEF72");
+    
     test(tokDouble);
     test(tokLong);
     test(tokInt);
@@ -45,6 +46,8 @@ void testTokenKeywordIdentifier(){
     test(tokShort);
     test(tokSigned);
     test(tokUnsigned);
+    test(tokVoid);
+
     test(tokIdent);
     assertEqStr(toCstring(&stringBuffer), "shorts");
     test(tokEof);

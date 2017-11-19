@@ -163,6 +163,12 @@ Token lexToken(){
                 return tokChar;
             }
             goto identifier;
+        case 'v':
+            //void
+            if (lexKeyword("void")){
+                return tokVoid;
+            }
+            goto identifier;
         case 's':
             //signed or short
             store('s');

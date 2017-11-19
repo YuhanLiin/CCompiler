@@ -16,6 +16,7 @@ typedef enum {
     tokSigned,  //Keyword signed
     tokChar,    //Keyword char
     tokShort,   //Keyword short
+    tokVoid,    //Keyword void
     tokIdent,   //Identifier [a-zA-Z][a-zA-Z_0-9]*  stored in stringBuffer
     tokNumDouble,  //64-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]* in floatVal
     tokNumFloat,   //32-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]*(f|F)
