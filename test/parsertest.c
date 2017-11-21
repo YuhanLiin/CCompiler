@@ -50,7 +50,9 @@ void outputAst(Ast* ast){
         }
         case astStmtReturn:
             outprint("ret ");
-            outputAst((Ast*)((StmtReturn*)ast)->expr);
+            if (hasRetExpr((StmtReturn*)ast)){
+                outputAst((Ast*)((StmtReturn*)ast)->expr);
+            }
             return;
         case astStmtEmpty:
             outprint("empty ");
@@ -160,6 +162,7 @@ void testParseBinop(){
 void testParseStmt(){
     test(parseStmt, "return (f) ;", "ret id:f ");
     test(parseStmt, "return f() ;", "ret call:f:0 ");
+    test(parseStmt, "return;", "ret ");
     test(parseStmt, " ;", "empty ");
     test(parseStmt, "{}", "block:0 ");
     test(parseStmt, "{ return 5;;}", "block:2 ret int:5 empty ");
@@ -175,6 +178,7 @@ void testParseFunction(){
     test(parseTopLevel, "double k() return 5;", "fn:double:k:0 ret int:5 ");
     test(parseTopLevel, "unsigned char a(); signed short b(){a();}", "fndec:unsigned char:a:0 fn:short:b:0 block:1 call:a:0 ");
     test(parseTopLevel, "signed long x(unsigned short int, signed int);", "fndec:int:x:2 unsigned short int ");
+    test(parseTopLevel, "void main();", "fndec:void:main:0 ");
 }
 
 void testParseError(){
@@ -199,6 +203,7 @@ void testParseError(){
     testErr(parseTopLevel, "int Blue(float f)", "1:17 expected statement before end of file.\n");
     testErr(parseTopLevel, "signed float a();", "1:7 expected type name before keyword \"float\".\n");
     testErr(parseTopLevel, "signed int a(unsigned);", "1:21 expected type name before ')'.\n");
+    testErr(parseTopLevel, "dog", "1:0 expected type name before identifier.\n");
 }
 
 int main(int argc, char const *argv[])

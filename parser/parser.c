@@ -50,6 +50,7 @@ void initParser(){
 static char canParseType(){
     switch(curTok){
         case tokChar:
+        case tokVoid:
         case tokShort:
         case tokInt:
         case tokLong:
@@ -468,6 +469,7 @@ static Ast* parseGlobal(){
         return parseFunction();
     }
     else{
+        syntaxError("type name");
         //TODO handle non-functions
         return NULL;
     }

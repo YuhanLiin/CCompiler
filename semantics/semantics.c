@@ -56,6 +56,7 @@ static char validateFuncPrevDecl(const Function* func){
     return 0; 
 }
 
+//All expression validators must set expression type or leave them as typNone if validation fails completely
 ExprInt* verifyExprInt(ExprInt* expint){
     expint->base.type = typInt32;
     return expint;
@@ -86,10 +87,10 @@ ExprFloat* verifyExprFloat(ExprFloat* expdb){
 ExprBinop* verifyExprBinop(ExprBinop* binop){
     if (binop->left->type == typVoid || binop->right->type == typVoid){
         if (binop->left->type == typVoid){
-            semanticError(binop->left.ast, VOID_ERROR_MSG);
+            semanticError(binop->left->ast, VOID_ERROR_MSG);
         }
         if (binop->right->type == typVoid){
-            semanticError(binop->right.ast, VOID_ERROR_MSG);
+            semanticError(binop->right->ast, VOID_ERROR_MSG);
         }
     }
     //Perform type verifcation only if both expression types have been verified and are not void
