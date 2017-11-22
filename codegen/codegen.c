@@ -197,16 +197,19 @@ static Address cmplExpr(ExprBase* expr){
 
 static void cmplStmt(Ast* ast, size_t retLabel){
     switch(ast->label){
+        case astStmtEmpty:
+            break;
+        case astStmtExpr:
+            cmplExpr(((StmtExpr*)ast)->expr);
+            break;
         case astStmtReturn: {
-            if (hasRetExpr((StmtReturn*)ast))){
+            if (hasRetExpr((StmtReturn*)ast)){
                 Address expaddr = cmplExpr((ExprBase*)((StmtReturn*)ast)->expr);
                 emitIns2("movq", expaddr, registerAddress($rax));
             }
             emitLabelStmt("jmp", retLabel);
             break;
         }
-        case astStmtEmpty:
-            break;
         case astStmtBlock: {
             StmtBlock* blk = (StmtBlock*)ast;
             curScope = blk->scopeId;
