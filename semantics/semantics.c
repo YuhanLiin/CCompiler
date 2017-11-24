@@ -4,6 +4,7 @@
 #include "io/error.h"
 #include "ast/type.h"
 #include <string.h>
+#include <assert.h>
 
 static Type returnType = typNone;
 static char correct = 1;
@@ -82,6 +83,18 @@ ExprDouble* verifyExprDouble(ExprDouble* expdb){
 ExprFloat* verifyExprFloat(ExprFloat* expdb){
     expdb->base.type = typFloat32;
     return expdb;
+}
+
+ExprLeftUnop* verifyExprLeftUnop(ExprLeftUnop* unop){
+    Type operandType = unop->operand->type;
+    switch(unop->op){
+        case tokMinus:
+            unop->base.type = operandType;
+            break;
+        default:
+            assert(0 && "Not an unary token operator");
+    }
+    return unop;
 }
 
 ExprBinop* verifyExprBinop(ExprBinop* binop){

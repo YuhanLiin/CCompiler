@@ -246,7 +246,7 @@ static ExprBase* parseLeftUnopExpr(){
             getTok();
             ExprBase* operand = parseLeftUnopExpr();
             if (operand){
-                return (ExprBase*)newExprLeftUnop(lineNumber, linePos, op, operand);
+                return (ExprBase*)verifyExprLeftUnop(newExprLeftUnop(lineNumber, linePos, op, operand));
             }
             return NULL;
         }

@@ -35,6 +35,8 @@ static void testReturn(){
     test("int main() return 4.5;");
     test("int main() return;");
     test("void main() return;");
+    test("void noreturn(){}");
+    test("int noreturn(){}");
     testErr("void main() return 5;", "1:12 cannot return a value from a void function.\n");
     testErr(
         "void main() return undefined;", 
@@ -70,6 +72,7 @@ static void testCall(){
 }
 
 static void testArithmetic(){
+    test("int neg() return- - + 4;");
     test("float x(int o, int b) o+b*3.2/43-5;");
     testErr(
         "void v() v()+v()-v();", 

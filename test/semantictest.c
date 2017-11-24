@@ -12,7 +12,7 @@
 // Specifically tests the AST transformations of the semantics module. 
 // Error messages and symtable insertions are tested in the correctness integration tests
 
-static void testVerifyLiteralAndBinop(){
+static void testVerifyLiteralAndOp(){
     initSemantics();
 
     ExprInt* integer = newExprInt(1, 2, 3);
@@ -32,6 +32,10 @@ static void testVerifyLiteralAndBinop(){
     ExprFloat* flt = newExprFloat(1, 2, 5.5);
     assertEqNum(verifyExprFloat(flt)->base.type, typFloat32);
     disposeAst(flt);
+
+    ExprLeftUnop* unop = newExprLeftUnop(1, 2, tokMinus, (ExprBase*)verifyExprInt(newExprInt(1, 2, 3)));
+    assertEqNum(verifyExprLeftUnop(unop)->base.type, typInt32);
+    disposeAst(unop);
 
     ExprBinop* binop = newExprBinop(
         1, 2, tokPlus,
@@ -137,7 +141,7 @@ static void testVerifyFunctionDef(){
 
 int main(int argc, char const *argv[])
 {
-    testVerifyLiteralAndBinop();
+    testVerifyLiteralAndOp();
     testVerifyIdent();
     testVerifyCall();
     testVerifyBlock(); 

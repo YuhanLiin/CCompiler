@@ -13,6 +13,7 @@ ExprLong* verifyExprUnsignedLong(ExprLong* expint);
 ExprDouble* verifyExprDouble(ExprDouble* expdb);
 ExprFloat* verifyExprFloat(ExprFloat* expdb);
 
+ExprLeftUnop* verifyExprLeftUnop(ExprLeftUnop* unop);
 ExprBinop* verifyExprBinop(ExprBinop* binop);
 ExprIdent* verifyExprIdent(ExprIdent* ident);
 ExprCall* verifyExprCall(ExprCall* call);
