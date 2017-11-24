@@ -124,6 +124,18 @@ static void cmplCall(char_t* name, Array(vptr) *args){
     emitIns1("call", symbolAddress(name));
 }
 
+static Address cmplLeftUnop(ExprLeftUnop* unop){
+    emitPush(cmplExpr(unop->operand));
+    Address addr = indirectAddress(-frameOffset, $rbp);
+    switch(unop->op){
+        case tokMinus:
+            emitIns1("negl", addr);
+            return addr;
+        default:
+            assert(0 && "Not a token unary operator");
+    }
+}
+
 // Move left operand onto stack and destructively operate on it
 static Address cmplBinop(ExprBinop* binop){
     // r10 will be used as intermediate for all binop operations
@@ -190,6 +202,8 @@ static Address cmplExpr(ExprBase* expr){
         case astExprBinop: {
             return cmplBinop((ExprBinop*)expr);
         }
+        case astExprLeftUnop: 
+            return cmplLeftUnop((ExprLeftUnop*)expr);
         default:
             assert(0 && "Unsupported AST for expr");
     }

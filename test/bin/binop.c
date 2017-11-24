@@ -9,9 +9,9 @@ int minus(int a){
 int multi(int a, int b, int c, int d, int f){
     return a + b * (c + d);
 }
-// unsigned int imulti(int a, int b, unsigned int c, unsigned int d, int f){
-//     return a + b * (c + d);
-// }
+unsigned int imulti(int a, int b, unsigned int c, unsigned int d, int f){
+    return a + b * (c + d);
+}
 
 int div(){
     return 100 / multi(0, 5, add(1, 1), 3, minus(1));
