@@ -10,7 +10,7 @@
 
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){
-    if (ast == NULL){   //Syntax error
+    if (ast == NULL || !checkSyntax()){   //Syntax error
         outprint(errorstr);
         return;
     }
@@ -39,6 +39,12 @@ void outputAst(Ast* ast){
             for (size_t i=0; i<expr->args.size; i++){
                 outputAst((Ast*)expr->args.elem[i]);
             }
+            return;
+        }
+        case astExprLeftUnop: {
+            ExprLeftUnop* unop = (ExprLeftUnop*)ast;
+            outprint("%s:", stringifyToken(unop->op));
+            outputAst((Ast*)unop->operand);
             return;
         }
         case astExprBinop: {
@@ -159,6 +165,11 @@ void testParseBinop(){
     test(parseStmt, "(a-\"lll\")/d;", "'/' '-' id:a str:lll id:d "); 
 }
 
+void testParseUnop(){
+    test(parseStmt, "----++45;", "'-':'-':'-':'-':int:45 ");
+    test(parseStmt, "4 - -5 + 1;", "'+' '-' int:4 '-':int:5 int:1 ");
+}
+
 void testParseStmt(){
     test(parseStmt, "return (f) ;", "ret id:f ");
     test(parseStmt, "return f() ;", "ret call:f:0 ");
@@ -211,6 +222,7 @@ int main(int argc, char const *argv[])
     testParseBasicExpr();
     testParseCall();
     testParseBinop();
+    testParseUnop();
     testParseStmt();
     testParseFunction();
     testParseError();

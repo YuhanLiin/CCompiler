@@ -236,6 +236,29 @@ static ExprBase* parsePrimaryExpr(){
     }
 }
 
+static ExprBase* parseLeftUnopExpr(){
+    switch(curTok){
+        //All single-token unary operators go here
+        case tokMinus: {
+            size_t opLine = lineNumber;
+            size_t opPos = linePos;
+            Token op = curTok;
+            getTok();
+            ExprBase* operand = parseLeftUnopExpr();
+            if (operand){
+                return (ExprBase*)newExprLeftUnop(lineNumber, linePos, op, operand);
+            }
+            return NULL;
+        }
+        //Plus operator means nothing, so just skip it
+        case tokPlus:
+            getTok(); 
+            return parseLeftUnopExpr();
+        //TODO this should be something like parseRightUnaryExpr
+        default: return parsePrimaryExpr();
+    }
+}
+
 //Return precedence of all operator tokens, 0 if token isnt operator
 static int operatorPrec(Token op){
     switch (op){
@@ -259,13 +282,13 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
         size_t opPos = linePos;
         getTok(); //Consume binop
         //Attempt to parse 1st atom of rhs expression
-        if ((rhs = parsePrimaryExpr()) == NULL) return rhs;
+        if ((rhs = parseLeftUnopExpr()) == NULL) return rhs;
         //While next binop is of higher precedence, accumulate expression into rhs
         while ((prec = operatorPrec(curTok)) > minPrec){
             ExprBase* newRhs = parseBinopExpr(rhs, prec);
             //Attempt to parse subsequent atoms at a precedece equal to current binop
             if (newRhs == NULL){
-                disposeAst(rhs); //Responsible for delete rhs, which was created in this scope
+                disposeAst(rhs); //Responsible for delete rhs, which was created in this function
                 return newRhs;
             }
             rhs = newRhs;
@@ -278,7 +301,7 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
 
 //expr := primeExpr exprBinop
 static ExprBase* parseExpr(){
-    ExprBase* lhs = parsePrimaryExpr(); //Parse the 1st primary expression
+    ExprBase* lhs = parseLeftUnopExpr(); //Parse the 1st primary expression
     if (lhs == NULL) return lhs; 
     ExprBase* expr = parseBinopExpr(lhs, 1); //Parse all following binops
     if (expr == NULL){
@@ -349,8 +372,6 @@ Ast* parseStmt(){
         case tokRParen:
         case tokUnexpected:
         case tokEof:
-        case tokPlus:
-        case tokMinus:
         case tokMulti:
         case tokDiv:
         case tokComma:

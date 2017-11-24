@@ -15,6 +15,7 @@ typedef enum {
     astExprStr,
     astExprIdent,
     astExprCall,
+    astExprLeftUnop,
     astExprBinop,
     astStmtEmpty,
     astStmtReturn,
@@ -74,6 +75,13 @@ typedef struct {
     char_t* name;
 } ExprIdent;
 ExprIdent* newExprIdent(size_t lineNumber, size_t linePos, char_t* name);
+
+typedef struct {
+    ExprBase base; 
+    Token op;
+    ExprBase* operand; 
+} ExprLeftUnop;
+ExprLeftUnop* newExprLeftUnop(size_t lineNumber, size_t linePos, Token op, ExprBase* operand);
 
 typedef struct {
     ExprBase base; 
