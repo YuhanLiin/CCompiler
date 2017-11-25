@@ -124,7 +124,7 @@ static void cmplCall(char_t* name, Array(vptr) *args){
     emitIns1("call", symbolAddress(name));
 }
 
-static Address cmplLeftUnop(ExprLeftUnop* unop){
+static Address cmplUnop(ExprUnop* unop){
     emitPush(cmplExpr(unop->operand));
     Address addr = indirectAddress(-frameOffset, $rbp);
     switch(unop->op){
@@ -202,8 +202,8 @@ static Address cmplExpr(ExprBase* expr){
         case astExprBinop: {
             return cmplBinop((ExprBinop*)expr);
         }
-        case astExprLeftUnop: 
-            return cmplLeftUnop((ExprLeftUnop*)expr);
+        case astExprUnop: 
+            return cmplUnop((ExprUnop*)expr);
         default:
             assert(0 && "Unsupported AST for expr");
     }

@@ -85,9 +85,23 @@ ExprFloat* verifyExprFloat(ExprFloat* expdb){
     return expdb;
 }
 
-ExprLeftUnop* verifyExprLeftUnop(ExprLeftUnop* unop){
+static char isLvalue(ExprBase* expr){
+    switch(expr->ast.label){
+        case astExprIdent:
+            return 1;
+    }
+    return 0;
+}
+
+ExprUnop* verifyExprUnop(ExprUnop* unop){
     Type operandType = unop->operand->type;
     switch(unop->op){
+        case tokDec:
+        case tokInc:
+            if (!isLvalue(unop->operand)){
+                semanticError(unop->base->ast, "lvalue required as operand of %s.", stringifyToken(unop->op));
+                break;
+            }
         case tokMinus:
             unop->base.type = operandType;
             break;

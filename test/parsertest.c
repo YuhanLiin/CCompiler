@@ -41,15 +41,12 @@ void outputAst(Ast* ast){
             }
             return;
         }
-        case astExprRightUnop: {
-            ExprRightUnop* unop = (ExprRightUnop*)ast;
-            outprint("%s::", stringifyToken(unop->op));
-            outputAst((Ast*)unop->operand);
-            return;
-        }
-        case astExprLeftUnop: {
-            ExprLeftUnop* unop = (ExprLeftUnop*)ast;
+        case astExprUnop: {
+            ExprUnop* unop = (ExprUnop*)ast;
             outprint("%s:", stringifyToken(unop->op));
+            if (!unop->leftside){
+                outprint(":");
+            }
             outputAst((Ast*)unop->operand);
             return;
         }

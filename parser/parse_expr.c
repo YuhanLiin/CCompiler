@@ -123,7 +123,7 @@ static ExprBase* parseRightUnopExpr(){
         switch(curTok){
             case tokDec:
             case tokInc:
-                expr = (ExprBase*)verifyExprRightUnop(newExprRightUnop(opLine, opPos, expr, curTok));
+                expr = (ExprBase*)verifyExprUnop(newExprUnop(opLine, opPos, curTok, expr, 0));
                 getTok();
                 break;
             default:
@@ -145,7 +145,7 @@ static ExprBase* parseLeftUnopExpr(){
             getTok();
             ExprBase* operand = parseLeftUnopExpr();
             if (operand){
-                return (ExprBase*)verifyExprLeftUnop(newExprLeftUnop(opLine, opPos, op, operand));
+                return (ExprBase*)verifyExprUnop(newExprUnop(opLine, opPos, op, operand, 1));
             }
             return NULL;
         }

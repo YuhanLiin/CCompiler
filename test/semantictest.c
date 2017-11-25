@@ -33,8 +33,8 @@ static void testVerifyLiteralAndOp(){
     assertEqNum(verifyExprFloat(flt)->base.type, typFloat32);
     disposeAst(flt);
 
-    ExprLeftUnop* unop = newExprLeftUnop(1, 2, tokMinus, (ExprBase*)verifyExprInt(newExprInt(1, 2, 3)));
-    assertEqNum(verifyExprLeftUnop(unop)->base.type, typInt32);
+    ExprUnop* unop = newExprUnop(1, 2, tokMinus, (ExprBase*)verifyExprInt(newExprInt(1, 2, 3)));
+    assertEqNum(verifyExprUnop(unop)->base.type, typInt32);
     disposeAst(unop);
 
     ExprBinop* binop = newExprBinop(
