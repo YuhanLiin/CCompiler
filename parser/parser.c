@@ -236,9 +236,30 @@ static ExprBase* parsePrimaryExpr(){
     }
 }
 
+static ExprBase* parseRightUnopExpr(){
+    ExprBase* expr = parsePrimaryExpr();
+    //Keep binding unary operators to the expression. Return when there is none left
+    while (expr){
+        size_t opLine = lineNumber;
+        size_t opPos = linePos; 
+        switch(curTok){
+            case tokDec:
+            case tokInc:
+                expr = (ExprBase*)verifyExprRightUnop(newExprRightUnop(opLine, opPos, expr, curTok));
+                getTok();
+                break;
+            default:
+                return expr;
+        }
+    }
+    return NULL;
+}
+
 static ExprBase* parseLeftUnopExpr(){
     switch(curTok){
         //All single-token unary operators go here
+        case tokDec:
+        case tokInc:
         case tokMinus: {
             size_t opLine = lineNumber;
             size_t opPos = linePos;
@@ -246,7 +267,7 @@ static ExprBase* parseLeftUnopExpr(){
             getTok();
             ExprBase* operand = parseLeftUnopExpr();
             if (operand){
-                return (ExprBase*)verifyExprLeftUnop(newExprLeftUnop(lineNumber, linePos, op, operand));
+                return (ExprBase*)verifyExprLeftUnop(newExprLeftUnop(opLine, opPos, op, operand));
             }
             return NULL;
         }
@@ -254,8 +275,8 @@ static ExprBase* parseLeftUnopExpr(){
         case tokPlus:
             getTok(); 
             return parseLeftUnopExpr();
-        //TODO this should be something like parseRightUnaryExpr
-        default: return parsePrimaryExpr();
+        default: 
+            return parseRightUnopExpr();
     }
 }
 

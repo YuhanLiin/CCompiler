@@ -378,31 +378,41 @@ const char_t * stringifyToken(Token tok){
         case tokNumInt:
         case tokNumULong:
         case tokNumUInt:
-            return "integer";
+            return "integer literal";
         case tokNumChar:
-            return "character";
+            return "character literal";
         case tokString:
-            return "string";
+            return "string literal";
         case tokPlus:
-            return "'+'";
+            return "+";
         case tokMinus:
-            return "'-'";
+            return "-";
+        case tokInc:
+            return "++";
+        case tokDec:
+            return "--";
+        case tokAssign:
+            return "=";
+        case tokPlusAssign:
+            return "+=";
+        case tokMinusAssign:
+            return "-=";
         case tokDiv:
-            return "'/'";
+            return "/";
         case tokMulti:
-            return "'*'";
+            return "*";
         case tokComma:
-            return "','";
+            return ",";
         case tokLParen:
-            return "'('";
+            return "(";
         case tokRParen:
-            return "')'";
+            return ")";
         case tokSemicolon:
-            return "';'";
+            return ";";
         case tokLBrace:
-            return "'{'";
+            return "{";
         case tokRBrace:
-            return "'}'";
+            return "}";
         default:
             assert(0 && "Unhandled token");
     }     

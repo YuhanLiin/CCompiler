@@ -41,6 +41,12 @@ void outputAst(Ast* ast){
             }
             return;
         }
+        case astExprRightUnop: {
+            ExprRightUnop* unop = (ExprRightUnop*)ast;
+            outprint("%s::", stringifyToken(unop->op));
+            outputAst((Ast*)unop->operand);
+            return;
+        }
         case astExprLeftUnop: {
             ExprLeftUnop* unop = (ExprLeftUnop*)ast;
             outprint("%s:", stringifyToken(unop->op));
@@ -160,14 +166,16 @@ void testParseCall(){
 }
 
 void testParseBinop(){
-    test(parseStmt, "1 + 2.500 * k;", "'+' int:1 '*' dbl:2.50 id:k "); 
-    test(parseStmt, "heyo( a + b * c/d - e);", "call:heyo:1 '-' '+' id:a '/' '*' id:b id:c id:d id:e "); 
-    test(parseStmt, "(a-\"lll\")/d;", "'/' '-' id:a str:lll id:d "); 
+    test(parseStmt, "1 + 2.500 * k;", "+ int:1 * dbl:2.50 id:k "); 
+    test(parseStmt, "heyo( a + b * c/d - e);", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
+    test(parseStmt, "(a-\"lll\")/d;", "/ - id:a str:lll id:d "); 
 }
 
 void testParseUnop(){
-    test(parseStmt, "----++45;", "'-':'-':'-':'-':int:45 ");
-    test(parseStmt, "4 - -5 + 1;", "'+' '-' int:4 '-':int:5 int:1 ");
+    test(parseStmt, "-+-+45;", "-:-:int:45 ");
+    test(parseStmt, "--++5;", "--:++:int:5 ");
+    test(parseStmt, "-3++--;", "-:--::++::int:3 ");
+    test(parseStmt, "4 - -5 + 1;", "+ - int:4 -:int:5 int:1 ");
 }
 
 void testParseStmt(){
@@ -195,25 +203,25 @@ void testParseFunction(){
 void testParseError(){
     testErr(
         parseStmt, "((sfgd) ",
-        "1:8 expected ')' before end of file.\n1:8 expected ';' before end of file.\n"
+        "1:8 expected ) before end of file.\n1:8 expected ; before end of file.\n"
     ); 
     testErr(parseStmt, "", "1:0 expected statement before end of file.\n"); 
-    testErr(parseStmt, "sdg(,", "1:4 expected expression before ','.\n");
+    testErr(parseStmt, "sdg(,", "1:4 expected expression before ,.\n");
     testErr(parseStmt, "\"wergrh\n", "2:0 expected statement before end of file.\n");
     testErr(parseStmt, "\"wergr", "1:6 expected statement before end of file.\n");
     testErr(
         parseStmt, "return k(k",
-        "1:10 expected ')' before end of file.\n1:10 expected ';' before end of file.\n"
+        "1:10 expected ) before end of file.\n1:10 expected ; before end of file.\n"
     );
-    testErr(parseStmt, "/**/bind k;", "1:9 expected ';' before identifier.\n");
+    testErr(parseStmt, "/**/bind k;", "1:9 expected ; before identifier.\n");
     testErr(parseStmt, "/*   *", "1:6 expected statement before end of file.\n");
-    testErr(parseStmt, "int 5;", "1:4 expected identifier before integer.\n");
+    testErr(parseStmt, "int 5;", "1:4 expected identifier before integer literal.\n");
     testErr(parseStmt, "signed s;", "1:7 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
-    testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ')'.\n");
+    testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ).\n");
     testErr(parseTopLevel, "int Blue(float f)", "1:17 expected statement before end of file.\n");
     testErr(parseTopLevel, "signed float a();", "1:7 expected type name before keyword \"float\".\n");
-    testErr(parseTopLevel, "signed int a(unsigned);", "1:21 expected type name before ')'.\n");
+    testErr(parseTopLevel, "signed int a(unsigned);", "1:21 expected type name before ).\n");
     testErr(parseTopLevel, "dog", "1:0 expected type name before identifier.\n");
 }
 

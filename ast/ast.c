@@ -58,6 +58,13 @@ ExprLeftUnop* newExprLeftUnop(size_t lineNumber, size_t linePos, Token op, ExprB
     expr->operand = operand;
     return expr;
 }
+ExprRightUnop* newExprRightUnop(size_t lineNumber, size_t linePos, ExprBase* operand, Token op){
+    New(ExprRightUnop, expr, 1)
+    expr->base = ExprBase(Ast(astExprRightUnop, lineNumber, linePos));
+    expr->op = op;
+    expr->operand = operand;
+    return expr;
+}
 
 ExprBinop* newExprBinop(size_t lineNumber, size_t linePos, Token op, ExprBase* left, ExprBase* right){
     New(ExprBinop, expr, 1)
@@ -165,6 +172,10 @@ void disposeAst(void* node){
         }
         case astExprLeftUnop: {
             disposeAst(((ExprLeftUnop*)ast)->operand);
+            break;
+        }
+        case astExprRightUnop: {
+            disposeAst(((ExprRightUnop*)ast)->operand);
             break;
         }
         case astExprBinop: {
