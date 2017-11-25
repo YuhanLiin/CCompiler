@@ -24,12 +24,17 @@ typedef enum {
     tokNumLong,     //64-bit int literal [0-9]+(LL|ll)
     tokNumUInt, //32-bit int literal unsigned [0-9](l|L)?U
     tokNumInt,  //32-bit int literal [0-9]+(l|L)?
-    tokNumChar, //'.'
-    tokString,  //String literal "[anychar]" stored in stringBuffer
+    tokNumChar, //'.' char literal stored as int
+    tokString,  //String literal stored in stringBuffer
     tokPlus,    //Operator +
     tokMinus,   //Operator -
     tokDiv,     //Operator /    
     tokMulti,   //Operator *
+    tokInc,     //Operator ++
+    tokDec,     //Operator --
+    tokAssign,  //Operator =
+    tokPlusAssign,   //Operator +=
+    tokMinusAssign,  //Operator -=
     tokComma,   // , token 
     tokLParen,      // ( token
     tokRParen,      // ) token

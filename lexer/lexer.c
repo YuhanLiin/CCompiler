@@ -209,10 +209,29 @@ Token lexToken(){
             return tokNumChar;
         case '+':
             getNext();
+            if (curChar == '+'){
+                getNext();
+                return tokInc;
+            }
+            else if (curChar == '='){
+                getNext();
+                return tokPlusAssign;
+            }
             return tokPlus;
         case '-':
             getNext();
+            if (curChar == '-'){
+                getNext();
+                return tokDec;
+            }
+            else if (curChar == '='){
+                getNext();
+                return tokMinusAssign;
+            }
             return tokMinus;
+        case '=':
+            getNext();
+            return tokAssign;
         case '*':
             getNext();
             return tokMulti;
