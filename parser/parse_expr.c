@@ -158,15 +158,31 @@ static ExprBase* parseLeftUnopExpr(){
     }
 }
 
-//Return precedence of all operator tokens, 0 if token isnt operator
+static char isRightAssociative(Token op){
+    switch (op){
+        case tokPlusAssign:
+        case tokMinusAssign:
+        case tokAssign:
+            return 1;
+    }
+    return 0;
+}
+
+//Return precedence of all binop tokens, 0 if token isnt operator
 static int operatorPrec(Token op){
     switch (op){
-        case tokPlus: return 1;
-        case tokMinus: return 1;
-        case tokMulti: return 2;
-        case tokDiv: return 2;
-        default: return 0;
+        case tokPlusAssign:
+        case tokMinusAssign:
+        case tokAssign:
+            return 1;
+        case tokPlus:
+        case tokMinus:
+            return 10;
+        case tokMulti:
+        case tokDiv:
+            return 11;
     }
+    return 0;
 }
 
 //Precedence climbing algorithm for binops. Constructs lhs from subsequent terms. Will not free lhs. Returns updated lhs or error
@@ -175,20 +191,20 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
     int prec;
     ExprBase* rhs = NULL;
     Token op;
-    //Will first consume any higher/equal precedence binop. Afterwards, due to inner loop, this outer loop will only consume equal precedence binops
-    while (operatorPrec(op = curTok) >= minPrec){
+    //Will first consume any higher/equal precedence binop
+    while ((prec = operatorPrec(op = curTok)) >= minPrec){
         size_t opLine = lineNumber;
         size_t opPos = linePos;
         getTok(); //Consume binop
         //Attempt to parse 1st atom of rhs expression
         if ((rhs = parseLeftUnopExpr()) == NULL) return rhs;
-        //While next binop is of higher precedence, accumulate expression into rhs
-        while ((prec = operatorPrec(curTok)) > minPrec){
-            ExprBase* newRhs = parseBinopExpr(rhs, prec);
+        //While next binop is of higher precedence (or equal for right assiciative ops), accumulate expression into rhs.
+        while (operatorPrec(curTok) > prec || isRightAssociative(op) && operatorPrec(curTok) == prec){
             //Attempt to parse subsequent atoms at a precedece equal to current binop
+            ExprBase* newRhs = parseBinopExpr(rhs, operatorPrec(curTok));
             if (newRhs == NULL){
                 disposeAst(rhs); //Responsible for delete rhs, which was created in this function
-                return newRhs;
+                return NULL;
             }
             rhs = newRhs;
         }

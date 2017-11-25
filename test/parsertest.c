@@ -168,14 +168,18 @@ void testParseCall(){
 void testParseBinop(){
     test(parseStmt, "1 + 2.500 * k;", "+ int:1 * dbl:2.50 id:k "); 
     test(parseStmt, "heyo( a + b * c/d - e);", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
-    test(parseStmt, "(a-\"lll\")/d;", "/ - id:a str:lll id:d "); 
+    test(parseStmt, "(a-\"lll\")/d;", "/ - id:a str:lll id:d ");
+    test(parseStmt, "1 + 3 = 4 + 5*2;", "= + int:1 int:3 + int:4 * int:5 int:2 ");
+    test(parseStmt, "i += 2 = 4 -= 5;", "+= id:i = int:2 -= int:4 int:5 ");
+    test(parseStmt, "a+b+c+d;", "+ + + id:a id:b id:c id:d ");
+    test(parseStmt, "a = c*b+d;", "= id:a + * id:c id:b id:d ");
 }
 
 void testParseUnop(){
     test(parseStmt, "-+-+45;", "-:-:int:45 ");
     test(parseStmt, "--++5;", "--:++:int:5 ");
     test(parseStmt, "-3++--;", "-:--::++::int:3 ");
-    test(parseStmt, "4 - -5 + 1;", "+ - int:4 -:int:5 int:1 ");
+    test(parseStmt, "4 - -5;", "- int:4 -:int:5 ");
 }
 
 void testParseStmt(){
