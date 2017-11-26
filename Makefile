@@ -1,8 +1,8 @@
 c = gcc
 basedir = -iquote C:\Users\linyu\MyCode\c\compiler
 
-devmain: main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c parser/shared.c parser/parse_expr.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c
-	${c} ${basedir} -g main.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c parser/shared.c parser/parse_expr.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c -o test/bin/main.exe
+devmain: test/maintest.c driver.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c parser/shared.c parser/parse_expr.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c
+	${c} ${basedir} -g test/maintest.c driver.c io/file.c io/error.c lexer/lexer.c array.c parser/parser.c parser/shared.c parser/parse_expr.c ast/ast.c ast/type.c semantics/semantics.c codegen/codegen.c scope/scope.c semantics/symtable.c codegen/address.c -o test/bin/main.exe
 
 correctnesstest: test/correctnesstest.c lexer/lexer.c array.c parser/parser.c parser/shared.c parser/parse_expr.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c test/io.c test/utils.c
 	${c} ${basedir} -g test/correctnesstest.c lexer/lexer.c array.c parser/parser.c parser/shared.c parser/parse_expr.c ast/ast.c ast/type.c semantics/semantics.c scope/scope.c semantics/symtable.c  -o correctnesstest.exe

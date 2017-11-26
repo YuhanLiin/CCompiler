@@ -131,14 +131,11 @@ static Address cmplUnop(ExprUnop* unop){
         switch(unop->op){
             case tokInc:
                 emitIns1("incq", addr);
-                break;
+                return addr;
             case tokDec:
                 emitIns1("decq", addr);
-                break;
-            default:
-                assert(0 && "Not a right side token unary operator");
+                return addr;
         }
-        return addr;
     }
     emitPush(addr);
     Address temp = indirectAddress(-frameOffset, $rbp);
@@ -154,7 +151,7 @@ static Address cmplUnop(ExprUnop* unop){
             emitIns1("decq", addr);
             break;
         default:
-            assert(0 && "Not a left side token unary operator");
+            assert(0 && "Not a token unary operator");
     }
     return temp;
 }
