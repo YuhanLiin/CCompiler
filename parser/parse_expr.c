@@ -139,8 +139,8 @@ static ExprBase* parseLeftUnopExpr(){
         case tokDec:
         case tokInc:
         case tokMinus: {
-            size_t opLine = lineNumber;
-            size_t opPos = linePos;
+            size_t opLine = lineNumberTokStart;
+            size_t opPos = linePosTokStart;
             Token op = curTok;
             getTok();
             ExprBase* operand = parseLeftUnopExpr();

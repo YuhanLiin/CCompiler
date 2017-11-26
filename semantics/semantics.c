@@ -99,7 +99,7 @@ ExprUnop* verifyExprUnop(ExprUnop* unop){
         case tokDec:
         case tokInc:
             if (!isLvalue(unop->operand)){
-                semanticError(unop->base->ast, "lvalue required as operand of %s.", stringifyToken(unop->op));
+                semanticError(unop->base.ast, "lvalue required as operand of %s.", stringifyToken(unop->op));
                 break;
             }
         case tokMinus:
@@ -109,6 +109,43 @@ ExprUnop* verifyExprUnop(ExprUnop* unop){
             assert(0 && "Not an unary token operator");
     }
     return unop;
+}
+
+//Assume that both expression types are not void nor none
+static void verifyArithBinop(ExprBinop* binop){
+    Type promoted = arithTypePromotion(binop->left->type, binop->right->type);
+    if (promoted != typNone){
+        binop->base.type = promoted;
+    }
+    else{
+        semanticError(
+            binop->base.ast, "invalid types %s and %s for %s operator.", 
+            stringifyType(binop->left->type), stringifyType(binop->right->type), stringifyToken(binop->op)
+        );
+    }
+}
+static void verifyAssignBinop(ExprBinop* binop){
+    if (!isLvalue(binop->left)){
+        semanticError(binop->left->ast, "lvalue required on left of assignment.");
+        return;
+    }
+    if (binop->op == tokAssign){
+        if (!checkTypeConvert(binop->right->type, binop->left->type)){
+            semanticError(
+                binop->right->ast, "no way to convert from %s to %s.",
+                stringifyType(binop->right->type), stringifyType(binop->left->type)
+            );
+        }
+    }
+    else{
+        if (arithTypePromotion(binop->right->type, binop->left->type) == typNone){
+            semanticError(
+                binop->base.ast, "invalid types %s and %s for %s operator.", 
+                stringifyType(binop->left->type), stringifyType(binop->right->type), stringifyToken(binop->op)
+            );
+        }
+    }
+    binop->base.type = binop->left->type;
 }
 
 ExprBinop* verifyExprBinop(ExprBinop* binop){
@@ -122,15 +159,20 @@ ExprBinop* verifyExprBinop(ExprBinop* binop){
     }
     //Perform type verifcation only if both expression types have been verified and are not void
     else if (binop->left->type != typNone && binop->right->type != typNone){
-        Type promoted = arithTypePromotion(binop->left->type, binop->right->type);
-        if (promoted != typNone){
-            binop->base.type = promoted;
-        }
-        else{
-            semanticError(
-                binop->base.ast, "invalid types %s and %s for %s operator.", 
-                stringifyType(binop->left->type), stringifyType(binop->right->type), stringifyToken(binop->op)
-            );
+        switch(binop->op){
+            case tokPlus:
+            case tokMinus:
+            case tokDiv:
+            case tokMulti:
+                verifyArithBinop(binop);
+                break;
+            case tokAssign:
+            case tokPlusAssign:
+            case tokMinusAssign:
+                verifyAssignBinop(binop);
+                break;
+            default:
+                assert(0 && "Unhandled binop.");
         }
     }
     return binop;

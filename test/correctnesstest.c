@@ -88,6 +88,19 @@ static void testArithmetic(){
     );
 }
 
+static void testAssignment(){
+    test("int x(int a){a = 4;}");
+    test("int x(int a){a += 4;}");
+    test("int x(int a){a -= 4;}");
+    testErr("int x(int a){54 = 4;}", "1:13 lvalue required on left of assignment.\n");
+}
+
+static void testUnop(){
+    testErr("int bad() return --5 + ++5;", "1:17 lvalue required as operand of --.\n1:23 lvalue required as operand of ++.\n");
+    testErr("int bad(int l) return --l--;", "1:22 lvalue required as operand of --.\n");
+    test("int good(int l) l++; ++l; --l; l--;");
+}
+
 int main(int argc, char const *argv[])
 {
     testReturn();
@@ -95,5 +108,7 @@ int main(int argc, char const *argv[])
     testFuncDuplication();
     testCall();
     testArithmetic();
+    testAssignment();
+    testUnop();
     return 0;
 }

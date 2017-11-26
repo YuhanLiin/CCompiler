@@ -12,7 +12,7 @@
 // Specifically tests the AST transformations of the semantics module. 
 // Error messages and symtable insertions are tested in the correctness integration tests
 
-static void testVerifyLiteralAndOp(){
+static void testVerifyLiteral(){
     initSemantics();
 
     ExprInt* integer = newExprInt(1, 2, 3);
@@ -32,8 +32,10 @@ static void testVerifyLiteralAndOp(){
     ExprFloat* flt = newExprFloat(1, 2, 5.5);
     assertEqNum(verifyExprFloat(flt)->base.type, typFloat32);
     disposeAst(flt);
+}
 
-    ExprUnop* unop = newExprUnop(1, 2, tokMinus, (ExprBase*)verifyExprInt(newExprInt(1, 2, 3)));
+static void testVerifyOperators(){
+    ExprUnop* unop = newExprUnop(1, 2, tokMinus, (ExprBase*)verifyExprInt(newExprInt(1, 2, 3)), 1);
     assertEqNum(verifyExprUnop(unop)->base.type, typInt32);
     disposeAst(unop);
 
@@ -44,6 +46,18 @@ static void testVerifyLiteralAndOp(){
     );
     assertEqNum(verifyExprBinop(binop)->base.type, typUInt64);
     disposeAst(binop);
+
+    New(char_t, identName, 4)
+    strcpy(identName, "var");
+    ExprBinop* assign = newExprBinop(
+        1, 2, tokAssign,
+        //Verifying the identifier requires the symbol table, so I set its type manually instead
+        (ExprBase*)newExprIdent(1, 2, identName),
+        (ExprBase*)verifyExprUnsignedLong(newExprLong(1, 2, 3))
+    );
+    assign->left->type = typUInt64;
+    assertEqNum(verifyExprBinop(assign)->base.type, typUInt64);
+    disposeAst(assign);
 }
 
 static void testVerifyIdent(){
@@ -141,7 +155,8 @@ static void testVerifyFunctionDef(){
 
 int main(int argc, char const *argv[])
 {
-    testVerifyLiteralAndOp();
+    testVerifyLiteral();
+    testVerifyOperators();
     testVerifyIdent();
     testVerifyCall();
     testVerifyBlock(); 

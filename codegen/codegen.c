@@ -125,15 +125,38 @@ static void cmplCall(char_t* name, Array(vptr) *args){
 }
 
 static Address cmplUnop(ExprUnop* unop){
-    emitPush(cmplExpr(unop->operand));
-    Address addr = indirectAddress(-frameOffset, $rbp);
+    Address addr = cmplExpr(unop->operand);
+    // If it's a leftside increment/decrement, then just update and return the operand without a temp value
+    if (unop->leftside){
+        switch(unop->op){
+            case tokInc:
+                emitIns1("incq", addr);
+                break;
+            case tokDec:
+                emitIns1("decq", addr);
+                break;
+            default:
+                assert(0 && "Not a right side token unary operator");
+        }
+        return addr;
+    }
+    emitPush(addr);
+    Address temp = indirectAddress(-frameOffset, $rbp);
     switch(unop->op){
         case tokMinus:
-            emitIns1("negl", addr);
-            return addr;
+            emitIns1("negq", temp);
+            break;
+        // Rightside increment and decrement
+        case tokInc:
+            emitIns1("incq", addr);
+            break;
+        case tokDec:
+            emitIns1("decq", addr);
+            break;
         default:
-            assert(0 && "Not a token unary operator");
+            assert(0 && "Not a left side token unary operator");
     }
+    return temp;
 }
 
 // Move left operand onto stack and destructively operate on it
