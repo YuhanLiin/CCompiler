@@ -158,18 +158,6 @@ static ExprBase* parseLeftUnopExpr(){
     }
 }
 
-static char isRightAssociative(Token op){
-    switch (op){
-        case tokPlusAssign:
-        case tokMinusAssign:
-        case tokMultiAssign:
-        case tokDivAssign:
-        case tokAssign:
-            return 1;
-    }
-    return 0;
-}
-
 //Return precedence of all binop tokens, 0 if token isnt operator
 static int operatorPrec(Token op){
     switch (op){
@@ -203,7 +191,7 @@ static ExprBase* parseBinopExpr(ExprBase* lhs, int minPrec){
         //Attempt to parse 1st atom of rhs expression
         if ((rhs = parseLeftUnopExpr()) == NULL) return rhs;
         //While next binop is of higher precedence (or equal for right assiciative ops), accumulate expression into rhs.
-        while (operatorPrec(curTok) > prec || isRightAssociative(op) && operatorPrec(curTok) == prec){
+        while (operatorPrec(curTok) > prec || isAssignmentOp(op) && operatorPrec(curTok) == prec){
             //Attempt to parse subsequent atoms at a precedece equal to current binop
             ExprBase* newRhs = parseBinopExpr(rhs, operatorPrec(curTok));
             if (newRhs == NULL){

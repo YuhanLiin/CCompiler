@@ -15,44 +15,52 @@ int DITCH_LEVEL = 0;
 } while(0)
 
 #define assertEqStr(actual, expected) do {\
-    if (strcmp(expected, actual)){\
+    const char_t* __actual = actual;\
+    const char_t* __expected = expected;\
+    if (strcmp(__expected, __actual)){\
         assertBegin();\
         fprintf(\
             stderr, "Expected %s to be:\n%s\nbut got:\n%s\n",\
-            #actual, expected, actual\
+            #actual, __expected, __actual\
         );\
         assertFailHandler();\
     }\
 } while(0);
 
 #define assertEqNum(actual, expected) do {\
-    if (expected != actual){\
+    int __actual = actual;\
+    int __expected = expected;\
+    if (__expected != __actual){\
         assertBegin();\
         fprintf(\
             stderr, "Expected %s to be %d, but got %d.\n",\
-            #actual, expected, actual\
+            #actual, __expected, __actual\
         );\
         assertFailHandler();\
     }\
 } while(0);
 
 #define assertNotEqNum(actual, notEqual) do {\
-    if (notEqual == actual){\
+    int __actual = actual;\
+    int __notEqual = notEqual;\
+    if (__notEqual == __actual){\
         assertBegin();\
         fprintf(\
             stderr, "Expected %s to NOT equal %d\n",\
-            #actual, notEqual\
+            #actual, __notEqual\
         );\
         assertFailHandler();\
     }\
 } while(0);
 
 #define assertEqFlt(actual, expected) do {\
-    if (!doubleEq(expected, actual)){\
+    double __actual = actual;\
+    double __expected = expected;\
+    if (!doubleEq(__expected, __actual)){\
         assertBegin();\
         fprintf(\
             stderr, "Expected %s to be %.2f, but got %.2f.\n",\
-            #actual, expected, actual\
+            #actual, __expected, __actual\
         );\
         assertFailHandler();\
     }\

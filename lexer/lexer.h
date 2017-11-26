@@ -61,4 +61,5 @@ void disposeLexer();//Dispose stringBuffer
 char_t consumeNext(); //Called by tokenizer
 //Gets the next token
 Token lexToken();
+char isAssignmentOp(Token op);
 const char_t * stringifyToken(Token tok);

@@ -355,6 +355,18 @@ Token lexToken(){
     assert(0 && "Lexer missing case");
 }
 
+char isAssignmentOp(Token op){
+    switch (op){
+        case tokPlusAssign:
+        case tokMinusAssign:
+        case tokMultiAssign:
+        case tokDivAssign:
+        case tokAssign:
+            return 1;
+    }
+    return 0;
+}
+
 const char_t * stringifyToken(Token tok){
     switch(tok){
         case tokEof:
