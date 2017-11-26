@@ -207,6 +207,9 @@ Token lexToken(){
             }
             getNext();
             return tokNumChar;
+        case '=':
+            getNext();
+            return tokAssign;
         case '+':
             getNext();
             if (curChar == '+'){
@@ -229,11 +232,12 @@ Token lexToken(){
                 return tokMinusAssign;
             }
             return tokMinus;
-        case '=':
-            getNext();
-            return tokAssign;
         case '*':
             getNext();
+            if (curChar == '='){
+                getNext();
+                return tokMultiAssign;
+            }
             return tokMulti;
         case ',':
             getNext();
@@ -255,8 +259,12 @@ Token lexToken(){
             return tokRParen;
         case '/':
             getNext();
+            if (curChar == '='){
+                getNext();
+                return tokDivAssign;
+            }
             //Single line comment
-            if (curChar == '/'){
+            else if (curChar == '/'){
                 getNext();
                 //Comment ends when end of line or end of file is seen
                 while (!isEol(curChar) && curChar != End){
@@ -397,6 +405,10 @@ const char_t * stringifyToken(Token tok){
             return "+=";
         case tokMinusAssign:
             return "-=";
+        case tokMultiAssign:
+            return "*=";
+        case tokDivAssign:
+            return "/=";
         case tokDiv:
             return "/";
         case tokMulti:

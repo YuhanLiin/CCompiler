@@ -112,7 +112,7 @@ void testTokenNumberExtensions(){
 }
 
 void testTokenSymbols(){
-    setup(", +++--- =+=-= */{};");
+    setup(", +++--- =+=-=*=/= */{};");
     test(tokComma);
     test(tokInc);
     test(tokPlus);
@@ -122,6 +122,8 @@ void testTokenSymbols(){
     test(tokAssign);
     test(tokPlusAssign);
     test(tokMinusAssign);
+    test(tokMultiAssign);
+    test(tokDivAssign);
 
     test(tokMulti);
     test(tokDiv);

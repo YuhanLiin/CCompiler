@@ -162,6 +162,8 @@ static char isRightAssociative(Token op){
     switch (op){
         case tokPlusAssign:
         case tokMinusAssign:
+        case tokMultiAssign:
+        case tokDivAssign:
         case tokAssign:
             return 1;
     }
@@ -173,6 +175,8 @@ static int operatorPrec(Token op){
     switch (op){
         case tokPlusAssign:
         case tokMinusAssign:
+        case tokMultiAssign:
+        case tokDivAssign:
         case tokAssign:
             return 1;
         case tokPlus:

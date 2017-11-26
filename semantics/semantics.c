@@ -169,6 +169,8 @@ ExprBinop* verifyExprBinop(ExprBinop* binop){
             case tokAssign:
             case tokPlusAssign:
             case tokMinusAssign:
+            case tokDivAssign:
+            case tokMultiAssign:
                 verifyAssignBinop(binop);
                 break;
             default:

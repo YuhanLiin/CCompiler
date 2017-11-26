@@ -35,6 +35,8 @@ typedef enum {
     tokAssign,  //Operator =
     tokPlusAssign,   //Operator +=
     tokMinusAssign,  //Operator -=
+    tokMultiAssign,  //Operator *=
+    tokDivAssign,    //Operator /=
     tokComma,   // , token 
     tokLParen,      // ( token
     tokRParen,      // ) token
