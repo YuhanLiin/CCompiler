@@ -102,6 +102,27 @@ static void checkSemicolon(){
     }
 }
 
+Ast* parseStmt();
+
+Ast* parseBlock(){
+    StmtBlock* block = newStmtBlock(lineNumberTokStart, linePosTokStart);
+    getTok(); //Consume left brace
+    while (curTok != tokRBrace){
+        Ast* stmt = parseStmt();
+        if (stmt){
+            if (!arrPush(vptr)(&block->stmts, stmt)){
+                exit(1);
+            }
+        }
+        else{
+            disposeAst(block);
+            return NULL;
+        }
+    }
+    getTok();
+    return (Ast*)verifyBlockStmt(block);
+}
+
 Ast* parseStmt(){
     switch(curTok){
         case tokReturn: {
@@ -129,24 +150,10 @@ Ast* parseStmt(){
             return (Ast*) empty;
         }
         case tokLBrace: {
-            StmtBlock* block = newStmtBlock(lineNumberTokStart, linePosTokStart);
-            getTok(); //Consume left brace
             preverifyBlockStmt();
-            while (curTok != tokRBrace){
-                Ast* stmt = parseStmt();
-                if (stmt){
-                    if (!arrPush(vptr)(&block->stmts, stmt)){
-                        exit(1);
-                    }
-                }
-                else{
-                    disposeAst(block);
-                    return NULL;
-                }
-            }
-            getTok();
-            return (Ast*)verifyBlockStmt(block);
-            //TODO handle other statements
+            Ast* blk = parseBlock();
+            postVerifyBlockStmt();
+            return blk;
         }
 
         //These are tokens that expressions can't start with, so they automatically trigger statement error
@@ -165,14 +172,28 @@ Ast* parseStmt(){
                 Type type = parseType();
                 if (type == typNone){
                     syntaxError("type name");
-                    return NULL;
                 }
-                if (curTok == tokIdent){
+                else if (curTok == tokIdent){
                     StmtVar* def = newStmtVarDef(lineNumberTokStart, linePosTokStart, type, toCstring(&stringBuffer));
                     getTok();  //Consume identifier
-                    checkSemicolon();
-                    //TODO write verifyer for this or throw it somewhere else
-                    return (Ast*) def;
+                    if (curTok == tokSemicolon){
+                        getTok();
+                        // Definition without assignment
+                        return (Ast*)verifyStmtVar(def);
+                    }
+                    else if (curTok == tokAssign){
+                        getTok();
+                        def->rhs = parseExpr();
+                        if (def->rhs){
+                            // Definition plus assignment of value
+                            checkSemicolon();
+                            return (Ast*)verifyStmtVar(def);
+                        }
+                    }
+                    else{
+                        syntaxError("= or ;");
+                    }
+                    disposeAst(def);
                 }
                 else{
                     syntaxError(stringifyToken(tokIdent));
@@ -247,6 +268,11 @@ static Ast* parseFunction(){
                 //Parse either ; for declaration or a statement for definition
                 if (isDecl){
                     getTok();
+                    return (Ast*)func;
+                }
+                else if (curTok == tokLBrace){
+                    func->stmt = parseBlock();
+                    verifyFunctionBody();
                     return (Ast*)func;
                 }
                 else if (func->stmt = parseStmt()){

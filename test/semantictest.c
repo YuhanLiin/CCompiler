@@ -108,6 +108,7 @@ static void testVerifyBlock(){
     assertNotEqNum(curScope, before);
     size_t after = curScope;
     verifyBlockStmt(blk);
+    postVerifyBlockStmt(blk);
     assertEqNum(blk->scopeId , after);
     assertEqNum(curScope, before);
 

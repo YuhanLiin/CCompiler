@@ -125,6 +125,7 @@ typedef struct {
     Ast ast;  //Label can be either astStmtDef or astStmtDecl, depending on if it's variable definition or declaration
     Type type;
     char_t* name;   //Left null for unnamed params
+    ExprBase* rhs;  //Left null for declarations or if no assignment is made. Can only have a value if its a definition
 } StmtVar;
 StmtVar* newStmtVarDef(size_t lineNumber, size_t linePos, Type type, char_t* name);
 StmtVar* newStmtVarDecl(size_t lineNumber, size_t linePos, Type type, char_t* name);

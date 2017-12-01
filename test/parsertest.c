@@ -85,7 +85,13 @@ void outputAst(Ast* ast){
             if (decl->name){
                 outprint(":%s", decl->name);
             }
-            outprint(" ");
+            if (decl->rhs){
+                outprint(" is ");
+                outputAst((Ast*)decl->rhs);
+            }
+            else{
+                outprint(" ");
+            }
             return;
         }
         case astFunction: {
@@ -187,6 +193,8 @@ void testParseStmt(){
     test(parseStmt, "{}", "block:0 ");
     test(parseStmt, "{ return 5;;}", "block:2 ret int:5 empty ");
     test(parseStmt, "long long lli;", "long long:lli ");
+    test(parseStmt, "int x;", "int:x ");
+    test(parseStmt, "int x = 5 + 4;", "int:x is + int:5 int:4 ");
 }
 
 void testParseFunction(){
@@ -218,6 +226,8 @@ void testParseError(){
     testErr(parseStmt, "/*   *", "1:6 expected statement before end of file.\n");
     testErr(parseStmt, "int 5;", "1:4 expected identifier before integer literal.\n");
     testErr(parseStmt, "signed s;", "1:7 expected type name before identifier.\n");
+    testErr(parseStmt, "long x + 5", "1:7 expected = or ; before +.\n");
+
     testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ).\n");
     testErr(parseTopLevel, "int Blue(float f)", "1:17 expected statement before end of file.\n");

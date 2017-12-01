@@ -21,3 +21,6 @@ convert: convert.c
 
 arith: arith.c
 	gcc arith.c -S -fno-asynchronous-unwind-tables -O0
+
+var: var.c
+	gcc var.c -S -fno-asynchronous-unwind-tables -O0

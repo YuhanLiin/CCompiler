@@ -103,6 +103,13 @@ static void testUnop(){
     test("int good(int l) l++; ++l; --l; l--;");
 }
 
+static void testDefineVar(){
+    test("void v(){int x = 5;}");
+    test("void v(){int x ;}");
+    testErr("void v(){int x = v();}", "1:17 cannot use a void-returning function call as an expression.\n");
+    testErr("void v(short x){int x;}", "1:20 variable 'x' has already been defined.");
+}
+
 int main(int argc, char const *argv[])
 {
     testReturn();
@@ -112,5 +119,6 @@ int main(int argc, char const *argv[])
     testArithmetic();
     testAssignment();
     testUnop();
+    testDefineVar();
     return 0;
 }

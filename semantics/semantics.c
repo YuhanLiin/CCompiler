@@ -132,7 +132,7 @@ static void verifyAssignBinop(ExprBinop* binop){
     if (binop->op == tokAssign){
         if (!checkTypeConvert(binop->right->type, binop->left->type)){
             semanticError(
-                binop->right->ast, "no way to convert from %s to %s.",
+                binop->right->ast, "no way to assign from %s to %s.",
                 stringifyType(binop->right->type), stringifyType(binop->left->type)
             );
         }
@@ -235,8 +235,11 @@ void preverifyBlockStmt(){
 
 StmtBlock* verifyBlockStmt(StmtBlock* blk){
     blk->scopeId = curScope;
-    toPrevScope();
     return blk;
+}
+
+void postVerifyBlockStmt(){
+    toPrevScope();
 }
 
 StmtReturn* verifyStmtReturn(StmtReturn* ret){
@@ -263,6 +266,24 @@ StmtReturn* verifyStmtReturn(StmtReturn* ret){
         }
     }
     return ret;
+}
+
+StmtVar* verifyStmtVar(StmtVar* var){
+    if (validateVarDefine(var)){
+        if (var->rhs && var->rhs != typNone){
+            if (var->rhs->type == typVoid){
+                semanticError(var->rhs->ast, VOID_ERROR_MSG);
+            }
+            else if (!checkTypeConvert(var->rhs->type, var->type)){
+                semanticError(var->rhs->ast, "no way to assign from %s to %s.", stringifyType(var->rhs->type), stringifyType(var->type));
+            }
+        }
+    }
+    else{
+        semanticError(var->ast, "variable '%s' has already been defined.", var->name);
+    }
+    insertVar(var->name, var);
+    return var;
 }
 
 static void verifyParamTypes(Array(vptr)* params){

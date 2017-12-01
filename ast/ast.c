@@ -101,13 +101,13 @@ StmtBlock* newStmtBlock(size_t label, size_t lineNumber){
 
 StmtVar* newStmtVarDef(size_t lineNumber, size_t linePos, Type type, char_t* name){
     New(StmtVar, stmt, 1)
-    *stmt = (StmtVar){Ast(astStmtDef, lineNumber, linePos), type, name};
+    *stmt = (StmtVar){Ast(astStmtDef, lineNumber, linePos), type, name, NULL};
     return stmt;
 }
 
 StmtVar* newStmtVarDecl(size_t lineNumber, size_t linePos, Type type, char_t* name){
     New(StmtVar, stmt, 1)
-    *stmt = (StmtVar){Ast(astStmtDecl, lineNumber, linePos), type, name};
+    *stmt = (StmtVar){Ast(astStmtDecl, lineNumber, linePos), type, name, NULL};
     return stmt;
 }
 
@@ -187,9 +187,12 @@ void disposeAst(void* node){
             arrDispose(vptr)(&((StmtBlock*)ast)->stmts);
             break;
         case astStmtDecl:
-        case astStmtDef:
-            free(((StmtVar*)ast)->name);
+        case astStmtDef: {
+            StmtVar* var = (StmtVar*)ast;
+            disposeAst(var->rhs);
+            free(var->name);
             break;
+        }
         case astFunction: {
             Function* func = (Function*)ast;
             free(func->name);

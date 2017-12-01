@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 int DITCH_LEVEL = 0;
 
@@ -28,8 +29,8 @@ int DITCH_LEVEL = 0;
 } while(0);
 
 #define assertEqNum(actual, expected) do {\
-    int __actual = actual;\
-    int __expected = expected;\
+    uint64_t __actual = (uint64_t)actual;\
+    uint64_t __expected = (uint64_t)expected;\
     if (__expected != __actual){\
         assertBegin();\
         fprintf(\
@@ -41,8 +42,8 @@ int DITCH_LEVEL = 0;
 } while(0);
 
 #define assertNotEqNum(actual, notEqual) do {\
-    int __actual = actual;\
-    int __notEqual = notEqual;\
+    uint64_t __actual = (uint64_t)actual;\
+    uint64_t __notEqual = (uint64_t)notEqual;\
     if (__notEqual == __actual){\
         assertBegin();\
         fprintf(\

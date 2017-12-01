@@ -19,8 +19,10 @@ ExprIdent* verifyExprIdent(ExprIdent* ident){return ident;}
 ExprCall* verifyExprCall(ExprCall* call){return call;}
 
 void preverifyBlockStmt(){}
+void postVerifyBlockStmt(){}
 StmtBlock* verifyBlockStmt(StmtBlock* blk){return blk;}
 StmtReturn* verifyStmtReturn(StmtReturn* ret){return ret;}
+StmtVar* verifyStmtVar(StmtVar* var){return var;}
 
 void verifyFunctionSignature(Function* func, char isDecl){}
 void verifyFunctionBody(){}
