@@ -88,12 +88,12 @@ static void emitIns2(const char_t* opcode, Address a, Address b){
 
 static void emitPush(Address a){
     emitIns1("pushq", a);
-    frameOffset += 8;
+    frameOffset -= 8;
 }
 // rsp should only be offsetted by a compiled-time value
 static void emitSubRsp(uint64_t num){
     emitIns2("subq", numberAddress(num), registerAddress($rsp));
-    frameOffset += num;
+    frameOffset -= num;
 }
 
 static Address cmplExpr(ExprBase* ast);
@@ -107,7 +107,7 @@ static void cmplCall(char_t* name, Array(vptr) *args){
             argAddrs[i] = cmplExpr((ExprBase*)args->elem[i]);
             if (argAddrs[i].mode == registerMode){
                 emitPush(argAddrs[i]);
-                argAddrs[i] = indirectAddress(-frameOffset, $rbp);
+                argAddrs[i] = indirectAddress(frameOffset, $rbp);
             }
         }
         int j;
@@ -138,7 +138,7 @@ static Address cmplUnop(ExprUnop* unop){
         }
     }
     emitPush(addr);
-    Address temp = indirectAddress(-frameOffset, $rbp);
+    Address temp = indirectAddress(frameOffset, $rbp);
     switch(unop->op){
         case tokMinus:
             emitIns1("negq", temp);
@@ -197,7 +197,7 @@ static Address cmplBinop(ExprBinop* binop){
     // Move left operand onto the stack unless we're assigning to it directly
     if (!isAssignmentOp(binop->op)){
         emitPush(left);
-        left = indirectAddress(-frameOffset, $rbp);
+        left = indirectAddress(frameOffset, $rbp);
     }
 
     Address right = cmplExpr(binop->right);
@@ -287,6 +287,17 @@ static void cmplStmt(Ast* ast, size_t retLabel){
                 cmplStmt(blk->stmts.elem[i], retLabel);
             }
             toPrevScope();
+            break;
+        }
+        case astStmtDef: {
+            StmtVar* def = (StmtVar*)ast;
+            if (def->rhs){
+                emitPush(cmplExpr(def->rhs));
+            }
+            else{
+                emitSubRsp(8);
+            }
+            insertAddress(def->name, indirectAddress(frameOffset, $rbp));
             break;
         }
         default:
