@@ -24,3 +24,6 @@ arith: arith.c
 
 var: var.c
 	gcc var.c -S -fno-asynchronous-unwind-tables -O0
+
+loop: loop.c
+	gcc loop.c -S -fno-asynchronous-unwind-tables -O0
