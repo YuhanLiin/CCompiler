@@ -159,28 +159,29 @@ static Address cmplUnop(ExprUnop* unop){
 // r10 will be used as intermediate for all binop operations
 const Register binopIntermediate = $r10;
 
-//Multiply left by right and store in rax. Promotes result to parameter type
+//Multiply left by right and store in rax. Promotes result to type
 static void emitMulti(Address left, Address right, Type type){
-    emitIns2("movq", left, registerAddress($rax));
-    //Can't run mul instruction on a number
-    if (right.mode == numberMode){
-        emitIns2("movq", right, registerAddress(binopIntermediate));
-        right = registerAddress(binopIntermediate);
+    assert(left.mode == indirectMode && "Left operand must be on stack");
+    //Put right operand on rax if its not already there
+    if (right.mode != registerMode || right.val.reg != $rax){
+        emitIns2("movq", right, registerAddress($rax));
+        right = registerAddress($rax);
     }
     if (isSignedType(type)){
-        emitIns1("imulq", right);
+        emitIns1("imulq", left);
     }
     else{
-        emitIns1("mulq", right);
+        emitIns1("mulq", left);
     }
 }
 static void emitDiv(Address left, Address right, Type type){
-    emitIns2("movq", left, registerAddress($rax));
-    //Can't run div instruction on a number
-    if (right.mode == numberMode){
+    assert(left.mode == indirectMode && "Left operand must be on stack");
+    //Can't run div instruction on a number. Also must have left operand on rax, so right operand can't be on rax
+    if (right.mode == numberMode || (right.mode == registerMode && right.val.reg == $rax)){
         emitIns2("movq", right, registerAddress(binopIntermediate));
         right = registerAddress(binopIntermediate);
     }
+    emitIns2("movq", left, registerAddress($rax));
     if (isSignedType(type)){
         emitIns0("cqto");
         emitIns1("idivq", right);
@@ -189,6 +190,15 @@ static void emitDiv(Address left, Address right, Type type){
         emitIns2("movq", numberAddress(0), registerAddress($rdx));
         emitIns1("divq", right);
     }
+}
+// Perform specified arithemtic operation on operands and store value in left operand
+static void emitBinop(const char_t* op, Address left, Address right, Type type){
+    // Can't have both operands on stack, so move second one to intermediate register. 
+    if (right.mode == indirectMode){
+        emitIns2("movq", right, registerAddress(binopIntermediate));
+        right = registerAddress(binopIntermediate);
+    }
+    emitIns2(op, right, left);
 }
 
 // Move left operand onto stack and destructively operate on it
@@ -199,25 +209,20 @@ static Address cmplBinop(ExprBinop* binop){
         emitPush(left);
         left = indirectAddress(frameOffset, $rbp);
     }
-
     Address right = cmplExpr(binop->right);
-    // Can't have both operands on stack, so move second one to $r10. $rax is also unsafe since we need it for mul/div 
-    if (right.mode == indirectMode || (right.mode == registerMode && right.val.reg == $rax)){
-        emitIns2("movq", right, registerAddress(binopIntermediate));
-        right = registerAddress(binopIntermediate);
-    }
+    
     // Left operand will always be the destination operand that is mutated
     switch(binop->op){
         case tokAssign:
-            emitIns2("movq", right, left);
+            emitBinop("movq", left, right, binop->base.type);
             return left;
         case tokPlusAssign:
         case tokPlus:
-            emitIns2("addq", right, left);
+            emitBinop("addq", left, right, binop->base.type);
             return left;
         case tokMinusAssign:
         case tokMinus:
-            emitIns2("subq", right, left);
+            emitBinop("subq", left, right, binop->base.type);
             return left;
         case tokMulti:
             emitMulti(left, right, binop->base.type);
