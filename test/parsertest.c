@@ -94,6 +94,13 @@ void outputAst(Ast* ast){
             }
             return;
         }
+        case astStmtWhile: {
+            StmtWhile* loop = (StmtWhile*)ast;
+            outprint("while ");
+            outputAst((Ast*)loop->condition);
+            outputAst(loop->stmt);
+            return;
+        }
         case astFunction: {
             Function* fn = (Function*)ast;
             size_t paramCount = fn->params.size;
@@ -152,49 +159,51 @@ void outputAst(Ast* ast){
 } while(0)
 
 void testParseBasicExpr(){
-    test(parseStmt, "55.55;", "dbl:55.55 ");
-    test(parseStmt, "55.55f;", "flt:55.55 ");
-    test(parseStmt, "78;", "int:78 ");
-    test(parseStmt, "78U;", "int:78 ");
-    test(parseStmt, "78LLU;", "long:78 ");
-    test(parseStmt, "78Ll;", "long:78 ");
-    test(parseStmt, "\"hey\";", "str:hey "); 
-    test(parseStmt, "a;", "id:a "); 
-    test(parseStmt, "((a));", "id:a "); 
+    test(parseStmtOrDef, "55.55;", "dbl:55.55 ");
+    test(parseStmtOrDef, "55.55f;", "flt:55.55 ");
+    test(parseStmtOrDef, "78;", "int:78 ");
+    test(parseStmtOrDef, "78U;", "int:78 ");
+    test(parseStmtOrDef, "78LLU;", "long:78 ");
+    test(parseStmtOrDef, "78Ll;", "long:78 ");
+    test(parseStmtOrDef, "\"hey\";", "str:hey "); 
+    test(parseStmtOrDef, "a;", "id:a "); 
+    test(parseStmtOrDef, "((a));", "id:a "); 
 }
 
 void testParseCall(){
-    test(parseStmt, "  omfg(5,\"\"  , var );", "call:omfg:3 int:5 str: id:var "); 
-    test(parseStmt, "abaj() ;", "call:abaj:0 "); 
+    test(parseStmtOrDef, "  omfg(5,\"\"  , var );", "call:omfg:3 int:5 str: id:var "); 
+    test(parseStmtOrDef, "abaj() ;", "call:abaj:0 "); 
 }
 
 void testParseBinop(){
-    test(parseStmt, "1 + 2.500 * k;", "+ int:1 * dbl:2.50 id:k "); 
-    test(parseStmt, "heyo( a + b * c/d - e);", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
-    test(parseStmt, "(a-\"lll\")/d;", "/ - id:a str:lll id:d ");
-    test(parseStmt, "1 + 3 = 4 + 5*2;", "= + int:1 int:3 + int:4 * int:5 int:2 ");
-    test(parseStmt, "i += 2 = 4 -= 5 *= 6 /= 7;", "+= id:i = int:2 -= int:4 *= int:5 /= int:6 int:7 ");
-    test(parseStmt, "a+b+c+d;", "+ + + id:a id:b id:c id:d ");
-    test(parseStmt, "a = c*b+d;", "= id:a + * id:c id:b id:d ");
+    test(parseStmtOrDef, "1 + 2.500 * k;", "+ int:1 * dbl:2.50 id:k "); 
+    test(parseStmtOrDef, "heyo( a + b * c/d - e);", "call:heyo:1 - + id:a / * id:b id:c id:d id:e "); 
+    test(parseStmtOrDef, "(a-\"lll\")/d;", "/ - id:a str:lll id:d ");
+    test(parseStmtOrDef, "1 + 3 = 4 + 5*2;", "= + int:1 int:3 + int:4 * int:5 int:2 ");
+    test(parseStmtOrDef, "i += 2 = 4 -= 5 *= 6 /= 7;", "+= id:i = int:2 -= int:4 *= int:5 /= int:6 int:7 ");
+    test(parseStmtOrDef, "a+b+c+d;", "+ + + id:a id:b id:c id:d ");
+    test(parseStmtOrDef, "a = c*b+d;", "= id:a + * id:c id:b id:d ");
 }
 
 void testParseUnop(){
-    test(parseStmt, "-+-+45;", "-:-:int:45 ");
-    test(parseStmt, "--++5;", "--:++:int:5 ");
-    test(parseStmt, "-3++--;", "-:--::++::int:3 ");
-    test(parseStmt, "4 - -5;", "- int:4 -:int:5 ");
+    test(parseStmtOrDef, "-+-+45;", "-:-:int:45 ");
+    test(parseStmtOrDef, "--++5;", "--:++:int:5 ");
+    test(parseStmtOrDef, "-3++--;", "-:--::++::int:3 ");
+    test(parseStmtOrDef, "4 - -5;", "- int:4 -:int:5 ");
 }
 
 void testParseStmt(){
-    test(parseStmt, "return (f) ;", "ret id:f ");
-    test(parseStmt, "return f() ;", "ret call:f:0 ");
-    test(parseStmt, "return;", "ret ");
-    test(parseStmt, " ;", "empty ");
-    test(parseStmt, "{}", "block:0 ");
-    test(parseStmt, "{ return 5;;}", "block:2 ret int:5 empty ");
-    test(parseStmt, "long long lli;", "long long:lli ");
-    test(parseStmt, "int x;", "int:x ");
-    test(parseStmt, "int x = 5 + 4;", "int:x is + int:5 int:4 ");
+    test(parseStmtOrDef, "return (f) ;", "ret id:f ");
+    test(parseStmtOrDef, "return f() ;", "ret call:f:0 ");
+    test(parseStmtOrDef, "return;", "ret ");
+    test(parseStmtOrDef, " ;", "empty ");
+    test(parseStmtOrDef, "{}", "block:0 ");
+    test(parseStmtOrDef, "{;}", "block:1 empty ");
+    test(parseStmtOrDef, "{ return 5;;}", "block:2 ret int:5 empty ");
+    test(parseStmtOrDef, "long long lli;", "long long:lli ");
+    test(parseStmtOrDef, "int x;", "int:x ");
+    test(parseStmtOrDef, "int x = 5 + 4;", "int:x is + int:5 int:4 ");
+    test(parseStmtOrDef, "while (a+b){;}", "while + id:a id:b block:1 empty ");
 }
 
 void testParseFunction(){
@@ -211,22 +220,24 @@ void testParseFunction(){
 
 void testParseError(){
     testErr(
-        parseStmt, "((sfgd) ",
+        parseStmtOrDef, "((sfgd) ",
         "1:8 expected ) before end of file.\n1:8 expected ; before end of file.\n"
     ); 
-    testErr(parseStmt, "", "1:0 expected statement before end of file.\n"); 
-    testErr(parseStmt, "sdg(,", "1:4 expected expression before ,.\n");
-    testErr(parseStmt, "\"wergrh\n", "2:0 expected statement before end of file.\n");
-    testErr(parseStmt, "\"wergr", "1:6 expected statement before end of file.\n");
+    testErr(parseStmtOrDef, "", "1:0 expected statement before end of file.\n"); 
+    testErr(parseStmtOrDef, "sdg(,", "1:4 expected expression before ,.\n");
+    testErr(parseStmtOrDef, "\"wergrh\n", "2:0 expected statement before end of file.\n");
+    testErr(parseStmtOrDef, "\"wergr", "1:6 expected statement before end of file.\n");
     testErr(
-        parseStmt, "return k(k",
+        parseStmtOrDef, "return k(k",
         "1:10 expected ) before end of file.\n1:10 expected ; before end of file.\n"
     );
-    testErr(parseStmt, "/**/bind k;", "1:9 expected ; before identifier.\n");
-    testErr(parseStmt, "/*   *", "1:6 expected statement before end of file.\n");
-    testErr(parseStmt, "int 5;", "1:4 expected identifier before integer literal.\n");
-    testErr(parseStmt, "signed s;", "1:7 expected type name before identifier.\n");
-    testErr(parseStmt, "long x + 5", "1:7 expected = or ; before +.\n");
+    testErr(parseStmtOrDef, "/**/bind k;", "1:9 expected ; before identifier.\n");
+    testErr(parseStmtOrDef, "/*   *", "1:6 expected statement before end of file.\n");
+    testErr(parseStmtOrDef, "int 5;", "1:4 expected identifier before integer literal.\n");
+    testErr(parseStmtOrDef, "signed s;", "1:7 expected type name before identifier.\n");
+    testErr(parseStmtOrDef, "long x + 5", "1:7 expected = or ; before +.\n");
+    testErr(parseStmtOrDef, "while 5;", "1:6 expected ( before integer literal.\n");
+    testErr(parseStmtOrDef, "while (10 {}", "1:10 expected ) before {.\n");
 
     testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ).\n");

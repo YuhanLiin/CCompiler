@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include <stdint.h>
 #include "lexer/lexer.h"
 #include "utils.h"
 #include "ast/ast.h"
@@ -14,7 +15,7 @@
 // # of labels used so far
 static size_t maxLabelNum = 0;
 // Distance of rsp from rbp
-static size_t frameOffset = 0;
+static int64_t frameOffset = 0;
 // Registers used as params in the MS x64 calling convention
 static const Register paramRegisters[] = {$rcx, $rdx, $r8, $r9};
 
@@ -91,9 +92,17 @@ static void emitPush(Address a){
     frameOffset -= 8;
 }
 // rsp should only be offsetted by a compiled-time value
-static void emitSubRsp(uint64_t num){
-    emitIns2("subq", numberAddress(num), registerAddress($rsp));
-    frameOffset -= num;
+static void emitSubRsp(int64_t num){
+    if (num != 0){
+        emitIns2("subq", numberAddress(num), registerAddress($rsp));
+        frameOffset -= num;
+    }
+}
+static void emitAddRsp(int64_t num){
+    if (num != 0){
+        emitIns2("addq", numberAddress(num), registerAddress($rsp));
+        frameOffset += num;
+    }
 }
 
 static Address cmplExpr(ExprBase* ast);
@@ -305,6 +314,31 @@ static void cmplStmt(Ast* ast, size_t retLabel){
             insertAddress(def->name, indirectAddress(frameOffset, $rbp));
             break;
         }
+        case astStmtWhile: {
+            StmtWhile* loop = (StmtWhile*)ast;
+            size_t loopStart = maxLabelNum++;
+            size_t loopEnd = maxLabelNum++;
+            int64_t startOffset = frameOffset;
+
+            emitLabelDecl(loopStart);
+            Address cond = cmplExpr(loop->condition);
+            if (cond.mode == numberMode){
+                if (cond.val.num != 0){
+                    cmplStmt(loop->stmt, retLabel);
+                    emitAddRsp(startOffset - frameOffset);
+                    emitLabelStmt("jmp", loopStart);
+                }
+            }
+            else{
+                emitIns2("cmpq", numberAddress(0), cond);
+                emitLabelStmt("je", loopEnd);
+                cmplStmt(loop->stmt, retLabel);
+                emitAddRsp(startOffset - frameOffset);
+                emitLabelStmt("jmp", loopStart);
+            }
+            emitLabelDecl(loopEnd);
+            break;
+        }
         default:
             assert(0 && "Unsupported AST for stmt");
     }
@@ -362,6 +396,8 @@ static void cmplGlobal(Ast* ast){
 
 void cmplTopLevel(TopLevel* top){
     initAddrTable();
+    maxLabelNum = 0;
+    frameOffset = 0;
     emitAsm(".text\n");
     for (size_t i=0; i<top->globals.size; i++){
         cmplGlobal(top->globals.elem[i]);

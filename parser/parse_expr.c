@@ -216,3 +216,23 @@ ExprBase* parseExpr(){
     }
     return expr;
 }
+
+ExprBase* parseBracketedExpr(){
+    if (curTok == tokLParen){
+        getTok();
+        ExprBase* expr = parseExpr();
+        if (expr){
+            if (curTok == tokRParen){
+                getTok();
+            }
+            else{
+                syntaxError(stringifyToken(tokRParen));
+            }
+            return expr;
+        }
+    }
+    else{
+        syntaxError(stringifyToken(tokLParen));
+    }
+    return NULL;
+}

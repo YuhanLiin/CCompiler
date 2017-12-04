@@ -4,5 +4,5 @@
 void initParser();
 
 char checkSyntax();
-Ast* parseStmt();
+Ast* parseStmtOrDef();
 TopLevel* parseTopLevel();

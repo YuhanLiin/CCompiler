@@ -128,10 +128,17 @@ Token lexToken(){
             } 
             goto identifier;
         case 'i':
-            //int keyword
-            if (lexKeyword("int")){
-                return tokInt;
-            } 
+            store('i');
+            getNext();
+            //int or if keyword
+            if (curChar == 'n'){
+                if (lexKeyword("nt")){
+                    return tokInt;
+                }
+            }
+            else if (lexKeyword("f")){
+                return tokIf;
+            }
             goto identifier;
         case 'l':
             //long keyword
@@ -182,6 +189,19 @@ Token lexToken(){
                 return tokShort;
             }
             goto identifier;
+        case 'w':
+            //while
+            if (lexKeyword("while")){
+                return tokWhile;
+            }
+            goto identifier;
+        case 'e':
+            //else
+            if (lexKeyword("else")){
+                return tokElse;
+            }
+            goto identifier;
+
         //Match string "[anychar]"
         case '"':
             getNext();
@@ -389,6 +409,12 @@ const char_t * stringifyToken(Token tok){
             return "keyword \"char\"";
         case tokShort:
             return "keyword \"short\"";
+        case tokIf:
+            return "keyword \"if\"";
+        case tokElse:
+            return "keyword \"else\"";
+        case tokWhile:
+            return "keyword \"while\"";
         case tokIdent:
             return "identifier";
         case tokNumDouble:

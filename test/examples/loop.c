@@ -4,4 +4,5 @@ int loop(int x){
         loop(y);
         x+=y;
     }
+    while(x) int f = 5;
 }

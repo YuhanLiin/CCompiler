@@ -102,13 +102,13 @@ static void checkSemicolon(){
     }
 }
 
-Ast* parseStmt();
+Ast* parseStmtOrDef();
 
-Ast* parseBlock(){
+static Ast* parseBlock(){
     StmtBlock* block = newStmtBlock(lineNumberTokStart, linePosTokStart);
     getTok(); //Consume left brace
     while (curTok != tokRBrace){
-        Ast* stmt = parseStmt();
+        Ast* stmt = parseStmtOrDef();
         if (stmt){
             if (!arrPush(vptr)(&block->stmts, stmt)){
                 exit(1);
@@ -124,9 +124,11 @@ Ast* parseBlock(){
 }
 
 Ast* parseStmt(){
+    size_t stmtLineNum = lineNumberTokStart;
+    size_t stmtLinePos = linePosTokStart;
     switch(curTok){
         case tokReturn: {
-            StmtReturn* ret = newStmtReturn(lineNumberTokStart, linePosTokStart);
+            StmtReturn* ret = newStmtReturn(stmtLineNum, stmtLinePos);
             getTok(); //Consume return
             if (curTok == tokSemicolon){
                 getTok();
@@ -145,7 +147,7 @@ Ast* parseStmt(){
             return (Ast*)verifyStmtReturn(ret);
         }
         case tokSemicolon: {
-            StmtEmpty* empty = newStmtEmpty(lineNumberTokStart, linePosTokStart);
+            StmtEmpty* empty = newStmtEmpty(stmtLineNum, stmtLinePos);
             getTok(); //Consume semicolon
             return (Ast*) empty;
         }
@@ -154,6 +156,19 @@ Ast* parseStmt(){
             Ast* blk = parseBlock();
             postVerifyBlockStmt();
             return blk;
+        }
+        case tokWhile: {
+            getTok();
+            ExprBase* cond = parseBracketedExpr();
+            if (cond){
+                Ast* stmt = parseStmt();
+                if (stmt){
+                    return (Ast*)newStmtWhile(stmtLineNum, stmtLinePos, cond, stmt);
+                }
+                disposeAst(stmt);
+            }
+            disposeAst(cond);
+            return NULL;
         }
 
         //These are tokens that expressions can't start with, so they automatically trigger statement error
@@ -164,51 +179,64 @@ Ast* parseStmt(){
         case tokMulti:
         case tokDiv:
         case tokComma:
+        case tokInt:
+        case tokLong:
+        case tokDouble:
+        case tokFloat:
+        case tokChar:
+        case tokSigned:
+        case tokUnsigned:
             syntaxError("statement");
             return NULL;
         //Checks for expression/declaration statements as last resort
         default: {
-            if (canParseType()){
-                Type type = parseType();
-                if (type == typNone){
-                    syntaxError("type name");
-                }
-                else if (curTok == tokIdent){
-                    StmtVar* def = newStmtVarDef(lineNumberTokStart, linePosTokStart, type, toCstring(&stringBuffer));
-                    getTok();  //Consume identifier
-                    if (curTok == tokSemicolon){
-                        getTok();
-                        // Definition without assignment
-                        return (Ast*)verifyStmtVar(def);
-                    }
-                    else if (curTok == tokAssign){
-                        getTok();
-                        def->rhs = parseExpr();
-                        if (def->rhs){
-                            // Definition plus assignment of value
-                            checkSemicolon();
-                            return (Ast*)verifyStmtVar(def);
-                        }
-                    }
-                    else{
-                        syntaxError("= or ;");
-                    }
-                    disposeAst(def);
-                }
-                else{
-                    syntaxError(stringifyToken(tokIdent));
-                }
-            }
-            else {
-                ExprBase* expr = parseExpr();
-                if (expr){
-                    checkSemicolon();
-                    return (Ast*) newStmtExpr(expr->ast.lineNumber, expr->ast.linePos, expr);
-                }
+            ExprBase* expr = parseExpr();
+            if (expr){
+                checkSemicolon();
+                return (Ast*) newStmtExpr(expr->ast.lineNumber, expr->ast.linePos, expr);
             }
             return NULL;
         }
     }      
+}
+
+// Parse statement or variable definitions. Used inside braces
+Ast* parseStmtOrDef(){
+    if (canParseType()){
+        Type type = parseType();
+        if (type == typNone){
+            syntaxError("type name");
+        }
+        else if (curTok == tokIdent){
+            StmtVar* def = newStmtVarDef(lineNumberTokStart, linePosTokStart, type, toCstring(&stringBuffer));
+            getTok();  //Consume identifier
+            if (curTok == tokSemicolon){
+                getTok();
+                // Definition without assignment
+                return (Ast*)verifyStmtVar(def);
+            }
+            else if (curTok == tokAssign){
+                getTok();
+                def->rhs = parseExpr();
+                if (def->rhs){
+                    // Definition plus assignment of value
+                    checkSemicolon();
+                    return (Ast*)verifyStmtVar(def);
+                }
+            }
+            else{
+                syntaxError("= or ;");
+            }
+            disposeAst(def);
+        }
+        else{
+            syntaxError(stringifyToken(tokIdent));
+        }
+        return NULL;
+    }
+    else{
+        return parseStmt();
+    }
 }
 
 static char parseParams(Array(vptr) *params){

@@ -111,6 +111,14 @@ StmtVar* newStmtVarDecl(size_t lineNumber, size_t linePos, Type type, char_t* na
     return stmt;
 }
 
+StmtWhile* newStmtWhile(size_t lineNumber, size_t linePos, ExprBase* condition, Ast* stmt){
+    New(StmtWhile, loop, 1)
+    loop->ast = Ast(astStmtWhile, lineNumber, linePos);
+    loop->condition = condition;
+    loop->stmt = stmt;
+    return loop;
+}
+
 Function* newFunction(size_t lineNumber, size_t linePos, Type type, char_t* name){
     New(Function, func, 1)
     func->ast = Ast(astFunction, lineNumber, linePos);
@@ -191,6 +199,12 @@ void disposeAst(void* node){
             StmtVar* var = (StmtVar*)ast;
             disposeAst(var->rhs);
             free(var->name);
+            break;
+        }
+        case astStmtWhile: {
+            StmtWhile* loop = (StmtWhile*)ast;
+            disposeAst(loop->condition);
+            disposeAst(loop->stmt);
             break;
         }
         case astFunction: {

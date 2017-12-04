@@ -23,6 +23,7 @@ typedef enum {
     astStmtBlock,
     astStmtDecl,
     astStmtDef,
+    astStmtWhile,
     astFunction,
     astTopLevel
 } AstLabel;
@@ -129,6 +130,13 @@ typedef struct {
 } StmtVar;
 StmtVar* newStmtVarDef(size_t lineNumber, size_t linePos, Type type, char_t* name);
 StmtVar* newStmtVarDecl(size_t lineNumber, size_t linePos, Type type, char_t* name);
+
+typedef struct {
+    Ast ast;
+    ExprBase* condition;
+    Ast* stmt;
+} StmtWhile;
+StmtWhile* newStmtWhile(size_t lineNumber, size_t linePos, ExprBase* condition, Ast* stmt);
 
 typedef struct {
     Ast ast;

@@ -9,3 +9,4 @@ char checkSyntax();
 Token getTok();
 void syntaxError(const char_t* expected);
 ExprBase* parseExpr();
+ExprBase* parseBracketedExpr();
