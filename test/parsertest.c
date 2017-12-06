@@ -94,8 +94,10 @@ void outputAst(Ast* ast){
             }
             return;
         }
+        case astStmtDoWhile:
+            outprint("do:");
         case astStmtWhile: {
-            StmtWhile* loop = (StmtWhile*)ast;
+            StmtWhileLoop* loop = (StmtWhileLoop*)ast;
             outprint("while ");
             outputAst((Ast*)loop->condition);
             outputAst(loop->stmt);
@@ -204,6 +206,7 @@ void testParseStmt(){
     test(parseStmtOrDef, "int x;", "int:x ");
     test(parseStmtOrDef, "int x = 5 + 4;", "int:x is + int:5 int:4 ");
     test(parseStmtOrDef, "while (a+b){;}", "while + id:a id:b block:1 empty ");
+    test(parseStmtOrDef, "do return x; while(a+b);", "do:while + id:a id:b ret id:x ");
 }
 
 void testParseFunction(){
@@ -239,6 +242,9 @@ void testParseError(){
     testErr(parseStmtOrDef, "while 5;", "1:6 expected ( before integer literal.\n");
     testErr(parseStmtOrDef, "while (10 {}", "1:10 expected ) before {.\n");
     testErr(parseStmtOrDef, "while (a) int x;", "1:10 expected statement before keyword \"int\".\n");
+    testErr(parseStmtOrDef, "do {} while(a)", "1:14 expected ; before end of file.\n");
+    testErr(parseStmtOrDef, "do {} ", "1:6 expected keyword \"while\" before end of file.\n");
+    testErr(parseStmtOrDef, "{ ", "1:2 expected statement before end of file.\n");
 
     testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ).\n");

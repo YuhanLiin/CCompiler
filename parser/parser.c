@@ -170,6 +170,26 @@ Ast* parseStmt(){
             disposeAst(cond);
             return NULL;
         }
+        case tokDo: {
+            getTok();
+            Ast* stmt = parseStmt();
+            if (stmt){
+                if (curTok == tokWhile){
+                    getTok();
+                    ExprBase* cond = parseBracketedExpr();
+                    if (cond){
+                        checkSemicolon();
+                        return (Ast*)newStmtDoWhile(stmtLineNum, stmtLinePos, cond, stmt);
+                    }
+                    disposeAst(cond);
+                }
+                else{
+                    syntaxError(stringifyToken(tokWhile));
+                }
+            }
+            disposeAst(stmt);
+            return NULL;
+        }
 
         //These are tokens that expressions can't start with, so they automatically trigger statement error
         case tokRBrace:

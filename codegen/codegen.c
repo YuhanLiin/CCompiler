@@ -315,7 +315,7 @@ static void cmplStmt(Ast* ast, size_t retLabel){
             break;
         }
         case astStmtWhile: {
-            StmtWhile* loop = (StmtWhile*)ast;
+            StmtWhileLoop* loop = (StmtWhileLoop*)ast;
             size_t loopStart = maxLabelNum++;
             size_t loopEnd = maxLabelNum++;
             int64_t startOffset = frameOffset;
