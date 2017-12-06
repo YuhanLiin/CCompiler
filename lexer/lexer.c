@@ -44,7 +44,7 @@ static char_t getNext(){
 }
 //Store in string
 static char_t store(char_t c){
-    arrPush(char_t)(&stringBuffer, c);
+    if (!arrPush(char_t)(&stringBuffer, c)) exit(1);
     return c;
 }
 //Get next char if it matches c. REturns whether match occurs
@@ -54,6 +54,10 @@ static char getNextIf(char_t c){
         return 1;
     }
     return 0;
+}
+static void storeNext(char_t c){
+    store(c);
+    getNext();
 }
 //Get and store next char if it matches c. REturns whether match occurs
 static char storeNextIf(char_t c){
@@ -91,17 +95,21 @@ static char lexDecimals(){
     return 0;
 }
 
-static char lexKeyword(const char_t *keyword){
+static char lexKeywordPart(const char_t *keyword){
     while (*keyword != '\0'){
         if (!storeNextIf(*keyword)){
             return 0;
         }
         keyword++;
     }
-    if (isIdentChar(curChar)){
-        return 0;
-    }
     return 1;
+}
+//In addition to matching keyword, this makes sure that the keyword isn't followed by identifier chars
+static char lexKeyword(const char_t *keyword){
+    if (lexKeywordPart(keyword) && !isIdentChar(curChar)){
+        return 1;
+    }
+    return 0;
 }
 
 //Gets the next token
@@ -121,15 +129,45 @@ Token lexToken(){
     }
      
     switch (curChar) {
-        case 'r':
-            //Return keyword
-            if (lexKeyword("return")){
-                return tokReturn;
+        case 'b':
+            //break
+            if (lexKeyword("break")){
+                return tokBreak;
+            }
+            goto identifier;
+        case 'c':
+            //char
+            if (lexKeyword("char")){
+                return tokChar;
+            }
+            goto identifier;
+        case 'd':
+            //double or do
+            if (lexKeywordPart("do")){
+                //If "do" is not followed by identifier char that makes it an isolated keyword
+                if (!isIdentChar(curChar)){
+                    return tokDo;
+                }
+                //If do is followed directly by "uble" keyword then it's the keyword double
+                if (lexKeyword("uble")){
+                    return tokDouble;
+                }
+            }
+            goto identifier;
+        case 'e':
+            //else
+            if (lexKeyword("else")){
+                return tokElse;
+            }
+            goto identifier;
+        case 'f':
+            //float keyword
+            if (lexKeyword("float")){
+                return tokFloat;
             } 
             goto identifier;
         case 'i':
-            store('i');
-            getNext();
+            storeNext('i');
             //int or if keyword
             if (curChar == 'n'){
                 if (lexKeyword("nt")){
@@ -146,40 +184,15 @@ Token lexToken(){
                 return tokLong;
             } 
             goto identifier;
-        case 'f':
-            //float keyword
-            if (lexKeyword("float")){
-                return tokFloat;
+        case 'r':
+            //Return keyword
+            if (lexKeyword("return")){
+                return tokReturn;
             } 
-            goto identifier;
-        case 'd':
-            //double keyword
-            if (lexKeyword("double")){
-                return tokDouble;
-            } 
-            goto identifier;
-        case 'u':
-            //unsigned
-            if (lexKeyword("unsigned")){
-                return tokUnsigned;
-            }
-            goto identifier;
-        case 'c':
-            //char
-            if (lexKeyword("char")){
-                return tokChar;
-            }
-            goto identifier;
-        case 'v':
-            //void
-            if (lexKeyword("void")){
-                return tokVoid;
-            }
             goto identifier;
         case 's':
             //signed or short
-            store('s');
-            getNext();
+            storeNext('s');
             if (curChar == 'i'){
                 if (lexKeyword("igned")){
                     return tokSigned;
@@ -189,18 +202,25 @@ Token lexToken(){
                 return tokShort;
             }
             goto identifier;
+        case 'u':
+            //unsigned
+            if (lexKeyword("unsigned")){
+                return tokUnsigned;
+            }
+            goto identifier;
+        case 'v':
+            //void
+            if (lexKeyword("void")){
+                return tokVoid;
+            }
+            goto identifier; 
         case 'w':
             //while
             if (lexKeyword("while")){
                 return tokWhile;
             }
             goto identifier;
-        case 'e':
-            //else
-            if (lexKeyword("else")){
-                return tokElse;
-            }
-            goto identifier;
+        
 
         //Match string "[anychar]"
         case '"':
@@ -210,8 +230,7 @@ Token lexToken(){
                 if (curChar == End){
                     return tokUnexpected;
                 }
-                store(curChar);
-                getNext();
+                storeNext(curChar);
             }
             getNext();
             return tokString;
@@ -364,8 +383,7 @@ Token lexToken(){
                 identifier:
                 //Continue if alphanumeric match doesnt end at keyword or no keyword exists and return identifier
                 while(isIdentChar(curChar)) {
-                    store(curChar);
-                    getNext();
+                    storeNext(curChar);
                 }
                 return tokIdent;
             }
@@ -393,6 +411,8 @@ const char_t * stringifyToken(Token tok){
             return "end of file";
         case tokReturn:
             return "keyword \"return\"";
+        case tokVoid:
+            return "keyword \"void\"";
         case tokInt:
             return "keyword \"int\"";
         case tokLong:
@@ -415,6 +435,10 @@ const char_t * stringifyToken(Token tok){
             return "keyword \"else\"";
         case tokWhile:
             return "keyword \"while\"";
+        case tokDo:
+            return "keyword \"do\"";
+        case tokBreak:
+            return "keyword \"break\"";
         case tokIdent:
             return "identifier";
         case tokNumDouble:

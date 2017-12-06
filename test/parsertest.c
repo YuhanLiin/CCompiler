@@ -238,6 +238,7 @@ void testParseError(){
     testErr(parseStmtOrDef, "long x + 5", "1:7 expected = or ; before +.\n");
     testErr(parseStmtOrDef, "while 5;", "1:6 expected ( before integer literal.\n");
     testErr(parseStmtOrDef, "while (10 {}", "1:10 expected ) before {.\n");
+    testErr(parseStmtOrDef, "while (a) int x;", "1:10 expected statement before keyword \"int\".\n");
 
     testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ).\n");
@@ -245,6 +246,7 @@ void testParseError(){
     testErr(parseTopLevel, "signed float a();", "1:7 expected type name before keyword \"float\".\n");
     testErr(parseTopLevel, "signed int a(unsigned);", "1:21 expected type name before ).\n");
     testErr(parseTopLevel, "dog", "1:0 expected type name before identifier.\n");
+    testErr(parseTopLevel, "int stmt() int l;", "1:11 expected statement before keyword \"int\".\n");
 }
 
 int main(int argc, char const *argv[])

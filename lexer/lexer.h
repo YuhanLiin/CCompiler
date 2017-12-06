@@ -20,6 +20,8 @@ typedef enum {
     tokWhile,   //Keyword while
     tokIf,
     tokElse,
+    tokDo,
+    tokBreak,
     tokIdent,   //Identifier [a-zA-Z][a-zA-Z_0-9]*  stored in stringBuffer
     tokNumDouble,  //64-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]* in floatVal
     tokNumFloat,   //32-bit floating pt literal .[0-9]+ | [0-9]+.[0-9]*(f|F)

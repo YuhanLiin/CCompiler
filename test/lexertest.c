@@ -8,19 +8,28 @@
 
 Token token;
 
-void setup(const char_t* str){
+static void setup(const char_t* str){
     ioSetup(str);
     initLexer();
 }
+
 #define test(expectedTok) do {\
     assertEqNum(lexToken(), expectedTok);\
 } while(0)
-void teardown(){
+
+#define testStr(expectedTok, expectedStr) do {\
+    test(expectedTok);\
+    char_t* ___str = toCstring(&stringBuffer);\
+    assertEqStr(___str, expectedStr);\
+    free(___str);\
+} while(0)
+
+static void teardown(){
     disposeLexer();
 }
 
 //String literals may need to be replaced for different char types
-void testTokenIgnored(){
+static void testTokenIgnored(){
     setup("  \t/*adfsg 45tg*/ //\n\r /* / * */  //");
     test(tokEof);
     setup("/*");
@@ -28,50 +37,59 @@ void testTokenIgnored(){
     teardown();
 }
 
-void testTokenKeywordIdentifier(){
-    setup("ret return returning _DEF72  double long int float char short signed unsigned void while if else shorts");
-    test(tokIdent);
-    assertEqStr(toCstring(&stringBuffer), "ret");
+static void testTokenKeywordIdentifier(){
+    setup("ret return returning _DEF72  double long int float char short signed unsigned void while if else");
+    testStr(tokIdent, "ret");
     test(tokReturn);
-    test(tokIdent);
-    assertEqStr(toCstring(&stringBuffer), "returning");
-    test(tokIdent);
-    assertEqStr(toCstring(&stringBuffer), "_DEF72");
+    testStr(tokIdent, "returning");
+    testStr(tokIdent, "_DEF72");
+    teardown();
     
-    test(tokDouble);
+    setup("long/float/char short signed serp shot sig unsigned void");
     test(tokLong);
-    test(tokInt);
+    test(tokDiv);
     test(tokFloat);
+    test(tokDiv);
     test(tokChar);
     test(tokShort);
     test(tokSigned);
+    testStr(tokIdent, "serp");
+    testStr(tokIdent, "shot");
+    testStr(tokIdent, "sig");
     test(tokUnsigned);
     test(tokVoid);
+    teardown();
+
+    setup("while if int in else break");
     test(tokWhile);
     test(tokIf);
+    test(tokInt);
+    testStr(tokIdent, "in");
     test(tokElse);
+    test(tokBreak);
+    teardown();
 
-    test(tokIdent);
-    assertEqStr(toCstring(&stringBuffer), "shorts");
-    test(tokEof);
-    //Eof should be safe to parse multiple times
-    test(tokEof);
+    setup("d do doa doub double double0");
+    testStr(tokIdent, "d");
+    test(tokDo);
+    testStr(tokIdent, "doa");
+    testStr(tokIdent, "doub");
+    test(tokDouble);
+    testStr(tokIdent, "double0");
     teardown();
 }
 
-void testTokenString(){
+static void testTokenString(){
     setup("\"bobobobob \" \"\" \" a");
-    test(tokString);
-    assertEqStr(toCstring(&stringBuffer), "bobobobob ");
-    test(tokString);
-    assertEqStr(toCstring(&stringBuffer), "");
+    testStr(tokString, "bobobobob ");
+    testStr(tokString, "");
     test(tokUnexpected);
     //Unexpected tokens are not consumed
     assert(curChar == End);
     teardown();
 }
 
-void testTokenChar(){
+static void testTokenChar(){
     setup("'");
     test(tokUnexpected);
     assert(curChar == End);
@@ -82,7 +100,7 @@ void testTokenChar(){
     teardown();
 }
 
-void testTokenNumber(){
+static void testTokenNumber(){
     setup("500(500.)60.54.7 '/' ..");
     test(tokNumInt);
     assertEqNum(intVal, 500);
@@ -101,7 +119,7 @@ void testTokenNumber(){
     teardown();
 }
 
-void testTokenNumberExtensions(){
+static void testTokenNumberExtensions(){
     setup("500L 500l 500Ll 500u 500lU 500LLU 5.5f 5.5F");
     test(tokNumInt);
     test(tokNumInt);
@@ -114,7 +132,7 @@ void testTokenNumberExtensions(){
     teardown();
 }
 
-void testTokenSymbols(){
+static void testTokenSymbols(){
     setup(", +++--- =+=-=*=/= */{};");
     test(tokComma);
     test(tokInc);
@@ -137,6 +155,20 @@ void testTokenSymbols(){
     teardown();
 }
 
+static void testTokenEof(){
+    setup("");
+    test(tokEof);
+    //EOF should be safe to parse multiple times
+    test(tokEof);
+}
+
+//Makes sure all tokens except tokUnexpected are printable
+static void testStringifyToken(){
+    for (Token tok = tokEof; tok <= tokRBrace; tok++){
+        stringifyToken(tok);
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     DITCH_LEVEL = 1;
@@ -147,5 +179,7 @@ int main(int argc, char const *argv[])
     testTokenNumberExtensions();
     testTokenString();
     testTokenKeywordIdentifier();
+    testTokenEof();
+    testStringifyToken();
     return 0;
 }
