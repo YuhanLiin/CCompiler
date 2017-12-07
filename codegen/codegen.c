@@ -315,14 +315,16 @@ static void cmplStmt(Ast* ast, size_t retLabel){
             break;
         }
         case astStmtWhile: {
+            //TODO Get rid of the rsp adds when gotos are implemented
             StmtWhileLoop* loop = (StmtWhileLoop*)ast;
             size_t loopStart = maxLabelNum++;
-            size_t loopEnd = maxLabelNum++;
             int64_t startOffset = frameOffset;
 
+            //Evaluate condition after start label
             emitLabelDecl(loopStart);
             Address cond = cmplExpr(loop->condition);
             if (cond.mode == numberMode){
+                //If cond is 0 then skip everything, otherwise just loop back to start label infinitely
                 if (cond.val.num != 0){
                     cmplStmt(loop->stmt, retLabel);
                     emitAddRsp(startOffset - frameOffset);
@@ -330,13 +332,39 @@ static void cmplStmt(Ast* ast, size_t retLabel){
                 }
             }
             else{
+                //If condition evaluates to 0 then exit loop via jump
+                size_t loopEnd = maxLabelNum++;
                 emitIns2("cmpq", numberAddress(0), cond);
                 emitLabelStmt("je", loopEnd);
+                //Otherwise evaluate inner statement then go back up
                 cmplStmt(loop->stmt, retLabel);
                 emitAddRsp(startOffset - frameOffset);
                 emitLabelStmt("jmp", loopStart);
+                emitLabelDecl(loopEnd);
             }
-            emitLabelDecl(loopEnd);
+            break;
+        }
+        case astStmtDoWhile: {
+            StmtWhileLoop* loop = (StmtWhileLoop*)ast;
+            size_t loopStart = maxLabelNum++;
+            int64_t startOffset = frameOffset;
+
+            //Evaluate statement then condition
+            emitLabelDecl(loopStart);
+            cmplStmt(loop->stmt, retLabel);
+            Address cond = cmplExpr(loop->condition);
+            emitAddRsp(startOffset - frameOffset);
+            //Special treatment for const conditions
+            if (cond.mode == numberMode){
+                if (cond.val.num != 0){
+                    emitLabelStmt("jmp", loopStart);
+                }
+            }
+            //If cond is not 0 jump back up and loop again
+            else{
+                emitIns2("cmpq", numberAddress(0), cond);
+                emitLabelStmt("jne", loopStart);
+            }
             break;
         }
         default:

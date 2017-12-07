@@ -22,7 +22,28 @@ unsigned int loop(unsigned int x){
     return y;
 }
 
-//Return 7;
+int dowhile0(){
+    int y = 1;
+    do y++; while(0);
+    return y;
+}
+
+int dowhile1(){
+    do {
+        return 1;
+    } while(1);
+}
+
+int dowhile(int x){
+    int y = 0;
+    do{
+        int x = x;
+        y += dowhile1();
+    } while(x-y);
+    return y;
+}
+
+//Return 42;
 int main(){
-    return loop(5) + loop1() + loop(0);
+    return (loop(5) + loop1() + loop(0)) * (dowhile0() + dowhile(4));
 }
