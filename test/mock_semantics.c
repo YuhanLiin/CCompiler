@@ -5,24 +5,28 @@
 void initSemantics(){}
 char checkSemantics(){}
 
-ExprInt* verifyExprInt(ExprInt* expint){return expint;}
-ExprInt* verifyExprUnsignedInt(ExprInt* expint){return expint;}
-ExprLong* verifyExprLong(ExprLong* expint){return expint;}
-ExprLong* verifyExprUnsignedLong(ExprLong* expint){return expint;}
+ExprInt* verifyExprInt(ExprInt* expint) {return expint;}
+ExprInt* verifyExprUnsignedInt(ExprInt* expint) {return expint;}
+ExprLong* verifyExprLong(ExprLong* expint) {return expint;}
+ExprLong* verifyExprUnsignedLong(ExprLong* expint) {return expint;}
 
-ExprDouble* verifyExprDouble(ExprDouble* expdb){return expdb;}
-ExprFloat* verifyExprFloat(ExprFloat* expdb){return expdb;}
+ExprDouble* verifyExprDouble(ExprDouble* expdb) {return expdb;}
+ExprFloat* verifyExprFloat(ExprFloat* expdb) {return expdb;}
 
-ExprUnop* verifyExprUnop(ExprUnop* unop){return unop;}
-ExprBinop* verifyExprBinop(ExprBinop* binop){return binop;}
-ExprIdent* verifyExprIdent(ExprIdent* ident){return ident;}
-ExprCall* verifyExprCall(ExprCall* call){return call;}
+ExprUnop* verifyExprUnop(ExprUnop* unop) {return unop;}
+ExprBinop* verifyExprBinop(ExprBinop* binop) {return binop;}
+ExprIdent* verifyExprIdent(ExprIdent* ident) {return ident;}
+ExprCall* verifyExprCall(ExprCall* call) {return call;}
 
 void preverifyBlockStmt(){}
 void postVerifyBlockStmt(){}
-StmtBlock* verifyBlockStmt(StmtBlock* blk){return blk;}
-StmtReturn* verifyStmtReturn(StmtReturn* ret){return ret;}
-StmtVar* verifyStmtVar(StmtVar* var){return var;}
+StmtBlock* verifyBlockStmt(StmtBlock* blk) {return blk;}
+StmtReturn* verifyStmtReturn(StmtReturn* ret) {return ret;}
+StmtVar* verifyStmtVar(StmtVar* var) {return var;}
+void preverifyLoop(){}
+void postVerifyLoop(){}
+Ast* verifyStmtBreak(Ast* stmt) {return stmt;}
+Ast* verifyStmtContinue(Ast* stmt) {return stmt;}
 
 void verifyFunctionSignature(Function* func, char isDecl){}
 void verifyFunctionBody(){}

@@ -137,8 +137,14 @@ Token lexToken(){
             goto identifier;
         case 'c':
             //char
-            if (lexKeyword("char")){
-                return tokChar;
+            storeNext('c');
+            if (curChar == 'h'){
+                if (lexKeyword("har")){
+                    return tokChar;
+                }
+            }
+            else if (lexKeyword("ontinue")){
+                return tokContinue;
             }
             goto identifier;
         case 'd':
@@ -439,6 +445,8 @@ const char_t * stringifyToken(Token tok){
             return "keyword \"do\"";
         case tokBreak:
             return "keyword \"break\"";
+        case tokContinue:
+            return "keyword \"continue\"";
         case tokIdent:
             return "identifier";
         case tokNumDouble:

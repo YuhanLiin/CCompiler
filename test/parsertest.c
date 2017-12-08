@@ -66,6 +66,12 @@ void outputAst(Ast* ast){
         case astStmtEmpty:
             outprint("empty ");
             return;
+        case astStmtBreak:
+            outprint("break ");
+            return;
+        case astStmtContinue:
+            outprint("cont ");
+            return;
         case astStmtExpr:
             outputAst((Ast*)((StmtExpr*)ast)->expr);
             return;
@@ -199,6 +205,10 @@ void testParseStmt(){
     test(parseStmtOrDef, "return f() ;", "ret call:f:0 ");
     test(parseStmtOrDef, "return;", "ret ");
     test(parseStmtOrDef, " ;", "empty ");
+    test(parseStmtOrDef, "break;", "break ");
+    test(parseStmtOrDef, "continue;", "cont ");
+    testErr(parseStmtOrDef, "break", "1:5 expected ; before end of file.\n");
+    testErr(parseStmtOrDef, "continue", "1:8 expected ; before end of file.\n");
     test(parseStmtOrDef, "{}", "block:0 ");
     test(parseStmtOrDef, "{;}", "block:1 empty ");
     test(parseStmtOrDef, "{ return 5;;}", "block:2 ret int:5 empty ");
@@ -215,7 +225,7 @@ void testParseFunction(){
         parseTopLevel, "long long int main (int a, double b, long c, long long d, long int, float);",
         "fndec:long long:main:6 int:a double:b int:c long long:d int float "
     );
-    test(parseTopLevel, "double k() return 5;", "fn:double:k:0 ret int:5 ");
+    test(parseTopLevel, "double k() {return 5;}", "fn:double:k:0 block:1 ret int:5 ");
     test(parseTopLevel, "unsigned char a(); signed short b(){a();}", "fndec:unsigned char:a:0 fn:short:b:0 block:1 call:a:0 ");
     test(parseTopLevel, "signed long x(unsigned short int, signed int);", "fndec:int:x:2 unsigned short int ");
     test(parseTopLevel, "void main();", "fndec:void:main:0 ");
@@ -248,11 +258,11 @@ void testParseError(){
 
     testErr(parseTopLevel, "int Blue(a)", "1:9 expected type name before identifier.\n");
     testErr(parseTopLevel, "int Blue(long, )", "1:15 expected type name before ).\n");
-    testErr(parseTopLevel, "int Blue(float f)", "1:17 expected statement before end of file.\n");
+    testErr(parseTopLevel, "int Blue(float f)", "1:17 expected ; or { before end of file.\n");
     testErr(parseTopLevel, "signed float a();", "1:7 expected type name before keyword \"float\".\n");
     testErr(parseTopLevel, "signed int a(unsigned);", "1:21 expected type name before ).\n");
     testErr(parseTopLevel, "dog", "1:0 expected type name before identifier.\n");
-    testErr(parseTopLevel, "int stmt() int l;", "1:11 expected statement before keyword \"int\".\n");
+    testErr(parseTopLevel, "int stmt() return;", "1:11 expected ; or { before keyword \"return\".\n");
 }
 
 int main(int argc, char const *argv[])

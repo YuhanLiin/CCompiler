@@ -74,9 +74,19 @@ ExprCall* newExprCall(size_t lineNumber, size_t linePos, char_t* name){
     return expr;
 }
 
-StmtEmpty* newStmtEmpty(size_t lineNumber, size_t linePos){
-    New(StmtEmpty, stmt, 1)
-    stmt->ast = Ast(astStmtEmpty, lineNumber, linePos);
+Ast* newStmtEmpty(size_t lineNumber, size_t linePos){
+    New(Ast, stmt, 1)
+    *stmt = Ast(astStmtEmpty, lineNumber, linePos);
+    return stmt;
+}
+Ast* newStmtBreak(size_t label, size_t lineNumber){
+    New(Ast, stmt, 1)
+    *stmt = Ast(astStmtBreak, lineNumber, linePos);
+    return stmt;
+}
+Ast* newStmtContinue(size_t label, size_t lineNumber){
+    New(Ast, stmt, 1)
+    *stmt = Ast(astStmtContinue, lineNumber, linePos);
     return stmt;
 }
 
@@ -164,6 +174,9 @@ void disposeAst(void* node){
         case astExprInt:
         case astExprLong:
         case astExprFloat:
+        case astStmtEmpty:
+        case astStmtBreak:
+        case astStmtContinue:
             break;
         case astExprStr: {
             free(((ExprStr*)ast)->str);
@@ -192,9 +205,7 @@ void disposeAst(void* node){
         case astStmtReturn: {
             disposeAst(((StmtReturn*)ast)->expr);
             break;
-        }
-        case astStmtEmpty:
-            break;
+        }        
         case astStmtExpr:
             disposeAst(((StmtExpr*)ast)->expr);
             break;

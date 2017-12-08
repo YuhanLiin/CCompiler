@@ -18,6 +18,8 @@ typedef enum {
     astExprUnop,
     astExprBinop,
     astStmtEmpty,
+    astStmtBreak,
+    astStmtContinue,
     astStmtReturn,
     astStmtExpr,
     astStmtBlock,
@@ -29,19 +31,25 @@ typedef enum {
     astTopLevel
 } AstLabel;
 
+//Base structs are always first field. Contain ast label followed by attributes for semantic analysis
 typedef struct {
     AstLabel label;
     size_t lineNumber;
     size_t linePos;
 } Ast;
 
-//Base structs are always first field. Contain ast label followed by attributes for semantic analysis
 typedef struct {
     Ast ast;
     Type type;
 } ExprBase;
 
 //Actual ast nodes and their allocators. Output should be a valid AST node for semantic validation
+
+//Statements that hold no actual data just use the base Ast struct instead of some other ast struct
+Ast* newStmtEmpty(size_t label, size_t lineNumber);
+Ast* newStmtBreak(size_t label, size_t lineNumber);
+Ast* newStmtContinue(size_t label, size_t lineNumber);
+
 typedef struct {
     ExprBase base; 
     double num;
@@ -100,9 +108,6 @@ typedef struct {
     Array(vptr) args;
 } ExprCall;
 ExprCall* newExprCall(size_t lineNumber, size_t linePos, char_t* name);
-
-typedef struct {Ast ast;} StmtEmpty;
-StmtEmpty* newStmtEmpty(size_t label, size_t lineNumber);
 
 typedef struct {
     Ast ast;

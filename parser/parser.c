@@ -146,11 +146,9 @@ Ast* parseStmt(){
             }
             return (Ast*)verifyStmtReturn(ret);
         }
-        case tokSemicolon: {
-            StmtEmpty* empty = newStmtEmpty(stmtLineNum, stmtLinePos);
+        case tokSemicolon:
             getTok(); //Consume semicolon
-            return (Ast*) empty;
-        }
+            return newStmtEmpty(stmtLineNum, stmtLinePos);
         case tokLBrace: {
             preverifyBlockStmt();
             Ast* blk = parseBlock();
@@ -161,7 +159,9 @@ Ast* parseStmt(){
             getTok();
             ExprBase* cond = parseBracketedExpr();
             if (cond){
+                preverifyLoop();
                 Ast* stmt = parseStmt();
+                postVerifyLoop();
                 if (stmt){
                     return (Ast*)newStmtWhile(stmtLineNum, stmtLinePos, cond, stmt);
                 }
@@ -172,7 +172,9 @@ Ast* parseStmt(){
         }
         case tokDo: {
             getTok();
+            preverifyLoop();
             Ast* stmt = parseStmt();
+            postVerifyLoop();
             if (stmt){
                 if (curTok == tokWhile){
                     getTok();
@@ -190,6 +192,14 @@ Ast* parseStmt(){
             disposeAst(stmt);
             return NULL;
         }
+        case tokBreak:
+            getTok();
+            checkSemicolon();
+            return verifyStmtBreak(newStmtBreak(stmtLineNum, stmtLinePos));
+        case tokContinue:
+            getTok();
+            checkSemicolon();
+            return verifyStmtContinue(newStmtContinue(stmtLineNum, stmtLinePos));
 
         //These are tokens that expressions can't start with, so they automatically trigger statement error
         case tokRBrace:
@@ -323,9 +333,8 @@ static Ast* parseFunction(){
                     verifyFunctionBody();
                     return (Ast*)func;
                 }
-                else if (func->stmt = parseStmt()){
-                    verifyFunctionBody();
-                    return (Ast*)func;
+                else {
+                    syntaxError("; or {");
                 }
                 //parseStmt reports errors, so no need for it here
             }

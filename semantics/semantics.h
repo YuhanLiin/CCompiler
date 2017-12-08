@@ -23,6 +23,10 @@ void postVerifyBlockStmt();
 StmtBlock* verifyBlockStmt(StmtBlock* blk);
 StmtReturn* verifyStmtReturn(StmtReturn* ret);
 StmtVar* verifyStmtVar(StmtVar* var);
+void preverifyLoop();
+void postVerifyLoop();
+Ast* verifyStmtBreak(Ast* stmt);
+Ast* verifyStmtContinue(Ast* stmt);
 
 void verifyFunctionSignature(Function* func, char isDecl);
 void verifyFunctionBody();

@@ -60,13 +60,14 @@ static void testTokenKeywordIdentifier(){
     test(tokVoid);
     teardown();
 
-    setup("while if int in else break");
+    setup("while if int in else break continue");
     test(tokWhile);
     test(tokIf);
     test(tokInt);
     testStr(tokIdent, "in");
     test(tokElse);
     test(tokBreak);
+    test(tokContinue);
     teardown();
 
     setup("d do doa doub double double0");

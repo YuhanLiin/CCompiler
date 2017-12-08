@@ -8,10 +8,14 @@
 
 static Type returnType = typNone;
 static char correct = 1;
+static size_t breakDepth = 0;
+static size_t continueDepth = 0;
 
 void initSemantics(){
     returnType = typNone;
     correct = 1;
+    breakDepth = 0;
+    continueDepth = 0;
 }
 char checkSemantics(){
     return correct;
@@ -284,6 +288,29 @@ StmtVar* verifyStmtVar(StmtVar* var){
     }
     insertVar(var->name, var);
     return var;
+}
+
+void preverifyLoop(){
+    breakDepth++;
+    continueDepth++;
+}
+void postVerifyLoop(){
+    assert(breakDepth > 0 && continueDepth > 0 && "Probably forgot matching preverifyLoop");
+    breakDepth--;
+    continueDepth--;
+}
+
+Ast* verifyStmtBreak(Ast* stmt){
+    if (breakDepth == 0){
+        semanticError(*stmt, "break statement placed outside of loop or switch block.");
+    }
+    return stmt;
+}
+Ast* verifyStmtContinue(Ast* stmt){
+    if (continueDepth == 0){
+        semanticError(*stmt, "continue statement placed outside of loop.");
+    }
+    return stmt;
 }
 
 static void verifyParamTypes(Array(vptr)* params){
