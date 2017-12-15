@@ -9,7 +9,6 @@ const int EXPECTED_OUT[] = {1, 46, 1, 48, 1, 8, 42};
 const int FILE_COUNT = 7;
 
 static void testDriver(int i){
-    DITCH_LEVEL = 1;
     const char_t *driverArgs[2];
     driverArgs[1] = CFILES[i];
     assertEqNum(driver(2, driverArgs), 0);
@@ -18,6 +17,7 @@ static void testDriver(int i){
 
 int main(int argc, char const *argv[])
 {
+    DITCH_LEVEL = 1;
     for (int i=0; i<FILE_COUNT; i++){
         testDriver(i);
     }

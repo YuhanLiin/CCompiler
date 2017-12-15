@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include "utils.h"
 
-void emitAsm(const char* format, ...);
+void emitOut(const char* format, ...);
 
 char_t consumeNext();
 

@@ -6,7 +6,7 @@
 static FILE* infile;
 static FILE* outfile;
 
-void emitAsm(const char* format, ...) {
+void emitOut(const char* format, ...) {
     va_list args;
     va_start(args, format);
     vfprintf(outfile, format, args);

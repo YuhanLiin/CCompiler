@@ -1,8 +1,7 @@
-#include "codegen/address.h"
+#include "codegen/asm_private.h"
 #include "utils.h"
 #include "scope/scope.h"
 #include <stdint.h>
-
 
 #define KEY Symbol
 #define VAL Address
@@ -10,7 +9,6 @@
 #include "generics/gen_map.c"
 #undef KEY
 #undef VAL
-
 static Map(Symbol, Address) addressTable;
 
 void initAddrTable(){
@@ -37,17 +35,4 @@ Address findAddress(char_t* name){
         scopeId = prevScope(scopeId);
     }
     return *addrptr;
-}
-
-Address registerAddress(Register reg){
-    return (Address){registerMode, {.reg = reg}};
-}
-Address symbolAddress(char_t *symbol){
-    return (Address){symbolMode, {.symbol = symbol}};
-}
-Address numberAddress(uint64_t num){
-    return (Address){numberMode, {.num = num}};
-}
-Address indirectAddress(int64_t offset, Register reg){
-    return (Address){indirectMode, {.indirect = {.offset = offset, .reg = reg}}};
 }

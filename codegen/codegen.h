@@ -4,5 +4,7 @@
 
 void cmplTopLevel(TopLevel* ast);
 
-// IO command. Not supplied by codegen/codegen.c
-void emitAsm(const char* format, ...);
+void initAsm();
+void disposeAsm();
+
+void emitAllAsm();

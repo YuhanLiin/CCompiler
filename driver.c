@@ -42,7 +42,10 @@ int driver(int argc, char_t const *argv[])
     TopLevel* ast = parseTopLevel();
     if (ast != NULL){
         if (checkSemantics() && checkSyntax()){
+            initAsm();
             cmplTopLevel(ast);
+            emitAllAsm();
+            disposeAsm();
         }
         else{
             code = 3;   
