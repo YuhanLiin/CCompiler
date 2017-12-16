@@ -11,10 +11,8 @@ void resetScopes(){
 }
 
 void initScopes(){
-    if (!arrInit(size_t)(&parentScopes, GLOBAL_SCOPE + 1, NULL, NULL)){
-        exit(1);
-    }
-    parentScopes.elem[GLOBAL_SCOPE] = GLOBAL_SCOPE;
+    if (!arrInit(size_t)(&parentScopes, GLOBAL_SCOPE + 1, NULL, NULL)) exit(1);
+    if (!arrPush(size_t)(&parentScopes, GLOBAL_SCOPE)) exit(1);
     resetScopes();
 }
 

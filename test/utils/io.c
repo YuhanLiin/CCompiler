@@ -17,7 +17,7 @@ size_t elen = 0;
 
 //Asserts positivity/success
 static int above0(int x){
-    assert(x >= 0);
+    assert(x >= 0 && "Why the hell is sprintf failing???");
     return x;
 }
 
@@ -37,8 +37,12 @@ void writeError(size_t line, size_t pos, char_t* message, ...){
 }
 
 //Output string to output array
-#define outprint(...) do {\
-    olen += above0(sprintf(&output[olen], __VA_ARGS__));} while(0)
+void emitOut(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    olen += above0(vsprintf(&output[olen], format, args));
+    va_end(args);
+}
 
 void ioSetup(const char_t* str){
     strcpy(input, str); //Might need to be adjusted for bigger char types

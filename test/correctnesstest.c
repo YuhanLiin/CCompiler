@@ -4,8 +4,8 @@
 #include "ast/ast.h"
 #include "parser/parser.h"
 
-#include "test/io.c"
-#include "test/utils.c"
+#include "test/utils/io.c"
+#include "test/utils/assert.c"
 
 #define test(inputStr) do {\
     ioSetup(inputStr);\

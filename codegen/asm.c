@@ -30,7 +30,7 @@ void disposeAsm(){
 //Below code has to do with emiting instructions
 
 // Never use this as a format string
-static const char_t* registerStr(Register reg){
+const char_t* registerStr(Register reg){
     switch (reg){
         case $rax:
             return "%rax";
@@ -87,7 +87,7 @@ static void emitLabel(const Label* label){
     }
 }
 
-static void emitInstr(const AsmInstruction* ins){
+void emitInstr(const AsmInstruction* ins){
     switch(ins->type){
         case ins0Op:
             emitOut("\t%s", ins->opcode);

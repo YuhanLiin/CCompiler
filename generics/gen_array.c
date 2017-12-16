@@ -16,13 +16,13 @@ char arrInit(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* d
     }
     else{
         size_t mem = sizeof(TYPE)*size;
-        array->size = size;
         array->elem = malloc(mem);
         if (array->elem == NULL) return 0;
         array->allocatedSize = size; // If allocation succeeds update allocation size field
         //If arr isnt null then update size field and copy arr into the new array
         if (arr != NULL){  
             memcpy(array->elem, arr, mem);
+            array->size = size;
         }
     }
     return 1;

@@ -6,8 +6,8 @@
 #include "lexer/lexer.h"
 #include "utils.h"
 
-#include "test/utils.c"
-#include "test/io.c"
+#include "test/utils/assert.c"
+#include "test/utils/io.c"
 
 // Specifically tests the AST transformations of the semantics module. 
 // Error messages and symtable insertions are tested in the correctness integration tests

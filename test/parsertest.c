@@ -5,37 +5,37 @@
 #include "parser/parser.h"
 #include "semantics/symtable.h"
 
-#include "test/io.c"
-#include "test/utils.c"
+#include "test/utils/io.c"
+#include "test/utils/assert.c"
 
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){
     if (ast == NULL || !checkSyntax()){   //Syntax error
-        outprint(errorstr);
+        emitOut(errorstr);
         return;
     }
     switch(ast->label){
         case astExprDouble:
-            outprint("dbl:%.2Lf ", ((ExprDouble*)ast)->num); //Print numbers with 2 digit precision
+            emitOut("dbl:%.2Lf ", ((ExprDouble*)ast)->num); //Print numbers with 2 digit precision
             return;
         case astExprFloat:
-            outprint("flt:%.2f ", ((ExprFloat*)ast)->num);
+            emitOut("flt:%.2f ", ((ExprFloat*)ast)->num);
             return;
         case astExprLong:
-            outprint("long:%lld ", ((ExprLong*)ast)->num);
+            emitOut("long:%lld ", ((ExprLong*)ast)->num);
             return;
         case astExprInt:
-            outprint("int:%d ", ((ExprInt*)ast)->num); //Print int
+            emitOut("int:%d ", ((ExprInt*)ast)->num); //Print int
             return;
         case astExprStr:
-            outprint("str:%s ", ((ExprStr*)ast)->str); //Print string
+            emitOut("str:%s ", ((ExprStr*)ast)->str); //Print string
             return;
         case astExprIdent:
-            outprint("id:%s ", ((ExprIdent*)ast)->name); //Print identifier
+            emitOut("id:%s ", ((ExprIdent*)ast)->name); //Print identifier
             return;
         case astExprCall: {
             ExprCall* expr = (ExprCall*)ast;
-            outprint("call:%s:%d ", expr->name, expr->args.size);
+            emitOut("call:%s:%d ", expr->name, expr->args.size);
             for (size_t i=0; i<expr->args.size; i++){
                 outputAst((Ast*)expr->args.elem[i]);
             }
@@ -43,68 +43,68 @@ void outputAst(Ast* ast){
         }
         case astExprUnop: {
             ExprUnop* unop = (ExprUnop*)ast;
-            outprint("%s:", stringifyToken(unop->op));
+            emitOut("%s:", stringifyToken(unop->op));
             if (!unop->leftside){
-                outprint(":");
+                emitOut(":");
             }
             outputAst((Ast*)unop->operand);
             return;
         }
         case astExprBinop: {
             ExprBinop* binop = (ExprBinop*)ast;
-            outprint("%s ", stringifyToken(binop->op));
+            emitOut("%s ", stringifyToken(binop->op));
             outputAst((Ast*)binop->left);
             outputAst((Ast*)binop->right);
             return;
         }
         case astStmtReturn:
-            outprint("ret ");
+            emitOut("ret ");
             if (hasRetExpr((StmtReturn*)ast)){
                 outputAst((Ast*)((StmtReturn*)ast)->expr);
             }
             return;
         case astStmtEmpty:
-            outprint("empty ");
+            emitOut("empty ");
             return;
         case astStmtBreak:
-            outprint("break ");
+            emitOut("break ");
             return;
         case astStmtContinue:
-            outprint("cont ");
+            emitOut("cont ");
             return;
         case astStmtExpr:
             outputAst((Ast*)((StmtExpr*)ast)->expr);
             return;
         case astStmtBlock: {
             StmtBlock* block = (StmtBlock*)ast;
-            outprint("block:%d ", block->stmts.size);
+            emitOut("block:%d ", block->stmts.size);
             for (size_t i=0; i<block->stmts.size; i++){
                 outputAst(block->stmts.elem[i]);
             }
             return;
         }
         case astStmtDecl:
-            outprint("dec:");
+            emitOut("dec:");
         case astStmtDef: {
             StmtVar* decl = (StmtVar*)ast;
-            outprint(stringifyType(decl->type));
+            emitOut(stringifyType(decl->type));
             if (decl->name){
-                outprint(":%s", decl->name);
+                emitOut(":%s", decl->name);
             }
             if (decl->rhs){
-                outprint(" is ");
+                emitOut(" is ");
                 outputAst((Ast*)decl->rhs);
             }
             else{
-                outprint(" ");
+                emitOut(" ");
             }
             return;
         }
         case astStmtDoWhile:
-            outprint("do:");
+            emitOut("do:");
         case astStmtWhile: {
             StmtWhileLoop* loop = (StmtWhileLoop*)ast;
-            outprint("while ");
+            emitOut("while ");
             outputAst((Ast*)loop->condition);
             outputAst(loop->stmt);
             return;
@@ -112,11 +112,11 @@ void outputAst(Ast* ast){
         case astFunction: {
             Function* fn = (Function*)ast;
             size_t paramCount = fn->params.size;
-            outprint("fn");
+            emitOut("fn");
             if (fn->stmt == NULL){
-                outprint("dec");
+                emitOut("dec");
             }
-            outprint(":%s:%s:%d ", stringifyType(fn->type), fn->name, paramCount);
+            emitOut(":%s:%s:%d ", stringifyType(fn->type), fn->name, paramCount);
             for (size_t i=0; i<paramCount; i++){
                 Ast* param = fn->params.elem[i];
                 assert(param->label == astStmtDef);

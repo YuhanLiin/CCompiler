@@ -74,3 +74,6 @@ void disposeAddrTable();
 
 void insertAddress(char_t* name, Address addr);
 Address findAddress(char_t* name);
+
+const char_t* registerStr(Register);
+void emitInstr(const AsmInstruction*);
