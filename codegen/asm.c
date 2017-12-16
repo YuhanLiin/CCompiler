@@ -13,7 +13,7 @@ Array(AsmInstruction) instructionBuffer;
 
 size_t appendInstr(AsmInstruction ins){
     if (!arrPush(AsmInstruction)(&instructionBuffer, ins)) exit(1);
-    return instructionBuffer.size;
+    return instructionBuffer.size - 1;
 }
 
 AsmInstruction* getInstrPtr(size_t i){

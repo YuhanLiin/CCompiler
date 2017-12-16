@@ -16,11 +16,24 @@
 static labelnum_t maxLabelNum = 0;
 // Registers used as params in the MS x64 calling convention
 static const Register paramRegisters[] = {$rcx, $rdx, $r8, $r9};
+// r11 will be used as intermediate for all mov operations
+static const Register movIntermediate = $r11;
+// r10 will be used as intermediate for all binop operations
+const Register binopIntermediate = $r10;
 
+static void cmplMov(Address from, Address to){
+    if (from.mode == indirectMode && to.mode == indirectMode){
+        appendInstr(op2Instruction("movq", from, registerAddress(movIntermediate)));
+        appendInstr(op2Instruction("movq", registerAddress(movIntermediate), to));
+    }
+    else{
+        appendInstr(op2Instruction("movq", from, to));
+    }
+}
 
 static void cmplStackPush(Address val, offset_t* frameOffset){
     *frameOffset -= 8;
-    appendInstr(op2Instruction("movq", val, indirectAddress(*frameOffset, $rbp)));
+    cmplMov(val, indirectAddress(*frameOffset, $rbp));
 }
 
 static Address cmplExpr(ExprBase* ast, offset_t* frameOffset, offset_t* maxCallSpace);
@@ -34,11 +47,11 @@ static void cmplCall(char_t* name, Array(vptr) *args, offset_t* frameOffset, off
             Address arg = cmplExpr((ExprBase*)args->elem[i], frameOffset, maxCallSpace);
             // Put the first 4 into registers
             if (i < 4){
-                appendInstr(op2Instruction("movq", arg, registerAddress(paramRegisters[i])));
+                cmplMov(arg, registerAddress(paramRegisters[i]));
             }
             // The rest go onto stack right before the 32-bit shadow call space
             else{
-                appendInstr(op2Instruction("movq", arg, indirectAddress(i * 8, $rsp)));
+                cmplMov(arg, indirectAddress(i * 8, $rsp));
             }
         }
         callSpace = args->size < 4 ? 32 : (args->size * 8);
@@ -83,15 +96,12 @@ static Address cmplUnop(ExprUnop* unop, offset_t* frameOffset, offset_t* maxCall
     return temp;
 }
 
-// r10 will be used as intermediate for all binop operations
-const Register binopIntermediate = $r10;
-
 //Multiply left by right and store in rax. Promotes result to type
 static void cmplMulti(Address left, Address right, Type type){
     assert(left.mode == indirectMode && "Left operand must be on stack");
     //Put right operand on rax if its not already there
     if (right.mode != registerMode || right.val.reg != $rax){
-        appendInstr(op2Instruction("movq", right, registerAddress($rax)));
+        cmplMov(right, registerAddress($rax));
         right = registerAddress($rax);
     }
     if (isSignedType(type)){
@@ -105,16 +115,16 @@ static void cmplDiv(Address left, Address right, Type type){
     assert(left.mode == indirectMode && "Left operand must be on stack");
     //Can't run div instruction on a number. Also must have left operand on rax, so right operand can't be on rax
     if (right.mode == numberMode || (right.mode == registerMode && right.val.reg == $rax)){
-        appendInstr(op2Instruction("movq", right, registerAddress(binopIntermediate)));
+        cmplMov(right, registerAddress(binopIntermediate));
         right = registerAddress(binopIntermediate);
     }
-    appendInstr(op2Instruction("movq", left, registerAddress($rax)));
+    cmplMov(left, registerAddress($rax));
     if (isSignedType(type)){
         appendInstr(op0Instruction("cqto"));
         appendInstr(op1Instruction("idivq", right));
     }
     else{
-        appendInstr(op2Instruction("movq", numberAddress(0), registerAddress($rdx)));
+        cmplMov(numberAddress(0), registerAddress($rdx));
         appendInstr(op1Instruction("divq", right));
     }
 }
@@ -122,7 +132,7 @@ static void cmplDiv(Address left, Address right, Type type){
 static void cmplRightToLeft(const char_t* op, Address left, Address right, Type type){
     // Can't have both operands on stack, so move second one to intermediate register. 
     if (right.mode == indirectMode){
-        appendInstr(op2Instruction("movq", right, registerAddress(binopIntermediate)));
+        cmplMov(right, registerAddress(binopIntermediate));
         right = registerAddress(binopIntermediate);
     }
     appendInstr(op2Instruction(op, right, left));
@@ -156,14 +166,14 @@ static Address cmplBinop(ExprBinop* binop, offset_t* frameOffset, offset_t* maxC
             return registerAddress($rax);
         case tokMultiAssign:
             cmplMulti(left, right, arithTypePromotion(binop->left->type, binop->right->type));
-            appendInstr(op2Instruction("movq", registerAddress($rax), left));
+            cmplMov(registerAddress($rax), left);
             return left;
         case tokDiv:
             cmplDiv(left, right, binop->base.type);
             return registerAddress($rax);
         case tokDivAssign:
             cmplDiv(left, right, arithTypePromotion(binop->left->type, binop->right->type));
-            appendInstr(op2Instruction("movq", registerAddress($rax), left));
+            cmplMov(registerAddress($rax), left);
             return left;
         default:
             assert(0 && "Unhandled binop.");
@@ -207,7 +217,7 @@ static void cmplStmt(Ast* ast, offset_t* frameOffset, offset_t* maxCallSpace, si
         case astStmtReturn: {
             if (hasRetExpr((StmtReturn*)ast)){
                 Address expaddr = cmplExpr((ExprBase*)((StmtReturn*)ast)->expr, frameOffset, maxCallSpace);
-                appendInstr(op2Instruction("movq", expaddr, registerAddress($rax)));
+                cmplMov(expaddr, registerAddress($rax));
             }
             appendInstr(labelInstruction("jmp", numLabel(retLabel)));
             break;
@@ -225,13 +235,7 @@ static void cmplStmt(Ast* ast, offset_t* frameOffset, offset_t* maxCallSpace, si
             StmtVar* def = (StmtVar*)ast;
             *frameOffset -= 8;
             if (def->rhs){
-                appendInstr(
-                    op2Instruction(
-                        "movq", 
-                        cmplExpr(def->rhs, frameOffset, maxCallSpace), 
-                        indirectAddress(*frameOffset, $rbp)
-                    )
-                );
+                cmplMov(cmplExpr(def->rhs, frameOffset, maxCallSpace), indirectAddress(*frameOffset, $rbp));
             }
             insertAddress(def->name, indirectAddress(*frameOffset, $rbp));
             break;
@@ -296,7 +300,7 @@ static void cmplParams(Array(vptr) *params){
         Address location = indirectAddress(16 + i*8, $rbp);
         // Right now dumps all param registers into shadow space. Safe but inefficient
         if (i < 4){
-            appendInstr(op2Instruction("movq", registerAddress(paramRegisters[i]), location));
+            cmplMov(registerAddress(paramRegisters[i]), location);
         }
         insertAddress(param->name, location);
     }
@@ -313,7 +317,7 @@ static void cmplGlobal(Ast* ast){
             appendInstr(labelInstruction(".globl", strLabel(func->name)));
             appendInstr(labelDeclInstruction(strLabel(func->name)));
             appendInstr(op1Instruction("pushq", registerAddress($rbp)));
-            appendInstr(op2Instruction("movq", registerAddress($rsp), registerAddress($rbp)));
+            cmplMov(registerAddress($rsp), registerAddress($rbp));
 
             // Create a new label for the return location
             size_t retLabel = maxLabelNum++;
@@ -333,7 +337,7 @@ static void cmplGlobal(Ast* ast){
             cmplStmt((Ast*)func->stmt, &frameOffset, &maxCallSpace, retLabel);
             // Decide amount to allocate on stack
             assert(maxCallSpace >= 0 && frameOffset <= 0 && "Offset signs are wrong");
-            getInstrPtr(rspInsIndex)->args.operands[1] = numberAddress(maxCallSpace - frameOffset);
+            getInstrPtr(rspInsIndex)->args.operands[0] = numberAddress(maxCallSpace - frameOffset);
             // Return routine
             appendInstr(labelDeclInstruction(numLabel(retLabel)));
             appendInstr(op0Instruction("leave"));
