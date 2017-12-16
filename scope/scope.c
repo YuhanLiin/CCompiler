@@ -42,7 +42,7 @@ size_t toNewScope(){
 }
 
 size_t prevScope(size_t scopeId){
-    return parentScopes.elem[curScope];
+    return parentScopes.elem[scopeId];
 }
 
 size_t toPrevScope(){

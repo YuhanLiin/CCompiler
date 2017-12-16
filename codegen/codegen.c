@@ -207,7 +207,14 @@ static Address cmplExpr(ExprBase* expr, offset_t* frameOffset, offset_t* maxCall
     }
 }
 
-static void cmplStmt(Ast* ast, offset_t* frameOffset, offset_t* maxCallSpace, size_t retLabel){
+typedef struct
+{
+    labelnum_t ret;
+    labelnum_t brk;
+    labelnum_t cont;
+} LabelContext;
+
+static void cmplStmt(Ast* ast, offset_t* frameOffset, offset_t* maxCallSpace, const LabelContext* labels){
     switch(ast->label){
         case astStmtEmpty:
             break;
@@ -219,14 +226,14 @@ static void cmplStmt(Ast* ast, offset_t* frameOffset, offset_t* maxCallSpace, si
                 Address expaddr = cmplExpr((ExprBase*)((StmtReturn*)ast)->expr, frameOffset, maxCallSpace);
                 cmplMov(expaddr, registerAddress($rax));
             }
-            appendInstr(labelInstruction("jmp", numLabel(retLabel)));
+            appendInstr(labelInstruction("jmp", numLabel(labels->ret)));
             break;
         }
         case astStmtBlock: {
             StmtBlock* blk = (StmtBlock*)ast;
             curScope = blk->scopeId;
             for (size_t i=0; i<blk->stmts.size; i++){
-                cmplStmt(blk->stmts.elem[i], frameOffset, maxCallSpace, retLabel);
+                cmplStmt(blk->stmts.elem[i], frameOffset, maxCallSpace, labels);
             }
             toPrevScope();
             break;
@@ -241,53 +248,60 @@ static void cmplStmt(Ast* ast, offset_t* frameOffset, offset_t* maxCallSpace, si
             break;
         }
         case astStmtWhile: {
-            //TODO Get rid of the rsp adds when gotos are implemented
             StmtWhileLoop* loop = (StmtWhileLoop*)ast;
-            size_t loopStart = maxLabelNum++;
+            const LabelContext loopCtx = (LabelContext){.ret=labels->ret, .brk=maxLabelNum++, .cont=maxLabelNum++};
 
             //Evaluate condition after start label
-            appendInstr(labelDeclInstruction(numLabel(loopStart)));
+            appendInstr(labelDeclInstruction(numLabel(loopCtx.cont)));
             Address cond = cmplExpr(loop->condition, frameOffset, maxCallSpace);
             if (cond.mode == numberMode){
                 //If cond is 0 then skip everything, otherwise just loop back to start label infinitely
                 if (cond.val.num != 0){
-                    cmplStmt(loop->stmt, frameOffset, maxCallSpace, retLabel);
-                    appendInstr(labelInstruction("jmp", numLabel(loopStart)));
+                    cmplStmt(loop->stmt, frameOffset, maxCallSpace, &loopCtx);
+                    appendInstr(labelInstruction("jmp", numLabel(loopCtx.cont)));
                 }
             }
             else{
                 //If condition evaluates to 0 then exit loop via jump
-                size_t loopEnd = maxLabelNum++;
                 appendInstr(op2Instruction("cmpq", numberAddress(0), cond));
-                appendInstr(labelInstruction("je", numLabel(loopEnd)));
+                appendInstr(labelInstruction("je", numLabel(loopCtx.brk)));
                 //Otherwise evaluate inner statement then go back up
-                cmplStmt(loop->stmt, frameOffset, maxCallSpace, retLabel);
-                appendInstr(labelInstruction("jmp", numLabel(loopStart)));
-                appendInstr(labelDeclInstruction(numLabel(loopEnd)));
+                cmplStmt(loop->stmt, frameOffset, maxCallSpace, &loopCtx);
+                appendInstr(labelInstruction("jmp", numLabel(loopCtx.cont)));
             }
+            appendInstr(labelDeclInstruction(numLabel(loopCtx.brk)));
             break;
         }
         case astStmtDoWhile: {
             StmtWhileLoop* loop = (StmtWhileLoop*)ast;
-            size_t loopStart = maxLabelNum++;
+            size_t doStart = maxLabelNum++;
+            const LabelContext doCtx = (LabelContext){.ret=labels->ret, .brk=maxLabelNum++, .cont=maxLabelNum++};
 
             //Evaluate statement then condition
-            appendInstr(labelDeclInstruction(numLabel(loopStart)));
-            cmplStmt(loop->stmt, frameOffset, maxCallSpace, retLabel);
+            appendInstr(labelDeclInstruction(numLabel(doStart)));
+            cmplStmt(loop->stmt, frameOffset, maxCallSpace, &doCtx);
+            appendInstr(labelDeclInstruction(numLabel(doCtx.cont)));
             Address cond = cmplExpr(loop->condition, frameOffset, maxCallSpace);
             //Special treatment for const conditions
             if (cond.mode == numberMode){
                 if (cond.val.num != 0){
-                    appendInstr(labelInstruction("jmp", numLabel(loopStart)));
+                    appendInstr(labelInstruction("jmp", numLabel(doStart)));
                 }
             }
             //If cond is not 0 jump back up and loop again
             else{
                 appendInstr(op2Instruction("cmpq", numberAddress(0), cond));
-                appendInstr(labelInstruction("jne", numLabel(loopStart)));
+                appendInstr(labelInstruction("jne", numLabel(doStart)));
             }
+            appendInstr(labelDeclInstruction(numLabel(doCtx.brk)));
             break;
         }
+        case astStmtContinue:
+            appendInstr(labelInstruction("jmp", numLabel(labels->cont)));
+            break;
+        case astStmtBreak:
+            appendInstr(labelInstruction("jmp", numLabel(labels->brk)));
+            break;
         default:
             assert(0 && "Unsupported AST for stmt");
     }
@@ -320,7 +334,7 @@ static void cmplGlobal(Ast* ast){
             cmplMov(registerAddress($rsp), registerAddress($rbp));
 
             // Create a new label for the return location
-            size_t retLabel = maxLabelNum++;
+            const LabelContext lblctx = (LabelContext){.ret=maxLabelNum++, .brk=0, .cont=0};
             // Stack space needed for variables
             offset_t frameOffset = 0;
             // Stack space needed for function calls
@@ -334,12 +348,12 @@ static void cmplGlobal(Ast* ast){
             if (!strcmp(func->name, "main")){
                 cmplCall("__main", NULL, &frameOffset, &maxCallSpace);
             }
-            cmplStmt((Ast*)func->stmt, &frameOffset, &maxCallSpace, retLabel);
+            cmplStmt((Ast*)func->stmt, &frameOffset, &maxCallSpace, &lblctx);
             // Decide amount to allocate on stack
             assert(maxCallSpace >= 0 && frameOffset <= 0 && "Offset signs are wrong");
             getInstrPtr(rspInsIndex)->args.operands[0] = numberAddress(maxCallSpace - frameOffset);
             // Return routine
-            appendInstr(labelDeclInstruction(numLabel(retLabel)));
+            appendInstr(labelDeclInstruction(numLabel(lblctx.ret)));
             appendInstr(op0Instruction("leave"));
             appendInstr(op0Instruction("ret"));
             // Reset scope back to global

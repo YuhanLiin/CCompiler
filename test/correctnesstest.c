@@ -94,6 +94,7 @@ static void testAssignment(){
     test("int x(int a){a -= 4;}");
     test("int x(int a){a /= 4;}");
     test("int x(int a){a *= 4;}");
+    test("int x(int y){{{y++}}}");
     testErr("int x(int a){54 = 4;}", "1:13 lvalue required on left of assignment.\n");
 }
 
