@@ -134,12 +134,15 @@ static void testTokenNumberExtensions(){
 }
 
 static void testTokenSymbols(){
-    setup(", +++--- =+=-=*=/= */{};");
+    setup(", +++---*/! =+=-=*=/= ==<><=>=!= {};");
     test(tokComma);
     test(tokInc);
     test(tokPlus);
     test(tokDec);
     test(tokMinus);
+    test(tokMulti);
+    test(tokDiv);
+    test(tokNot);
     
     test(tokAssign);
     test(tokPlusAssign);
@@ -147,8 +150,13 @@ static void testTokenSymbols(){
     test(tokMultiAssign);
     test(tokDivAssign);
 
-    test(tokMulti);
-    test(tokDiv);
+    test(tokEquals);
+    test(tokLess);
+    test(tokGreater);
+    test(tokLessEquals);
+    test(tokGreaterEquals);
+    test(tokNotEquals);
+
     test(tokLBrace);
     test(tokRBrace);
     test(tokSemicolon);

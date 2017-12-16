@@ -191,6 +191,10 @@ void testParseBinop(){
     test(parseStmtOrDef, "i += 2 = 4 -= 5 *= 6 /= 7;", "+= id:i = int:2 -= int:4 *= int:5 /= int:6 int:7 ");
     test(parseStmtOrDef, "a+b+c+d;", "+ + + id:a id:b id:c id:d ");
     test(parseStmtOrDef, "a = c*b+d;", "= id:a + * id:c id:b id:d ");
+    test(parseStmtOrDef, "a + b > a * b;", "> + id:a id:b * id:a id:b ");
+    test(parseStmtOrDef, "x = a > b < c;", "= id:x < > id:a id:b id:c ");
+    test(parseStmtOrDef, "a <= b == c;", "== <= id:a id:b id:c ");
+    test(parseStmtOrDef, "a != b >= c;", "!= id:a >= id:b id:c ");
 }
 
 void testParseUnop(){
@@ -198,6 +202,7 @@ void testParseUnop(){
     test(parseStmtOrDef, "--++5;", "--:++:int:5 ");
     test(parseStmtOrDef, "-3++--;", "-:--::++::int:3 ");
     test(parseStmtOrDef, "4 - -5;", "- int:4 -:int:5 ");
+    test(parseStmtOrDef, "!!a;", "!:!:id:a ");
 }
 
 void testParseStmt(){

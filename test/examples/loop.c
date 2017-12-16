@@ -4,5 +4,11 @@ int loop(int x){
         loop(y);
         x+=y;
     }
-    while(x) int f = 5;
+}
+
+int condition(int a, int b){
+    int x = a == b;
+    int y = a > b;
+    int z = a < b;
+    return x + y + z;
 }

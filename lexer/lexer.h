@@ -39,10 +39,17 @@ typedef enum {
     tokInc,     //Operator ++
     tokDec,     //Operator --
     tokAssign,  //Operator =
+    tokNot, //Operator !
     tokPlusAssign,   //Operator +=
     tokMinusAssign,  //Operator -=
     tokMultiAssign,  //Operator *=
     tokDivAssign,    //Operator /=
+    tokEquals,  // ==
+    tokNotEquals,   // !=
+    tokGreater,  // >
+    tokLess,    // <
+    tokGreaterEquals,   // >=
+    tokLessEquals,  // <=
     tokComma,   // , token 
     tokLParen,      // ( token
     tokRParen,      // ) token

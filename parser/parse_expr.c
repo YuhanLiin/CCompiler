@@ -138,7 +138,8 @@ static ExprBase* parseLeftUnopExpr(){
         //All single-token unary operators go here
         case tokDec:
         case tokInc:
-        case tokMinus: {
+        case tokMinus:
+        case tokNot: {
             size_t opLine = lineNumberTokStart;
             size_t opPos = linePosTokStart;
             Token op = curTok;
@@ -167,6 +168,14 @@ static int operatorPrec(Token op){
         case tokDivAssign:
         case tokAssign:
             return 1;
+        case tokEquals:
+        case tokNotEquals:
+            return 6;
+        case tokGreater:
+        case tokGreaterEquals:
+        case tokLess:
+        case tokLessEquals:
+            return 7;
         case tokPlus:
         case tokMinus:
             return 10;

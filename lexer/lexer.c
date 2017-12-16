@@ -254,7 +254,32 @@ Token lexToken(){
             return tokNumChar;
         case '=':
             getNext();
+            if (curChar == '='){
+                getNext();
+                return tokEquals;
+            }
             return tokAssign;
+        case '!':
+            getNext();
+            if (curChar == '='){
+                getNext();
+                return tokNotEquals;
+            }
+            return tokNot;
+        case '>':
+            getNext();
+            if (curChar == '='){
+                getNext();
+                return tokGreaterEquals;
+            }
+            return tokGreater;
+        case '<':
+            getNext();
+            if (curChar == '='){
+                getNext();
+                return tokLessEquals;
+            }
+            return tokLess;
         case '+':
             getNext();
             if (curChar == '+'){
@@ -461,6 +486,8 @@ const char_t * stringifyToken(Token tok){
             return "character literal";
         case tokString:
             return "string literal";
+        case tokNot:
+            return "!";
         case tokPlus:
             return "+";
         case tokMinus:
@@ -479,6 +506,18 @@ const char_t * stringifyToken(Token tok){
             return "*=";
         case tokDivAssign:
             return "/=";
+        case tokEquals:
+            return "==";
+        case tokNotEquals:
+            return "!=";
+        case tokGreater:
+            return ">";
+        case tokLess:
+            return "<";
+        case tokGreaterEquals:
+            return ">=";
+        case tokLessEquals:
+            return "<=";
         case tokDiv:
             return "/";
         case tokMulti:
