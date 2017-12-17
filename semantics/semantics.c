@@ -109,6 +109,9 @@ ExprUnop* verifyExprUnop(ExprUnop* unop){
         case tokMinus:
             unop->base.type = operandType;
             break;
+        case tokNot:
+            unop->base.type = typInt32;
+            break;
         default:
             assert(0 && "Not an unary token operator");
     }
@@ -119,7 +122,21 @@ ExprUnop* verifyExprUnop(ExprUnop* unop){
 static void verifyArithBinop(ExprBinop* binop){
     Type promoted = arithTypePromotion(binop->left->type, binop->right->type);
     if (promoted != typNone){
-        binop->base.type = promoted;
+        binop->base.type = binop->left->type = binop->right->type = promoted;
+    }
+    else{
+        semanticError(
+            binop->base.ast, "invalid types %s and %s for %s operator.", 
+            stringifyType(binop->left->type), stringifyType(binop->right->type), stringifyToken(binop->op)
+        );
+    }
+}
+static void verifyRelBinop(ExprBinop* binop){
+    Type promoted = arithTypePromotion(binop->left->type, binop->right->type);
+    //TODO pointer comparisons need to be supported
+    if (promoted != typNone){
+        binop->left->type = binop->right->type = promoted;
+        binop->base.type = typInt32;
     }
     else{
         semanticError(
@@ -134,7 +151,10 @@ static void verifyAssignBinop(ExprBinop* binop){
         return;
     }
     if (binop->op == tokAssign){
-        if (!checkTypeConvert(binop->right->type, binop->left->type)){
+        if (checkTypeConvert(binop->right->type, binop->left->type)){
+            binop->base.type = binop->left->type;    
+        }
+        else{
             semanticError(
                 binop->right->ast, "no way to assign from %s to %s.",
                 stringifyType(binop->right->type), stringifyType(binop->left->type)
@@ -142,14 +162,19 @@ static void verifyAssignBinop(ExprBinop* binop){
         }
     }
     else{
-        if (arithTypePromotion(binop->right->type, binop->left->type) == typNone){
+        Type promoted = arithTypePromotion(binop->right->type, binop->left->type);
+        if (promoted != typNone){
+            // Assignment result has same type as left variable, but arith promotion still occurs for both operands
+            binop->base.type = binop->left->type;
+            binop->left->type = binop->right->type = promoted;   
+        }
+        else{
             semanticError(
                 binop->base.ast, "invalid types %s and %s for %s operator.", 
                 stringifyType(binop->left->type), stringifyType(binop->right->type), stringifyToken(binop->op)
             );
         }
     }
-    binop->base.type = binop->left->type;
 }
 
 ExprBinop* verifyExprBinop(ExprBinop* binop){
@@ -169,6 +194,14 @@ ExprBinop* verifyExprBinop(ExprBinop* binop){
             case tokDiv:
             case tokMulti:
                 verifyArithBinop(binop);
+                break;
+            case tokEquals:
+            case tokNotEquals:
+            case tokGreater:
+            case tokLess:
+            case tokGreaterEquals:
+            case tokLessEquals:
+                verifyRelBinop(binop);
                 break;
             case tokAssign:
             case tokPlusAssign:

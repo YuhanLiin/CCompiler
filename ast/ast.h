@@ -38,6 +38,7 @@ typedef struct {
     size_t linePos;
 } Ast;
 
+//The type field refers to the type that the result of the expression must be converted into in order to be used
 typedef struct {
     Ast ast;
     Type type;
