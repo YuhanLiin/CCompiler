@@ -200,6 +200,28 @@ Ast* parseStmt(){
             getTok();
             checkSemicolon();
             return verifyStmtContinue(newStmtContinue(stmtLineNum, stmtLinePos));
+        case tokIf:
+            getTok();
+            ExprBase* cond = parseBracketedExpr();
+            if (cond){
+                Ast* stmt = parseStmt();
+                if (stmt){
+                    if (curTok == tokElse){
+                        getTok();
+                        Ast* elseStmt = parseStmt();
+                        if (elseStmt){
+                            return (Ast*)newStmtIf(stmtLineNum, stmtLinePos, cond, stmt, elseStmt);
+                        }
+                        disposeAst(elseStmt);
+                    }
+                    else{
+                        return (Ast*)newStmtIf(stmtLineNum, stmtLinePos, cond, stmt, NULL);
+                    }
+                }
+                disposeAst(stmt);
+            }
+            disposeAst(cond);
+            return NULL;
 
         //These are tokens that expressions can't start with, so they automatically trigger statement error
         case tokRBrace:
@@ -216,6 +238,7 @@ Ast* parseStmt(){
         case tokChar:
         case tokSigned:
         case tokUnsigned:
+        case tokElse:
             syntaxError("statement");
             return NULL;
         //Checks for expression/declaration statements as last resort

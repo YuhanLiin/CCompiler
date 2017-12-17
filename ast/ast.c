@@ -136,6 +136,15 @@ StmtWhileLoop* newStmtDoWhile(size_t lineNumber, size_t linePos, ExprBase* condi
     return loop;
 }
 
+StmtIf* newStmtIf(size_t lineNumber, size_t linePos, ExprBase* condition, Ast* ifStmt, Ast* elseStmt){
+    New(StmtIf, ifelse, 1)
+    ifelse->ast = Ast(astStmtIf, lineNumber, linePos);
+    ifelse->condition = condition;
+    ifelse->ifStmt = ifStmt;
+    ifelse->elseStmt = elseStmt;
+    return ifelse;
+}
+
 Function* newFunction(size_t lineNumber, size_t linePos, Type type, char_t* name){
     New(Function, func, 1)
     func->ast = Ast(astFunction, lineNumber, linePos);
@@ -226,12 +235,17 @@ void disposeAst(void* node){
             disposeAst(loop->stmt);
             break;
         }
+        case astStmtIf: {
+            StmtIf* ifelse = (StmtIf*)ast;
+            disposeAst(ifelse->condition);
+            disposeAst(ifelse->ifStmt);
+            disposeAst(ifelse->elseStmt);
+            break;
+        }
         case astFunction: {
             Function* func = (Function*)ast;
             free(func->name);
-            if (func->stmt != NULL){
-                disposeAst(func->stmt);
-            }
+            disposeAst(func->stmt);
             arrDispose(vptr)(&func->params);
             break;
         }

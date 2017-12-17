@@ -109,6 +109,20 @@ void outputAst(Ast* ast){
             outputAst(loop->stmt);
             return;
         }
+        case astStmtIf: {
+            StmtIf *ifelse = (StmtIf*)ast;
+            emitOut("if ");
+            outputAst((Ast*)ifelse->condition);
+            outputAst((Ast*)ifelse->ifStmt);
+            if (ifelse->elseStmt){
+                emitOut("else ");
+                outputAst(ifelse->elseStmt);
+            }
+            else{
+                emitOut("noelse ");
+            }
+            return;
+        }
         case astFunction: {
             Function* fn = (Function*)ast;
             size_t paramCount = fn->params.size;
@@ -224,6 +238,21 @@ void testParseStmt(){
     test(parseStmtOrDef, "do return x; while(a+b);", "do:while + id:a id:b ret id:x ");
 }
 
+void testIfElse(){
+    test(parseStmtOrDef, "if (x) y;", "if id:x id:y noelse ");
+    test(parseStmtOrDef, "if (x) break; else {}", "if id:x break else block:0 ");
+    //Dangling else problem, for which the else is attached to the inner most if
+    test(parseStmtOrDef, "if (x) if (y) return y; else return x;", "if id:x if id:y ret id:y else ret id:x noelse ");
+    test(
+        parseStmtOrDef,
+        "if (x) x; else if (y) y; else if (z) z; else ;",
+        "if id:x id:x else if id:y id:y else if id:z id:z else empty "
+    );
+    testErr(parseStmtOrDef, "if x) ", "1:3 expected ( before identifier.\n");
+    testErr(parseStmtOrDef, "if (a) else", "1:7 expected statement before keyword \"else\".\n");
+    testErr(parseStmtOrDef, "if ()", "1:4 expected expression before ).\n");
+}
+
 void testParseFunction(){
     //This one also tests all the types so far
     test(
@@ -277,6 +306,7 @@ int main(int argc, char const *argv[])
     testParseBinop();
     testParseUnop();
     testParseStmt();
+    testIfElse();
     testParseFunction();
     testParseError();
     return 0;

@@ -27,6 +27,7 @@ typedef enum {
     astStmtDef,
     astStmtWhile,
     astStmtDoWhile,
+    astStmtIf,
     astFunction,
     astTopLevel
 } AstLabel;
@@ -146,6 +147,15 @@ typedef struct {
 } StmtWhileLoop;
 StmtWhileLoop* newStmtWhile(size_t lineNumber, size_t linePos, ExprBase* condition, Ast* stmt);
 StmtWhileLoop* newStmtDoWhile(size_t lineNumber, size_t linePos, ExprBase* condition, Ast* stmt);
+
+//If and else
+typedef struct {
+    Ast ast;
+    ExprBase* condition;
+    Ast* ifStmt;
+    Ast* elseStmt;  //Left null if there's no else statement
+} StmtIf;
+StmtIf* newStmtIf(size_t lineNumber, size_t linePos, ExprBase* condition, Ast* ifStmt, Ast* elseStmt);
 
 typedef struct {
     Ast ast;
