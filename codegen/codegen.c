@@ -22,6 +22,7 @@ static const Register movIntermediate = $r11;
 static const Register binopIntermediate = $r10;
 // rax will be used as intermediate for all unop operations
 static const Register unopIntermediate = $r10;
+static const Register unopByteIntermediate = $r10b;
 
 static void cmplMov(Address from, Address to){
     if (from.mode == indirectMode && to.mode == indirectMode){
@@ -85,6 +86,11 @@ static Address cmplUnop(ExprUnop* unop, offset_t* frameOffset, offset_t* maxCall
         case tokMinus:
             appendInstr(op1Instruction("negq", temp));
             break;
+        case tokNot:
+            appendInstr(op2Instruction("cmpq", numberAddress(0), temp));
+            appendInstr(op1Instruction("sete", registerAddress(unopByteIntermediate)));
+            appendInstr(op2Instruction("movzbq", registerAddress(unopByteIntermediate), registerAddress(unopIntermediate)));
+            break;
         // Rightside increment and decrement
         case tokInc:
             appendInstr(op1Instruction("incq", addr));
@@ -131,13 +137,20 @@ static void cmplDiv(Address left, Address right, Type type){
     }
 }
 // Perform specified arithemtic operation on operands and store value in left operand
-static void cmplRightToLeft(const char_t* op, Address left, Address right, Type type){
+static void cmplArith(const char_t* op, Address left, Address right, Type type){
     // Can't have both operands on stack, so move second one to intermediate register. 
     if (right.mode == indirectMode){
         cmplMov(right, registerAddress(binopIntermediate));
         right = registerAddress(binopIntermediate);
     }
     appendInstr(op2Instruction(op, right, left));
+}
+// Do relational comparison and store result in rax
+static Address cmplRel(const char_t* relOp, Address left, Address right, Type type){
+    cmplArith("cmpq", left, right, type);
+    appendInstr(op1Instruction(relOp, registerAddress($al)));
+    appendInstr(op2Instruction("movzbq", registerAddress($al), registerAddress($rax)));
+    return registerAddress($rax);
 }
 
 // Move left operand onto stack and destructively operate on it
@@ -153,30 +166,44 @@ static Address cmplBinop(ExprBinop* binop, offset_t* frameOffset, offset_t* maxC
     // Left operand will always be the destination operand that is mutated
     switch(binop->op){
         case tokAssign:
-            cmplRightToLeft("movq", left, right, binop->base.type);
+            cmplArith("movq", left, right, binop->right->type);
             return left;
         case tokPlusAssign:
         case tokPlus:
-            cmplRightToLeft("addq", left, right, binop->base.type);
+            cmplArith("addq", left, right, binop->right->type);
             return left;
         case tokMinusAssign:
         case tokMinus:
-            cmplRightToLeft("subq", left, right, binop->base.type);
+            cmplArith("subq", left, right, binop->right->type);
             return left;
         case tokMulti:
             cmplMulti(left, right, binop->base.type);
             return registerAddress($rax);
         case tokMultiAssign:
-            cmplMulti(left, right, arithTypePromotion(binop->left->type, binop->right->type));
+            cmplMulti(left, right, binop->right->type);
             cmplMov(registerAddress($rax), left);
             return left;
         case tokDiv:
             cmplDiv(left, right, binop->base.type);
             return registerAddress($rax);
         case tokDivAssign:
-            cmplDiv(left, right, arithTypePromotion(binop->left->type, binop->right->type));
+            cmplDiv(left, right, binop->right->type);
             cmplMov(registerAddress($rax), left);
             return left;
+
+        case tokEquals:
+            return cmplRel("cmpq", left, right, binop->right->type);
+        case tokNotEquals:
+            return cmplRel("cmpq", left, right, binop->right->type);
+        case tokGreaterEquals:
+            return cmplRel("cmpq", left, right, binop->right->type);
+        case tokLessEquals:
+            return cmplRel("cmpq", left, right, binop->right->type);
+        case tokGreater:
+            return cmplRel("cmpq", left, right, binop->right->type);
+        case tokLess:
+            return cmplRel("cmpq", left, right, binop->right->type);
+
         default:
             assert(0 && "Unhandled binop.");
     }

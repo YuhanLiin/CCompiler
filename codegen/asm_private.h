@@ -5,6 +5,7 @@
 
 typedef enum {
     $rbp, $rsp,
+    $al, $r10b, $r11b,
     $rax, $rcx, $rdx, $r8, $r9, $r10, $r11
     // ,$rbx, $rdi, $rsi, $r12, $r13, $r14, $r15
 } Register;

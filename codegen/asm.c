@@ -34,6 +34,12 @@ const char_t* registerStr(Register reg){
     switch (reg){
         case $rax:
             return "%rax";
+        case $al:
+            return "%ax";
+        case $r10b:
+            return "%r10b";
+        case $r11b:
+            return "%r11b";
         case $rbp:
             return "%rbp";
         case $rsp:
