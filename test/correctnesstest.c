@@ -74,6 +74,7 @@ static void testCall(){
 static void testArithmetic(){
     test("int neg() {return- - + 4;}");
     test("float x(int o, int b) {o+b*3.2/43-5;}");
+    test("int a(){!(1 > 2 < 3 <= 4 >= 5 == 6 != 7);}");
     testErr(
         "void v() {v()+v()-v();}", 
         "1:10 cannot use a void-returning function call as an expression.\n"

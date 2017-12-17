@@ -19,7 +19,9 @@ static const Register paramRegisters[] = {$rcx, $rdx, $r8, $r9};
 // r11 will be used as intermediate for all mov operations
 static const Register movIntermediate = $r11;
 // r10 will be used as intermediate for all binop operations
-const Register binopIntermediate = $r10;
+static const Register binopIntermediate = $r10;
+// rax will be used as intermediate for all unop operations
+static const Register unopIntermediate = $r10;
 
 static void cmplMov(Address from, Address to){
     if (from.mode == indirectMode && to.mode == indirectMode){
@@ -77,8 +79,8 @@ static Address cmplUnop(ExprUnop* unop, offset_t* frameOffset, offset_t* maxCall
                 return addr;
         }
     }
-    cmplStackPush(addr, frameOffset);
-    Address temp = indirectAddress(*frameOffset, $rbp);
+    Address temp = registerAddress(unopIntermediate);
+    cmplMov(addr, temp);
     switch(unop->op){
         case tokMinus:
             appendInstr(op1Instruction("negq", temp));
