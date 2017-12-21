@@ -59,7 +59,7 @@ char isFloatType(Type type){
     }
 }
 
-//Can also serve as integer promotions. Promotes to int64 by default
+//Can also serve as integer promotions. Promotes to int32 by default
 Type argTypePromotion(Type type){
     switch (type){
         case typFloat32:
@@ -73,6 +73,9 @@ Type argTypePromotion(Type type){
         case typInt16:
         case typInt32:
             return typInt32;
+        case typInt64:
+        case typUInt64:
+            return type;
         default:
             assert(0 && "Type invalid for int promotion");
     }
