@@ -6,5 +6,5 @@ void v(){
 int main()
 {
     v();
-    return 1;
+    return 6;
 }

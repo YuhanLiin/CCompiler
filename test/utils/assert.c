@@ -7,8 +7,11 @@
 #include <stdint.h>
 
 int DITCH_LEVEL = 0;
+int CASE_NUMBER = 0;
 
-#define assertBegin() fprintf(stderr, "\nAssertion error in %s, line %d, in %s:\n", __FILE__, __LINE__, __func__)
+#define assertBegin() do{\
+    fprintf(stderr, "\nTest Case #%d:\nAssertion error in %s, line %d, in %s:\n", CASE_NUMBER, __FILE__, __LINE__, __func__);\
+} while(0)
 
 #define assertFailHandler() do {\
     if (DITCH_LEVEL == 1) return;\
@@ -26,6 +29,7 @@ int DITCH_LEVEL = 0;
         );\
         assertFailHandler();\
     }\
+    CASE_NUMBER++;\
 } while(0);
 
 #define assertEqNum(actual, expected) do {\
@@ -39,6 +43,7 @@ int DITCH_LEVEL = 0;
         );\
         assertFailHandler();\
     }\
+    CASE_NUMBER++;\
 } while(0);
 
 #define assertNotEqNum(actual, notEqual) do {\
@@ -52,6 +57,7 @@ int DITCH_LEVEL = 0;
         );\
         assertFailHandler();\
     }\
+    CASE_NUMBER++;\
 } while(0);
 
 #define assertEqFlt(actual, expected) do {\
@@ -65,6 +71,7 @@ int DITCH_LEVEL = 0;
         );\
         assertFailHandler();\
     }\
+    CASE_NUMBER++;\
 } while(0);
 
 char doubleEq(const double a, const double b){

@@ -1,26 +1,43 @@
-int add(int a, int b){
+int add5(int a, int b){
     return a + b + 5;
 }
 
 int minus(int a){
-    return 50 - add(1, 2) - a;
+    return 50 - add5(1, 2) - a;
 }
 
-int multi(int a, int b, int c, int d, int f){
-    return a + b * (c + d);
+int multi(int a, int b){
+    return a * b;
 }
-unsigned int imulti(int a, int b, unsigned int c, unsigned int d, int f){
-    return a + b * (c + d);
-}
-
-int div(){
-    return 100 / multi(0, 5, add(1, 1), 3, minus(1));
-}
-unsigned int idiv(){
-    return 100U / multi(0, 5, add(1, 1), 3, minus(1));
+unsigned int umulti(int a, int b){
+    return a * b;
 }
 
-//Should return 46
+int div(int x){
+    return 100 / x;
+}
+unsigned int udiv(int x){
+    return 100U /x;
+}
+
 int main(){
-    return add(1, minus(div()));
+    if (add5(-1, -2) == 2){
+        if (minus(3) == 39){
+            if (multi(-2, -2) == 4){
+                if(umulti(1, 0) == 0){
+                    if (div(-5) == -20){
+                        if (udiv(11) == 9){
+                            return 0;
+                        }
+                        return 1;
+                    }
+                    return 2;
+                }
+                return 3;
+            }
+            return 4;
+        }
+        return 5;
+    }
+    return 6;
 }

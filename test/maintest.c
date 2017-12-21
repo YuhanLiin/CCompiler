@@ -1,12 +1,25 @@
 #include "utils.h"
 #include "test/utils/assert.c"
 #include <stdlib.h>
+
 int driver(int argc, char_t const *argv[]);
 
-const char_t* CFILES[] = {"basic.c", "binop.c", "params.c", "unop.c", "void.c", "assign.c", "loop.c", "controlflow.c"};
-const char_t* EXEFILES[] = {"basic.exe", "binop.exe", "params.exe", "unop.exe", "void.exe", "assign.exe", "loop.exe", "controlflow.exe"};
-const int EXPECTED_OUT[] = {1, 46, 1, 48, 1, 8, 42, 10};
-const int FILE_COUNT = 8;
+#define FILE_COUNT 10
+const char_t* CFILES[FILE_COUNT] = {
+    "basic.c", "basicif.c", "binop.c", "params.c", 
+    "unop.c", "void.c", "assign.c", "loop.c", 
+    "controlflow.c", "condition.c"
+};
+const char_t* EXEFILES[FILE_COUNT] = {
+    "basic.exe", "basicif.exe", "binop.exe", "params.exe", 
+    "unop.exe", "void.exe", "assign.exe", "loop.exe", 
+    "controlflow.exe", "condition.exe"
+};
+const int EXPECTED_OUT[FILE_COUNT] = {
+    0, 1, 0, 3, 
+    48, 6, 0, 42, 
+    10, 17
+};
 
 static void testDriver(int i){
     const char_t *driverArgs[2];

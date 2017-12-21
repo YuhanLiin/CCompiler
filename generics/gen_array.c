@@ -28,6 +28,11 @@ char arrInit(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* d
     return 1;
 }
 
+//Expands array size to all available memory allocated. Extra space is all garbage
+void arrExpand(TYPE)(Array(TYPE)* array){
+    array->size = array->allocatedSize;
+}
+
 //Destroys all elements and empties array
 void arrClear(TYPE) (Array(TYPE)* array){
     if (array->destructor != NULL){

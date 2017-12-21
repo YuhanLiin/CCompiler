@@ -65,16 +65,14 @@ Type argTypePromotion(Type type){
         case typFloat32:
         case typFloat64:
             return typFloat64;
-        case typUInt64:
-            return typUInt64;
+        case typUInt32:
+            return typUInt32;
         case typUInt8:
         case typUInt16:
-        case typUInt32:
         case typInt8:
         case typInt16:
         case typInt32:
-        case typInt64:
-            return typInt64;
+            return typInt32;
         default:
             assert(0 && "Type invalid for int promotion");
     }
@@ -93,10 +91,16 @@ Type arithTypePromotion(Type t1, Type t2){
     if (t1 == typFloat32 || t2 == typFloat32){
         return typFloat32;
     }
-    t1 = argTypePromotion(t1);
-    t2 = argTypePromotion(t2);
     if (t1 == typUInt64 || t2 == typUInt64){
         return typUInt64;
     }
-    return typInt64;
+    if (t1 == typInt64 || t2 == typInt64){
+        return typInt64;
+    }
+    t1 = argTypePromotion(t1);
+    t2 = argTypePromotion(t2);
+    if (t1 == typUInt32 || t2 == typUInt32){
+        return typUInt32;
+    }
+    return typInt32;
 }

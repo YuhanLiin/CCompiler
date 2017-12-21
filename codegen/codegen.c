@@ -146,9 +146,34 @@ static void cmplArith(const char_t* op, Address left, Address right, Type type){
     appendInstr(op2Instruction(op, right, left));
 }
 // Do relational comparison and store result in rax
-static Address cmplRel(const char_t* relOp, Address left, Address right, Type type){
+static Address cmplRel(Token relOp, Address left, Address right, Type type){
+    const char_t* opcode;
+    switch(relOp){
+        case tokEquals:
+            opcode = "sete";
+            break;
+        case tokNotEquals:
+            opcode = "setne";
+            break;
+        case tokGreaterEquals:
+            if (isSignedType(type)) opcode = "setge";
+            else opcode = "setae";
+            break;
+        case tokLessEquals:
+            if (isSignedType(type)) opcode = "setle";
+            else opcode = "setbe";
+            break;
+        case tokGreater:
+            if (isSignedType(type)) opcode = "setg";
+            else opcode = "seta";
+            break;
+        case tokLess:
+            if (isSignedType(type)) opcode = "setl";
+            else opcode = "setb";
+            break;
+    }
     cmplArith("cmpq", left, right, type);
-    appendInstr(op1Instruction(relOp, registerAddress($al)));
+    appendInstr(op1Instruction(opcode, registerAddress($al)));
     appendInstr(op2Instruction("movzbq", registerAddress($al), registerAddress($rax)));
     return registerAddress($rax);
 }
@@ -192,17 +217,12 @@ static Address cmplBinop(ExprBinop* binop, offset_t* frameOffset, offset_t* maxC
             return left;
 
         case tokEquals:
-            return cmplRel("cmpq", left, right, binop->right->type);
         case tokNotEquals:
-            return cmplRel("cmpq", left, right, binop->right->type);
         case tokGreaterEquals:
-            return cmplRel("cmpq", left, right, binop->right->type);
         case tokLessEquals:
-            return cmplRel("cmpq", left, right, binop->right->type);
         case tokGreater:
-            return cmplRel("cmpq", left, right, binop->right->type);
         case tokLess:
-            return cmplRel("cmpq", left, right, binop->right->type);
+            return cmplRel(binop->op, left, right, binop->right->type);
 
         default:
             assert(0 && "Unhandled binop.");
@@ -331,6 +351,27 @@ static void cmplStmt(Ast* ast, offset_t* frameOffset, offset_t* maxCallSpace, co
         case astStmtBreak:
             appendInstr(labelInstruction("jmp", numLabel(labels->brk)));
             break;
+        case astStmtIf: {
+            StmtIf* ifelse = (StmtIf*)ast;
+            size_t endLbl = maxLabelNum++;
+            // No need to have separate else label if there's no else statement
+            size_t elseLbl = ifelse->elseStmt ? maxLabelNum++ : endLbl;
+            
+            // If condition evaluates to 0 then jump to else branch (or end label if there's no else)
+            Address cond = cmplExpr(ifelse->condition, frameOffset, maxCallSpace);
+            appendInstr(op2Instruction("cmpq", numberAddress(0), cond));
+            appendInstr(labelInstruction("je", numLabel(elseLbl)));
+            // Otherwise execute the conditonal code
+            cmplStmt(ifelse->ifStmt, frameOffset, maxCallSpace, labels);
+            // If there is an else branch, the conditional code also needs to skip it and jmp to the end
+            if (ifelse->elseStmt){
+                appendInstr(labelInstruction("jmp", numLabel(endLbl)));
+                appendInstr(labelDeclInstruction(numLabel(elseLbl)));
+                cmplStmt(ifelse->elseStmt, frameOffset, maxCallSpace, labels);
+            }
+            appendInstr(labelDeclInstruction(numLabel(endLbl)));
+            break;
+        }
         default:
             assert(0 && "Unsupported AST for stmt");
     }

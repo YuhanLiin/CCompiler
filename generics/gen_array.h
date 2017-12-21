@@ -22,6 +22,12 @@ typedef struct
 //Thus, both arr and dtr can be null
 char arrInit(TYPE) (Array(TYPE)* array, size_t size, const TYPE arr[], void (* dtr)(TYPE));
 
+#ifndef arrExpand
+#define arrExpand(t) CONCAT(arrExpand, t)
+#endif
+//Expands array size to all available memory allocated. Extra space is all garbage
+void arrExpand(TYPE)(Array(TYPE)* array);
+
 #ifndef arrClear
 #define arrClear(t) CONCAT(arrClear, t)
 #endif
