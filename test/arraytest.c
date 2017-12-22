@@ -19,25 +19,25 @@
 #define checkInitAttrs(arr, sz, allocsz, isNulled) do{\
     assertEqNum(arr.size, sz);\
     assertEqNum(arr.allocatedSize, allocsz);\
-    if (isNulled) {assertEqNum(arr.elem, NULL);}\
-    else assertNotEqNum(arr.elem, NULL);\
+    if (isNulled) {assert0(arr.elem);}\
+    else assertn0(arr.elem);\
 } while (0)
 
 static void testInit(){
     char string[] = "pig";
     Array(char) str;
     // Empty initialization
-    arrInit(char)(&str, 0, NULL, NULL);
+    assertn0(arrInit(char)(&str, 0, NULL, NULL));
     checkInitAttrs(str, 0, 0, 1);
     arrDispose(char)(&str);
     // Allocate initial memory but still keep array empty
-    arrInit(char)(&str, 4, NULL, NULL);
+    assertn0(arrInit(char)(&str, 4, NULL, NULL));
     checkInitAttrs(str, 0, 4, 0);
     arrExpand(char)(&str);
     checkInitAttrs(str, 4, 4, 0);
     arrDispose(char)(&str);
     // Initialize array at specific size with contents
-    arrInit(char)(&str, 4, string, NULL);
+    assertn0(arrInit(char)(&str, 4, string, NULL));
     checkInitAttrs(str, 4, 4, 0);
     arrDispose(char)(&str);
 }
@@ -56,11 +56,11 @@ static void testInit(){
 
 static void testPushPop(){
     Array(char) str;
-    arrInit(char)(&str, 0, NULL, NULL);
-    arrPush(char)(&str, 'a');
-    arrPush(char)(&str, 'b');
-    arrPush(char)(&str, 'd');
-    arrPush(char)(&str, 'e');
+    assertn0(arrInit(char)(&str, 0, NULL, NULL));
+    assertn0(arrPush(char)(&str, 'a'));
+    assertn0(arrPush(char)(&str, 'b'));
+    assertn0(arrPush(char)(&str, 'd'));
+    assertn0(arrPush(char)(&str, 'e'));
     checkContents(char, str, 4, 'a', 'b', 'd', 'e');
 
     arrPop(char)(&str);
@@ -72,19 +72,19 @@ static void testPushPop(){
 static void testExtractInsert(){
     Array(int) arr;
     int a[] = {0,1,2,3};
-    arrInit(int)(&arr, 4, a, NULL);
+    assertn0(arrInit(int)(&arr, 4, a, NULL));
     arrExtract(int)(&arr, 2);
     arrExtract(int)(&arr, 0);
     checkContents(int, arr, 2, 1, 3);
-    arrInsert(int)(&arr, 5, 0);
+    assertn0(arrInsert(int)(&arr, 5, 0));
     checkContents(int, arr, 3, 5, 1, 3);
     arrDispose(int)(&arr);
 }
 
-int deleted[100];
-size_t ind = 0;
+static int deleted[100];
+static size_t ind = 0;
 
-void dtr(int c){
+static void dtr(int c){
     deleted[ind] = c;
     ind++;
 }
@@ -92,7 +92,7 @@ void dtr(int c){
 static void testDispose(){
     Array(int) arr;
     int a[] = {0,1,2,3};
-    arrInit(int)(&arr, 4, a, &dtr);
+    assertn0(arrInit(int)(&arr, 4, a, &dtr));
     arrDispose(int)(&arr);
     checkArrEquals(4, deleted, a);
 }

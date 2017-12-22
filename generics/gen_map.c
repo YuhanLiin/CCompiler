@@ -8,10 +8,14 @@
 #define LOADFACTOR 0.65f
 #endif
 
+#ifndef STATUSENUM
+typedef enum {stEmpty=0, stDeleted=1, stFilled=2} StatusEnum;
+#define STATUSENUM StatusEnum
+#endif
 #define Pair(k, v) CONCAT3(Pair, k, v)
 typedef struct {
     KEY key;
-    enum {stEmpty=0, stDeleted=1, stFilled=2} status;
+    STATUSENUM status;
     VAL value;
 } Pair(KEY, VAL);
 
@@ -20,7 +24,14 @@ typedef struct {
 #endif
 
 //Inits map to all empty pairs of specific size.
-char mapInit(KEY, VAL)(Map(KEY, VAL)* table, size_t initSize, size_t (*hash)(KEY), char (*eq)(KEY, KEY), void (*keyDtr)(KEY), void (*valDtr)(VAL)){
+char mapInit(KEY, VAL)(
+    Map(KEY, VAL)* table,
+    size_t initSize,
+    size_t (*hash)(KEY),
+    char (*eq)(KEY, KEY),
+    void (*keyDtr)(KEY),
+    void (*valDtr)(VAL)
+){
     table->hash = hash;
     table->keyDtr = keyDtr;
     table->valDtr = valDtr;
@@ -165,12 +176,13 @@ static Pair(KEY, VAL)* getProbe(KEY, VAL)(const Map(KEY, VAL)* table, size_t sta
     return NULL;
 }
 
-//Deletes entry from hash table if it exists. Returns key and value pointer if successful
-const VAL* mapRemove(KEY, VAL)(Map(KEY, VAL)* table, KEY key, KEY* keyReturn){
+//Deletes entry from hash table if it exists. Returns pointer to value if successful otherwise none
+//Will dispose the key but moves the value to the caller
+const VAL* mapRemove(KEY, VAL)(Map(KEY, VAL)* table, KEY key){
     Pair(KEY, VAL)* pair = getProbe(KEY, VAL)(table, toIndex(KEY, VAL)(table, key), key);
     if (pair != NULL){
         pair->status = stDeleted;
-        *keyReturn = pair->key;
+        if (table->keyDtr) (*table->keyDtr)(pair->key);
         return &pair->value;
     }
     return NULL;

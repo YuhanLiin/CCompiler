@@ -4,6 +4,7 @@
 #include "test/utils/io.c"
 #include "test/utils/assert.h"
 
+// Prints out an ASM instruction and see if it matches the expected output
 static void ts(AsmInstruction instr, const char* expected) {
     ioSetup("");
     emitInstr(&instr);

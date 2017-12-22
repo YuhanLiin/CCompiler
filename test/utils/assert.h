@@ -41,6 +41,9 @@
     }\
 } while(0);
 
+#define assert0(actual) assertEqNum(actual, 0)
+#define assertn0(actual) assertNotEqNum(actual, 0)
+
 #define assertNotEqNum(actual, notEqual) do {\
     uint64_t __actual = (uint64_t)actual;\
     uint64_t __notEqual = (uint64_t)notEqual;\

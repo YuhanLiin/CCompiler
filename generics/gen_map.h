@@ -24,7 +24,7 @@ void mapDispose(KEY, VAL)(Map(KEY, VAL)* table);
 char mapInsert(KEY, VAL)(Map(KEY, VAL)* table, KEY key, VAL value);
 
 #define mapRemove(k, v) CONCAT3(mapRemove, k, v)
-const VAL* mapRemove(KEY, VAL)(Map(KEY, VAL)* table, KEY key, KEY* keyReturn);
+const VAL* mapRemove(KEY, VAL)(Map(KEY, VAL)* table, KEY key);
 
 #define mapFind(k, v) CONCAT3(mapFind, k, v)
 VAL* mapFind(KEY, VAL)(const Map(KEY, VAL)* table, KEY key);
