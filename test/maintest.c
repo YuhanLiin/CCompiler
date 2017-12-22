@@ -21,6 +21,7 @@ const int EXPECTED_OUT[FILE_COUNT] = {
     10, 17
 };
 
+#define DITCH_LEVEL 1
 static void testDriver(int i){
     const char_t *driverArgs[2];
     driverArgs[1] = CFILES[i];
@@ -30,7 +31,6 @@ static void testDriver(int i){
 
 int main(int argc, char const *argv[])
 {
-    DITCH_LEVEL = 1;
     for (int i=0; i<FILE_COUNT; i++){
         testDriver(i);
     }

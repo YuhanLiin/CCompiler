@@ -7,6 +7,7 @@
 #include "test/utils/assert.h"
 
 Token token;
+#define DITCH_LEVEL 1
 
 static void setup(const char_t* str){
     ioSetup(str);
@@ -180,7 +181,6 @@ static void testStringifyToken(){
 
 int main(int argc, char const *argv[])
 {
-    DITCH_LEVEL = 1;
     testTokenIgnored();
     testTokenSymbols();
     testTokenChar();
