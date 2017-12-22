@@ -2,7 +2,7 @@
 #include "codegen/codegen.h"
 
 #include "test/utils/io.c"
-#include "test/utils/assert.c"
+#include "test/utils/assert.h"
 
 static void ts(AsmInstruction instr, const char* expected) {
     ioSetup("");

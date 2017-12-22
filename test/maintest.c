@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "test/utils/assert.c"
+#include "test/utils/assert.h"
 #include <stdlib.h>
 
 int driver(int argc, char_t const *argv[]);

@@ -1,16 +1,13 @@
-#include "lexer/lexer.h"
 #include "utils.h"
-#include "ast/type.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 
-int DITCH_LEVEL = 0;
-int CASE_NUMBER = 0;
+#define DITCH_LEVEL 0
 
 #define assertBegin() do{\
-    fprintf(stderr, "\nTest Case #%d:\nAssertion error in %s, line %d, in %s:\n", CASE_NUMBER, __FILE__, __LINE__, __func__);\
+    fprintf(stderr, "\nAssertion error in %s, line %d, in %s:\n", __FILE__, __LINE__, __func__);\
 } while(0)
 
 #define assertFailHandler() do {\
@@ -29,7 +26,6 @@ int CASE_NUMBER = 0;
         );\
         assertFailHandler();\
     }\
-    CASE_NUMBER++;\
 } while(0);
 
 #define assertEqNum(actual, expected) do {\
@@ -43,7 +39,6 @@ int CASE_NUMBER = 0;
         );\
         assertFailHandler();\
     }\
-    CASE_NUMBER++;\
 } while(0);
 
 #define assertNotEqNum(actual, notEqual) do {\
@@ -57,7 +52,6 @@ int CASE_NUMBER = 0;
         );\
         assertFailHandler();\
     }\
-    CASE_NUMBER++;\
 } while(0);
 
 #define assertEqFlt(actual, expected) do {\
@@ -71,11 +65,7 @@ int CASE_NUMBER = 0;
         );\
         assertFailHandler();\
     }\
-    CASE_NUMBER++;\
 } while(0);
 
-char doubleEq(const double a, const double b){
-    double diff = a - b;
-    static double tolerance = 0.0001;
-    return -tolerance < diff || diff < tolerance;
-}
+// Will evaluate a and b multiple times, so must be used with care
+#define doubleEq(a, b) -0.0001 < ((a)-(b)) || ((a)-(b)) < 0.0001

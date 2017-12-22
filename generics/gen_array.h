@@ -64,10 +64,3 @@ TYPE arrExtract(TYPE) (Array(TYPE)* array, size_t pos);
 #endif
 //Pop element from back and returns it. Does not call destructor
 TYPE arrPop(TYPE) (Array(TYPE)* array);
-
-#ifndef arrCopy
-#define arrCopy(t) CONCAT(arrCopy, t)
-#endif
-//Copy one array's elements into another. Assumes dest array is unallocated or disposed (no remaining resources)
-//Can fail due to malloc
-char arrCopy(TYPE) (Array(TYPE)* dest, const Array(TYPE)* src);

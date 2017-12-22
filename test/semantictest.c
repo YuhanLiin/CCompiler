@@ -7,7 +7,7 @@
 #include "utils.h"
 #include <string.h>
 
-#include "test/utils/assert.c"
+#include "test/utils/assert.h"
 #include "test/utils/io.c"
 
 // Specifically tests the AST transformations of the semantics module. 

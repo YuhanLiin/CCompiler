@@ -1,16 +1,17 @@
-#include "test/utils/assert.c"
+#include "test/utils/assert.h"
 #include "ast/type.h"
 
+#define signedOrNot(type, isSigned) assertEqNum(isSignedType(type), isSigned)
 static void testSignedType(){
-    assertEqNum(isSignedType(typInt8), 1);
-    assertEqNum(isSignedType(typInt16), 1);
-    assertEqNum(isSignedType(typInt32), 1);
-    assertEqNum(isSignedType(typInt64), 1);
+    signedOrNot(typInt8, 1);
+    signedOrNot(typInt16, 1);
+    signedOrNot(typInt32, 1);
+    signedOrNot(typInt64, 1);
 
-    assertEqNum(isSignedType(typUInt8), 0);
-    assertEqNum(isSignedType(typUInt16), 0);
-    assertEqNum(isSignedType(typUInt32), 0);
-    assertEqNum(isSignedType(typUInt64), 0);
+    signedOrNot(typUInt8, 0);
+    signedOrNot(typUInt16, 0);
+    signedOrNot(typUInt32, 0);
+    signedOrNot(typUInt64, 0);
 }
 
 #define intOrFloat(type, isInt)do {\
@@ -30,28 +31,33 @@ static void testIsIntOrFloat(){
     intOrFloat(typFloat64, 0);
 }
 
+#define checkArgPromotion(type, promoted) assertEqNum(argTypePromotion(type), promoted);
 static void testArgPromotion(){
-    assertEqNum(argTypePromotion(typFloat64), typFloat64);
-    assertEqNum(argTypePromotion(typFloat32), typFloat64);
-    assertEqNum(argTypePromotion(typInt64), typInt64);
-    assertEqNum(argTypePromotion(typUInt64), typUInt64);
-    assertEqNum(argTypePromotion(typUInt32), typUInt32);
-    assertEqNum(argTypePromotion(typInt32), typInt32);
-    assertEqNum(argTypePromotion(typUInt16), typInt32);
-    assertEqNum(argTypePromotion(typInt16), typInt32);
-    assertEqNum(argTypePromotion(typUInt8), typInt32);
-    assertEqNum(argTypePromotion(typInt8), typInt32);
+    checkArgPromotion(typFloat64, typFloat64);
+    checkArgPromotion(typFloat32, typFloat64);
+    checkArgPromotion(typInt64, typInt64);
+    checkArgPromotion(typUInt64, typUInt64);
+    checkArgPromotion(typUInt32, typUInt32);
+    checkArgPromotion(typInt32, typInt32);
+    checkArgPromotion(typUInt16, typInt32);
+    checkArgPromotion(typInt16, typInt32);
+    checkArgPromotion(typUInt8, typInt32);
+    checkArgPromotion(typInt8, typInt32);
 }
 
+#define checkArithPromotion(type1, type2, promoted) do {\
+    assertEqNum(arithTypePromotion(type1, type2), promoted);\
+    assertEqNum(arithTypePromotion(type2, type1), promoted);\
+} while (0)
 static void testArithPromotion(){
-    assertEqNum(arithTypePromotion(typFloat64, typInt64), typFloat64);
-    assertEqNum(arithTypePromotion(typFloat64, typFloat32), typFloat64);
-    assertEqNum(arithTypePromotion(typUInt64, typFloat32), typFloat32);
-    assertEqNum(arithTypePromotion(typInt64, typUInt64), typUInt64);
-    assertEqNum(arithTypePromotion(typUInt64, typInt32), typUInt64);
-    assertEqNum(arithTypePromotion(typInt64, typInt32), typInt64);
-    assertEqNum(arithTypePromotion(typInt32, typUInt16), typInt32);
-    assertEqNum(arithTypePromotion(typInt32, typInt32), typInt32);
+    checkArithPromotion(typFloat64, typInt64, typFloat64);
+    checkArithPromotion(typFloat64, typFloat32, typFloat64);
+    checkArithPromotion(typUInt64, typFloat32, typFloat32);
+    checkArithPromotion(typInt64, typUInt64, typUInt64);
+    checkArithPromotion(typUInt64, typInt32, typUInt64);
+    checkArithPromotion(typInt64, typInt32, typInt64);
+    checkArithPromotion(typInt32, typUInt16, typInt32);
+    checkArithPromotion(typInt32, typInt32, typInt32);
 }
 
 int main(int argc, char const *argv[])

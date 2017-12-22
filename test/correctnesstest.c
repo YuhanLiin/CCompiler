@@ -5,7 +5,7 @@
 #include "parser/parser.h"
 
 #include "test/utils/io.c"
-#include "test/utils/assert.c"
+#include "test/utils/assert.h"
 
 #define test(inputStr) do {\
     ioSetup(inputStr);\

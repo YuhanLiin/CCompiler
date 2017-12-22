@@ -84,9 +84,3 @@ TYPE arrExtract(TYPE) (Array(TYPE)* array, size_t pos){
 TYPE arrPop(TYPE) (Array(TYPE)* array){
     return arrExtract(TYPE) (array, array->size-1);
 }
-
-//Copy one array's elements and destructor into another. Assumes dest array is unallocated or disposed (no remaining resources)
-//Can fail due to malloc
-char arrCopy(TYPE) (Array(TYPE)* dest, const Array(TYPE)* src){
-    return arrInit(TYPE)(dest, src->size, src->elem, src->destructor);
-}

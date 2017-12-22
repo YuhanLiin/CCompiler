@@ -6,7 +6,7 @@
 #include "semantics/symtable.h"
 
 #include "test/utils/io.c"
-#include "test/utils/assert.c"
+#include "test/utils/assert.h"
 
 //Output ast to output string array for testing purposes. Put space after every output to delimit multiple nodes
 void outputAst(Ast* ast){
