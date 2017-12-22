@@ -22,6 +22,9 @@ typetest: test/typetest.c ast/type.c
 asmtest: test/asmtest.c codegen/asm.c test/utils/io.c
 	${c} ${basedir} -g test/asmtest.c codegen/asm.c -o asmtest.exe
 
+scopetest: test/scopetest.c scope/scope.c array.c
+	${c} ${basedir} -g test/scopetest.c scope/scope.c array.c -o scopetest.exe
+
 arraytest: test/arraytest.c generics/gen_array.c generics/gen_array.h
 	${c} ${basedir} -g test/arraytest.c -o arraytest.exe
 

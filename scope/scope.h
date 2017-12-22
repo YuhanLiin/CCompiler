@@ -2,8 +2,8 @@
 #include "utils.h"
 
 typedef struct {
-    char_t* name;
-    size_t scopeId;
+    const char_t* name;
+    const size_t scopeId;
 } Symbol;
 
 #define GLOBAL_SCOPE 0
